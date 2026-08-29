@@ -68,7 +68,8 @@
 
   .station-list{ margin-bottom:18px; display:none; }
   .station{ display:flex; justify-content:space-between; align-items:center; padding:9px 11px;
-    background:var(--surface2); border-radius:9px; margin-bottom:6px; }
+    background:var(--surface2); border-radius:9px; margin-bottom:6px; cursor:pointer; border-left:3px solid transparent; }
+  .station:active{ background:#26313A; }
   .station .n{ font-size:12.5px; color:var(--sub); }
   .station .d{ font-size:10.5px; color:var(--dim); margin-top:2px; }
   .station .p{ font-size:13.5px; font-weight:700; color:var(--ink); }
@@ -505,6 +506,7 @@
   }
 
   var lastCalc = null;
+  var lastStations = [];
 
   function render(){
     var fuelPrice=num(els.fuelPrice), fuelCons=num(els.fuelConsumption),
@@ -846,8 +848,9 @@
           }
           if(!near.length) throw new Error('no-stations');
 
-          near.sort(function(a,b){ return a.price-b.price; });
-          var top=near.slice(0,4);
+          var cheapestPrice = near.reduce(function(m,x){ return Math.min(m,x.price); }, Infinity);
+          near.sort(function(a,b){ return a.dist-b.dist; });
+          var top=near.slice(0,5);
           var avg=near.reduce(function(s,x){ return s+x.price; },0)/near.length;
           var usesFallbackGrade = top.some(function(x){ return x.grade!=='Precio Gasolina 95 E5'; });
 
@@ -859,15 +862,17 @@
           note.innerHTML = 'Datos oficiales del Ministerio'+(data.Fecha ? ' \u2014 '+esc(data.Fecha) : '')+
             (usesFallbackGrade ? '. Alguna estaci\u00f3n mostrada no vende 95 E5 est\u00e1ndar; se indica el grado usado.' : '.');
 
+          lastStations = top;
           listEl.style.display='block';
-          listEl.innerHTML = '<div class="section-title">M\u00e1s baratas cerca de ti</div>'+
-            top.map(function(s){
+          listEl.innerHTML = '<div class="section-title">Gasolineras m\u00e1s cercanas</div>'+
+            top.map(function(s,idx){
               var gradeNote = s.grade!=='Precio Gasolina 95 E5' ? ' \u00b7 '+esc(s.grade.replace('Precio ','')) : '';
-              return '<div class="station"><div><div class="n">'+esc(s.name)+'</div>'+
+              var cheapTag = s.price===cheapestPrice ? ' <span class="tag" style="background:'+VOLT+';color:#0E1316;">M\u00c1S BARATA</span>' : '';
+              return '<div class="station" data-idx="'+idx+'"><div><div class="n">'+esc(s.name)+cheapTag+'</div>'+
                 '<div class="d">'+esc(s.addr)+' \u00b7 '+fmt(s.dist,1)+' km'+gradeNote+'</div></div>'+
                 '<div class="p num">'+fmt(s.price,3)+' '+EURO+'</div></div>';
             }).join('')+
-            '<div class="field-hint" style="margin-top:4px;">Toca un precio y c\u00e1mbialo arriba si vas a repostar en una concreta.</div>';
+            '<div class="field-hint" style="margin-top:4px;">Toca una gasolinera para usar su precio exacto arriba.</div>';
 
           render(); reset();
         })
@@ -920,6 +925,20 @@
     render();
   });
   document.getElementById('btn-refresh').addEventListener('click', fetchRealPrices);
+  document.getElementById('station-list').addEventListener('click', function(e){
+    var row = e.target.closest('.station');
+    if(!row) return;
+    var idx = parseInt(row.getAttribute('data-idx'), 10);
+    var st = lastStations[idx];
+    if(!st) return;
+    els.fuelPrice.value = st.price.toFixed(3);
+    var hint = document.getElementById('fuel-hint');
+    hint.textContent = st.name+' \u00b7 '+fmt(st.dist,1)+' km \u2014 precio exacto de esta estaci\u00f3n';
+    hint.classList.add('live');
+    document.querySelectorAll('.station').forEach(function(el){ el.style.borderLeft = 'none'; });
+    row.style.borderLeft = '3px solid '+VOLT;
+    render();
+  });
 
   loadSettings();
   renderCalibration();
