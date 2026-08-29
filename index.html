@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -429,6 +430,24 @@
 
 <script>
 (function(){
+  var CURRENT_VERSION = "2026-08-29-1";
+  (function checkForUpdates(){
+    try{
+      var already = sessionStorage.getItem('atto2_update_check');
+      if(already === CURRENT_VERSION) return; // ya comprobado en esta sesion con esta version
+      fetch('./version.json?_=' + Date.now(), { cache:'no-store' })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          sessionStorage.setItem('atto2_update_check', CURRENT_VERSION);
+          if(d && d.v && d.v !== CURRENT_VERSION){
+            var freshUrl = location.pathname + '?v=' + encodeURIComponent(d.v);
+            location.replace(freshUrl);
+          }
+        })
+        .catch(function(){}); // sin internet o fallo puntual: seguimos con lo que ya cargo
+    }catch(e){}
+  })();
+
   var PRESETS = { ciudad:19, mixto:22, carretera:26 };
   var KEYS = ['fuelPrice','chargerPrice','parkHours','currentSoc','detourKm','sessionKwh',
               'elecConsumption','fuelConsumption','chargerPower','battery','chargeEff',
