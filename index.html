@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Carga vs Gasolina">
+<meta name="theme-color" content="#0E1316">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAADT0lEQVR4nO3bQW4bRxRF0e8gY08MeB0eZ1tZR7aVcZaUgQzFkfSKzW4KrKp/zgoK4MUjqpv88vXb94KP/PbsAzAvcRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA4icRCJg0gcROIgEschP/7+69lHeAJx3NazjBIHA+K4oe1slDgYEMdI59kocTAgjqj5bJQ4GBDHx8xGiYMBcXzAbLwQx1vKeCWOQ/75489nH+EJxPE/ZuNX4iASx3/MxhviIBLHT2bjPXEQiaPKbATiIBKH2YjEQdQ9DrMx0DoOZYy1joOxvnGYjZv6xsFNTeMwG0c0jYMjOsZhNg7qGAcHtYvDbBzXLg6O6xWH2bhLoziUca9GcXCvLnGYjRO6xHFFz7+7VZM4zMY5LeLgnP3jMBun7R8Hp20eh9m4YvM4uGLnOMzGRdvGoYzrto2D6/aMw2w8xJ5x8BAbxmE2HuX3Zx9gAY+tbaHXeLstx+SzsVAZtV8cPNBWcZiNx9oqjpktV0btFMfks7GifeKY2YqzUdvEMfNsLFpG7RHHzGUsbYc4ZrbubNQGcZiNz7N8HDNbejZq9Thmno3Vy6jV4+BTLRyH2fhsC8cxrT3KqHXjmHk2trFqHNPaZjZq0TimnY2dyqhFfyb4wM9g2s5msORyzGmz2ShxPMp+ZVTzOHynjLWO41G2nI0Sx3W7llHiYEAcl2w8GyUOBsRx3t6zUZ3juHiP3b6M6hwHN4njjA6zUeI4oUkZJQ4GxHGfPrNR4rhLqzKqbRzexx7RNI4Tus1GieOghmWUOBgQx209Z6PEcVPbMkocDIhjpPNsVM84POQ4qGMcBzWfjRJHoowSBwPi+IDZeCGOt5TxShxE7eIY32PNxq/axTGgjDfEQSSOn8zGe+KoUkYgDiJxmI2oVxzv77HKGOgVB3dpHYfZGGsdB2N94zAbNzWNQxlHNI2DIxrF8XqPNRsHNYrjhTKOaxcHx/WKw2zc5cvXb9+ffQYm1Ws5uIs4iMRBJA4icRCJg0gcROIgEgeROIjEQSQOInEQiYNIHETiIBIHkTiIxEEkDiJxEImDSBxE4iASB5E4iMRBJA6ifwETRJHZgLD9PAAAAABJRU5ErkJggg==">
+<title>Carga vs Gasolina</title>
+<style>
+  :root{
+    --bg:#0E1316; --surface:#171D21; --surface2:#1F262B; --panel:#141A1E;
+    --line:#262E33; --ink:#EDF2F4; --muted:#90A0AA; --dim:#657178; --sub:#B8C4CC;
+    --volt:#3ED9A3; --flame:#FF9452; --amber:#E8C547;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    -webkit-font-smoothing:antialiased; overscroll-behavior-y:contain; }
+  .num{ font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+  .wrap{ max-width:480px; margin:0 auto;
+    padding: max(22px, env(safe-area-inset-top)) 16px max(32px, env(safe-area-inset-bottom)); }
+  .eyebrow{ font-size:11px; letter-spacing:.12em; color:var(--volt); font-weight:700; margin-bottom:6px; }
+  h1{ font-size:26px; font-weight:800; margin:0 0 6px; letter-spacing:-0.01em; }
+  .subtitle{ font-size:13.5px; color:var(--muted); margin:0 0 18px; line-height:1.5; }
+
+  .mode-switch{ display:flex; gap:6px; background:var(--panel); border:1px solid var(--line);
+    border-radius:12px; padding:5px; margin-bottom:18px; }
+  .mode-btn{ flex:1; padding:10px 6px; border-radius:8px; border:none; background:transparent;
+    color:var(--muted); font-size:12.5px; font-weight:700; line-height:1.3; }
+  .mode-btn.active{ background:var(--volt); color:#0E1316; }
+
+  .hero{ border:1px solid var(--volt); border-radius:16px; padding:20px 18px; margin-bottom:20px;
+    background:linear-gradient(135deg, rgba(62,217,163,0.14), rgba(23,29,33,0)); }
+  .hero-label{ font-size:12.5px; color:var(--muted); margin-bottom:6px; }
+  .hero-number{ font-size:42px; font-weight:700; line-height:1.1; }
+  .hero-unit{ font-size:16px; color:var(--muted); font-family:-apple-system, sans-serif; }
+  .badge{ display:inline-block; margin-top:12px; padding:6px 12px; border-radius:999px;
+    font-size:12px; font-weight:800; letter-spacing:.03em; background:var(--volt); color:#0E1316; }
+  .hero-sub{ font-size:13px; color:var(--sub); margin-top:12px; line-height:1.5; }
+
+  .section-title{ font-size:13px; font-weight:700; color:var(--muted); text-transform:uppercase;
+    letter-spacing:.06em; margin:0 0 10px; }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+  @media (max-width:380px){ .field-row{ grid-template-columns:1fr; } }
+
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12.5px; color:var(--sub); margin-bottom:6px; }
+  .field-input-wrap{ display:flex; align-items:center; background:var(--surface2);
+    border:1px solid #2A333A; border-radius:10px; padding:9px 12px; }
+  .field-input-wrap.highlight{ border-color:var(--volt); }
+  .field-input-wrap input{ flex:1; background:transparent; border:none; color:var(--ink);
+    font-size:16px; font-weight:600; outline:none; width:100%; min-width:0; }
+  .field-unit{ font-size:12px; color:var(--muted); margin-left:8px; white-space:nowrap; }
+  .field-hint{ font-size:11px; color:var(--dim); margin-top:5px; line-height:1.4; }
+  .field-hint.live{ color:var(--volt); }
+  .field-hint.warn{ color:var(--amber); }
+
+  .refresh-btn{ width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+    background:var(--surface2); border:1px dashed var(--volt); border-radius:10px; padding:11px 14px;
+    color:var(--volt); font-size:13px; font-weight:700; margin-bottom:8px; }
+  .refresh-btn:active{ transform:translateY(1px); }
+  .refresh-btn[disabled]{ opacity:.6; }
+  .refresh-note{ font-size:11px; color:var(--dim); line-height:1.5; margin:0 0 18px; }
+
+  .station-list{ margin-bottom:18px; display:none; }
+  .station{ display:flex; justify-content:space-between; align-items:center; padding:9px 11px;
+    background:var(--surface2); border-radius:9px; margin-bottom:6px; }
+  .station .n{ font-size:12.5px; color:var(--sub); }
+  .station .d{ font-size:10.5px; color:var(--dim); margin-top:2px; }
+  .station .p{ font-size:13.5px; font-weight:700; color:var(--ink); }
+
+  .gauge-card{ background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:16px 16px 12px; margin-bottom:20px; }
+  .gauge-labels{ display:flex; justify-content:space-between; font-size:10.5px; color:var(--dim);
+    margin-bottom:8px; font-family:ui-monospace, monospace; }
+  .gauge-track{ position:relative; height:10px; border-radius:6px; margin-bottom:10px; }
+  .gauge-band{ position:absolute; top:-4px; bottom:-4px; background:rgba(255,255,255,0.18); border-radius:4px; }
+  .gauge-threshold{ position:absolute; top:-6px; bottom:-6px; width:2px; background:var(--ink); }
+  .gauge-marker{ position:absolute; top:-9px; transform:translateX(-50%); }
+  .gauge-marker-dot{ width:16px; height:16px; border-radius:50%; background:var(--bg); border:3px solid var(--volt); }
+  .gauge-footnote{ font-size:10.5px; color:var(--dim); line-height:1.5; margin-top:6px; }
+
+  .card{ background:var(--surface); border:1px solid var(--line); border-radius:14px;
+    padding:14px 16px; margin-bottom:20px; }
+  .row{ display:flex; justify-content:space-between; align-items:center; padding:6px 0; }
+  .row .l{ font-size:13px; color:var(--sub); }
+  .row .v{ font-size:13.5px; color:var(--ink); }
+  .row.strong .l{ font-size:13.5px; color:var(--ink); font-weight:700; }
+  .row.strong .v{ font-size:16px; font-weight:700; }
+  .row.sub .l, .row.sub .v{ font-size:12px; color:var(--dim); }
+  .divider{ height:1px; background:var(--line); margin:6px 0; }
+  .note-inline{ font-size:11.5px; color:var(--dim); line-height:1.55; margin-top:8px; }
+
+  .fill-bar{ height:8px; background:var(--surface2); border-radius:5px; overflow:hidden;
+    margin:10px 0 6px; position:relative; }
+  .fill-now{ position:absolute; left:0; top:0; bottom:0; background:#33564C; }
+  .fill-gain{ position:absolute; top:0; bottom:0; background:var(--volt); }
+  .fill-legend{ font-size:10.5px; color:var(--dim); }
+
+  .settings-toggle{ width:100%; display:flex; justify-content:space-between; align-items:center;
+    background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:13px 16px;
+    color:var(--ink); font-size:13.5px; font-weight:700; margin-bottom:12px; }
+  .settings-toggle .chev{ transition:transform .15s; }
+  .settings-toggle.open .chev{ transform:rotate(180deg); }
+  .settings-panel{ background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px; margin-bottom:20px; display:none; }
+  .settings-panel.open{ display:block; }
+  .settings-sub{ font-size:11.5px; font-weight:700; color:var(--muted); text-transform:uppercase;
+    letter-spacing:.05em; margin:18px 0 10px; padding-top:14px; border-top:1px solid var(--line); }
+  .settings-sub.first{ margin-top:0; padding-top:0; border-top:none; }
+
+  .preset-row{ display:flex; gap:8px; margin-bottom:16px; }
+  .preset-btn{ flex:1; padding:8px 0; border-radius:8px; border:1px solid #2A333A;
+    background:var(--surface2); color:var(--sub); font-size:12.5px; font-weight:700; }
+  .preset-btn.active{ background:var(--volt); color:#0E1316; border-color:var(--volt); }
+
+  .compare-row{ display:grid; grid-template-columns:1fr 90px; gap:8px; margin-bottom:8px; }
+  .compare-row input{ background:var(--surface2); border:1px solid #2A333A; border-radius:8px;
+    padding:9px 10px; color:var(--ink); font-size:13px; }
+  .compare-row input[type="number"]{ text-align:right; }
+  .compare-item{ display:flex; justify-content:space-between; align-items:center; padding:9px 10px;
+    border-radius:9px; background:var(--surface2); margin-bottom:6px; border-left:3px solid transparent; }
+  .compare-item .name{ font-size:12.5px; color:var(--sub); }
+  .compare-item .price{ font-size:13px; font-weight:700; }
+  .compare-item .tag{ font-size:10px; font-weight:800; padding:2px 7px; border-radius:999px; margin-left:6px; }
+  .compare-empty{ font-size:11.5px; color:var(--dim); text-align:center; padding:6px 0; }
+
+  .calib{ display:flex; align-items:center; gap:12px; }
+  .calib-dot{ width:12px; height:12px; border-radius:50%; background:var(--volt); flex-shrink:0; }
+  .calib-main{ font-size:13.5px; font-weight:700; }
+  .calib-sub{ font-size:11.5px; color:var(--dim); margin-top:3px; line-height:1.4; }
+
+  .hist-summary{ display:flex; gap:10px; margin-bottom:12px; }
+  .hist-stat{ flex:1; background:var(--surface2); border-radius:10px; padding:10px 12px; }
+  .hist-stat .n{ font-size:19px; font-weight:700; }
+  .hist-stat .l{ font-size:10.5px; color:var(--dim); margin-top:2px; }
+  .hist-entry{ display:flex; justify-content:space-between; font-size:12px; padding:7px 0;
+    border-bottom:1px solid var(--line); color:var(--sub); }
+  .hist-entry:last-child{ border-bottom:none; }
+
+  .btn-secondary{ flex:1; background:var(--surface2); border:1px solid #2A333A; border-radius:9px;
+    padding:10px; color:var(--sub); font-size:12.5px; font-weight:700; }
+  .btn-save{ width:100%; background:var(--volt); border:none; border-radius:9px; padding:11px;
+    color:#0E1316; font-size:12.5px; font-weight:800; margin-top:10px; }
+  .btn-clear{ background:transparent; border:1px solid #3A2A2A; border-radius:9px; padding:10px 14px;
+    color:var(--flame); font-size:12px; font-weight:700; margin-top:12px; }
+
+  .methodology{ border-top:1px solid var(--line); padding-top:16px; margin-top:4px; }
+  .methodology-title{ font-size:12px; font-weight:700; color:var(--muted); margin-bottom:6px; }
+  .methodology p{ font-size:11.5px; color:var(--dim); line-height:1.6; margin:0 0 10px; }
+
+  button{ font-family:inherit; cursor:pointer; -webkit-appearance:none; appearance:none; }
+  input[type="number"]{ -moz-appearance:textfield; }
+  .hidden{ display:none !important; }
+  @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">BYD ATTO 2 DM-i &middot; BOOST</div>
+  <h1>&iquest;Compensa cargar aqu&iacute;?</h1>
+  <p class="subtitle">Calculadora de equilibrio entre electricidad p&uacute;blica y gasolina.</p>
+
+  <div class="mode-switch">
+    <button class="mode-btn active" id="mode-parked">Aparcada aqu&iacute;<br>igualmente</button>
+    <button class="mode-btn" id="mode-trip">Parada solo<br>para cargar</button>
+  </div>
+
+  <div class="hero" id="hero">
+    <div class="hero-label">Precio m&aacute;ximo que deber&iacute;as pagar en el cargador</div>
+    <div class="hero-number num" id="hero-number">0,000<span class="hero-unit"> &euro;/kWh</span></div>
+    <div class="badge" id="badge">COMPENSA CARGAR AQU&Iacute;</div>
+    <div class="hero-sub" id="hero-sub"></div>
+  </div>
+
+  <div class="section-title">Datos de ahora mismo</div>
+  <div class="field-row">
+    <div class="field">
+      <label>Gasolina en tu zona</label>
+      <div class="field-input-wrap">
+        <input class="num" id="inp-fuelPrice" type="number" inputmode="decimal" step="0.01" value="1.744">
+        <span class="field-unit">&euro;/L</span>
+      </div>
+      <div class="field-hint" id="fuel-hint">Media Madrid, sem. 7-13 ago 2026</div>
+    </div>
+    <div class="field">
+      <label>Precio de este cargador</label>
+      <div class="field-input-wrap highlight">
+        <input class="num" id="inp-chargerPrice" type="number" inputmode="decimal" step="0.01" value="0.30">
+        <span class="field-unit">&euro;/kWh</span>
+      </div>
+      <div class="field-hint">El que ves en la app del punto de carga</div>
+    </div>
+  </div>
+
+  <button class="refresh-btn" id="btn-refresh">
+    <span style="font-size:15px;line-height:1;">&#8635;</span>
+    <span id="refresh-btn-label">Precio real de gasolineras cercanas</span>
+  </button>
+  <p class="refresh-note" id="refresh-note">Consulta la API oficial del Ministerio, que publica a diario el precio de cada gasolinera de Espa&ntilde;a. Usa tu ubicaci&oacute;n para quedarse con las m&aacute;s cercanas.</p>
+
+  <div class="station-list" id="station-list"></div>
+
+  <!-- MODO APARCADA -->
+  <div id="block-parked">
+    <div class="section-title">Cu&aacute;nto tiempo estar&aacute;s aqu&iacute;</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Tiempo aparcada</label>
+        <div class="field-input-wrap highlight">
+          <input class="num" id="inp-parkHours" type="number" inputmode="decimal" step="0.25" value="1.5">
+          <span class="field-unit">horas</span>
+        </div>
+        <div class="field-hint">Compra, gimnasio, trabajo...</div>
+      </div>
+      <div class="field">
+        <label>Bater&iacute;a actual</label>
+        <div class="field-input-wrap">
+          <input class="num" id="inp-currentSoc" type="number" inputmode="decimal" step="5" value="30">
+          <span class="field-unit">%</span>
+        </div>
+        <div class="field-hint">Lo que marca el coche ahora</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row strong"><span class="l">Cargar&aacute;s</span><span class="v num" id="pk-kwh">&mdash;</span></div>
+      <div class="fill-bar">
+        <div class="fill-now" id="fill-now"></div>
+        <div class="fill-gain" id="fill-gain"></div>
+      </div>
+      <div class="fill-legend" id="fill-legend">&mdash;</div>
+      <div class="divider"></div>
+      <div class="row"><span class="l">Km el&eacute;ctricos que ganas</span><span class="v num" id="pk-km">&mdash;</span></div>
+      <div class="row"><span class="l">Coste de la sesi&oacute;n</span><span class="v num" id="pk-cost">&mdash;</span></div>
+      <div class="row"><span class="l">Te habr&iacute;a costado en gasolina</span><span class="v num" id="pk-equiv">&mdash;</span></div>
+      <div class="divider"></div>
+      <div class="row strong"><span class="l" id="pk-savings-label">Ahorras enchufando</span><span class="v num" id="pk-savings">&mdash;</span></div>
+      <div class="note-inline" id="pk-note"></div>
+      <button class="btn-save" id="btn-save-parked">Guardar esta recarga en mi historial</button>
+    </div>
+  </div>
+
+  <!-- MODO PARADA DEDICADA -->
+  <div id="block-trip" class="hidden">
+    <div class="section-title">Coste de parar a prop&oacute;sito</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Desv&iacute;o hasta el cargador</label>
+        <div class="field-input-wrap">
+          <input class="num" id="inp-detourKm" type="number" inputmode="decimal" step="0.5" value="0">
+          <span class="field-unit">km (solo ida)</span>
+        </div>
+        <div class="field-hint">Km extra sobre tu ruta normal</div>
+      </div>
+      <div class="field">
+        <label>kWh que vas a cargar</label>
+        <div class="field-input-wrap">
+          <input class="num" id="inp-sessionKwh" type="number" inputmode="decimal" step="1" value="12">
+          <span class="field-unit">kWh</span>
+        </div>
+        <div class="field-hint">Estimaci&oacute;n de esta sesi&oacute;n</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="row"><span class="l">Km el&eacute;ctricos que ganas</span><span class="v num" id="tr-km">&mdash;</span></div>
+      <div class="row"><span class="l">Coste de la sesi&oacute;n</span><span class="v num" id="tr-cost">&mdash;</span></div>
+      <div class="row"><span class="l">Te habr&iacute;a costado en gasolina</span><span class="v num" id="tr-equiv">&mdash;</span></div>
+      <div class="row sub" id="tr-row-detour" style="display:none;"><span class="l">Coste del desv&iacute;o (ida y vuelta)</span><span class="v num" id="tr-detour">&mdash;</span></div>
+      <div class="divider"></div>
+      <div class="row strong"><span class="l" id="tr-savings-label">Ahorras en esta parada</span><span class="v num" id="tr-savings">&mdash;</span></div>
+      <div class="divider"></div>
+      <div class="row"><span class="l">Tiempo de carga estimado</span><span class="v num" id="tr-time">&mdash;</span></div>
+      <div class="row"><span class="l">Lo que ganas por hora de espera</span><span class="v num" id="tr-perhour">&mdash;</span></div>
+      <div class="note-inline" id="tr-note"></div>
+      <button class="btn-save" id="btn-save-trip">Guardar esta recarga en mi historial</button>
+    </div>
+  </div>
+
+  <div class="gauge-card">
+    <div class="gauge-labels"><span>0 &euro;</span><span id="gauge-max-label">0,60 &euro;/kWh</span></div>
+    <div class="gauge-track" id="gauge-track">
+      <div class="gauge-band" id="gauge-band"></div>
+      <div class="gauge-threshold" id="gauge-threshold"></div>
+      <div class="gauge-marker" id="gauge-marker"><div class="gauge-marker-dot" id="gauge-marker-dot"></div></div>
+    </div>
+    <div class="gauge-footnote" id="gauge-footnote"></div>
+  </div>
+
+  <div class="section-title">Desglose por cada 100 km</div>
+  <div class="card">
+    <div class="row"><span class="l">Coste en gasolina</span><span class="v num" id="bd-fuel">&mdash;</span></div>
+    <div class="row"><span class="l">Coste en el&eacute;ctrico</span><span class="v num" id="bd-elec">&mdash;</span></div>
+    <div class="divider"></div>
+    <div class="row strong"><span class="l" id="bd-savings-label">Ahorro cargando aqu&iacute;</span><span class="v num" id="bd-savings">&mdash;</span></div>
+    <div class="note-inline" id="breakeven-note"></div>
+  </div>
+
+  <div class="section-title">Calibraci&oacute;n de la bater&iacute;a</div>
+  <div class="card">
+    <div class="calib">
+      <div class="calib-dot" id="calib-dot"></div>
+      <div>
+        <div class="calib-main" id="calib-main">Sin registro todav&iacute;a</div>
+        <div class="calib-sub" id="calib-sub">La bater&iacute;a LFP necesita llegar al 100% una vez por semana para que el sistema recalibre su lectura de carga.</div>
+      </div>
+    </div>
+    <button class="btn-save" id="btn-mark-full">Hoy he cargado al 100%</button>
+  </div>
+
+  <div class="section-title">Tu historial</div>
+  <div class="card">
+    <div class="hist-summary">
+      <div class="hist-stat"><div class="n num" id="hist-count">0</div><div class="l">recargas guardadas</div></div>
+      <div class="hist-stat"><div class="n num" id="hist-total">0,00 &euro;</div><div class="l">ahorro acumulado</div></div>
+    </div>
+    <div class="note-inline" id="hist-projection"></div>
+    <div id="hist-list"><div class="compare-empty">A&uacute;n no has guardado ninguna recarga</div></div>
+    <button class="btn-clear" id="btn-clear-history">Borrar historial</button>
+  </div>
+
+  <div class="section-title">Comparar varios cargadores</div>
+  <div class="card">
+    <div class="compare-row"><input type="text" id="cmp-name-0" placeholder="Cargador 1 (opcional)"><input type="number" id="cmp-price-0" inputmode="decimal" step="0.01" placeholder="&euro;/kWh"></div>
+    <div class="compare-row"><input type="text" id="cmp-name-1" placeholder="Cargador 2 (opcional)"><input type="number" id="cmp-price-1" inputmode="decimal" step="0.01" placeholder="&euro;/kWh"></div>
+    <div class="compare-row"><input type="text" id="cmp-name-2" placeholder="Cargador 3 (opcional)"><input type="number" id="cmp-price-2" inputmode="decimal" step="0.01" placeholder="&euro;/kWh"></div>
+    <div id="compare-results"><div class="compare-empty">Introduce al menos un precio para compararlos</div></div>
+  </div>
+
+  <button class="settings-toggle" id="settings-toggle">
+    <span>Ajustes del veh&iacute;culo y de la carga</span>
+    <span class="chev">&#9662;</span>
+  </button>
+  <div class="settings-panel" id="settings-panel">
+    <div class="settings-sub first">Consumo</div>
+    <div class="preset-row" id="preset-row">
+      <button class="preset-btn" data-preset="ciudad">Ciudad</button>
+      <button class="preset-btn active" data-preset="mixto">Mixto</button>
+      <button class="preset-btn" data-preset="carretera">Carretera</button>
+    </div>
+    <div class="field">
+      <label>Consumo el&eacute;ctrico real</label>
+      <div class="field-input-wrap">
+        <input class="num" id="inp-elecConsumption" type="number" inputmode="decimal" step="0.5" value="22">
+        <span class="field-unit">kWh/100km</span>
+      </div>
+      <div class="field-hint">Afina con tu ordenador de a bordo</div>
+    </div>
+    <div class="field">
+      <label>Consumo en modo h&iacute;brido</label>
+      <div class="field-input-wrap">
+        <input class="num" id="inp-fuelConsumption" type="number" inputmode="decimal" step="0.1" value="5.0">
+        <span class="field-unit">L/100km</span>
+      </div>
+      <div class="field-hint">Con la bater&iacute;a agotada</div>
+    </div>
+
+    <div class="settings-sub">Carga</div>
+    <div class="field-row">
+      <div class="field">
+        <label>Potencia del cargador</label>
+        <div class="field-input-wrap">
+          <input class="num" id="inp-chargerPower" type="number" inputmode="decimal" step="0.1" value="6.6">
+          <span class="field-unit">kW</span>
+        </div>
+        <div class="field-hint">Tu coche admite 6,6 m&aacute;x.</div>
+      </div>
+      <div class="field">
+        <label>Capacidad de bater&iacute;a</label>
+        <div class="field-input-wrap">
+          <input class="num" id="inp-battery" type="number" inputmode="decimal" step="0.5" value="18">
+          <span class="field-unit">kWh</span>
+        </div>
+        <div class="field-hint">Atto 2 DM-i Boost: 18</div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field">
+        <label>Eficiencia de carga AC</label>
+        <div class="field-input-wrap">
+          <input class="num" id="inp-chargeEff" type="number" inputmode="decimal" step="1" value="86">
+          <span class="field-unit">%</span>
+        </div>
+        <div class="field-hint">BYD declara 84&ndash;87%</div>
+      </div>
+      <div class="field">
+        <label>Coste fijo de sesi&oacute;n</label>
+        <div class="field-input-wrap">
+          <input class="num" id="inp-sessionFee" type="number" inputmode="decimal" step="0.1" value="0">
+          <span class="field-unit">&euro;</span>
+        </div>
+        <div class="field-hint">Tarifa de conexi&oacute;n</div>
+      </div>
+    </div>
+
+    <div class="settings-sub">Tu rango de referencia</div>
+    <div class="field-row">
+      <div class="field">
+        <label>L&iacute;mite inferior</label>
+        <div class="field-input-wrap">
+          <input class="num" id="inp-bandLo" type="number" inputmode="decimal" step="0.01" value="0.25">
+          <span class="field-unit">&euro;/kWh</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>L&iacute;mite superior</label>
+        <div class="field-input-wrap">
+          <input class="num" id="inp-bandHi" type="number" inputmode="decimal" step="0.01" value="0.30">
+          <span class="field-unit">&euro;/kWh</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-secondary" id="btn-reset-defaults" style="width:100%; margin-top:6px;">Restablecer valores de f&aacute;brica</button>
+  </div>
+
+  <div class="methodology">
+    <div class="methodology-title">C&oacute;mo se calcula</div>
+    <p>El precio m&aacute;ximo iguala el coste por km en gasolina con el coste por km en el&eacute;ctrico, descontando las p&eacute;rdidas de la carga en AC. En modo <strong>aparcada</strong> el tiempo no se cuenta como coste, porque el coche iba a estar ah&iacute; de todas formas: solo limita cu&aacute;ntos kWh caben. En modo <strong>parada dedicada</strong> s&iacute; se descuenta el desv&iacute;o y se valora la espera.</p>
+    <p>Los precios de gasolina vienen de la API oficial del Ministerio (actualizada a diario). Tus datos se guardan solo en este tel&eacute;fono.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  var PRESETS = { ciudad:19, mixto:22, carretera:26 };
+  var KEYS = ['fuelPrice','chargerPrice','parkHours','currentSoc','detourKm','sessionKwh',
+              'elecConsumption','fuelConsumption','chargerPower','battery','chargeEff',
+              'sessionFee','bandLo','bandHi'];
+  var DEFAULTS = { fuelPrice:1.744, chargerPrice:0.30, parkHours:1.5, currentSoc:30, detourKm:0,
+    sessionKwh:12, elecConsumption:22, fuelConsumption:5.0, chargerPower:6.6, battery:18,
+    chargeEff:86, sessionFee:0, bandLo:0.25, bandHi:0.30 };
+
+  var STORAGE_KEY = 'atto2_calc_v3';
+  var HISTORY_KEY = 'atto2_history_v1';
+  var CALIB_KEY = 'atto2_lastfull_v1';
+  var MODE_KEY = 'atto2_mode_v1';
+
+  var VOLT='#3ED9A3', FLAME='#FF9452', AMBER='#E8C547', EURO='\u20AC';
+
+  var PROVINCES = {
+    'alava':'01','araba':'01','albacete':'02','alicante':'03','alacant':'03','almeria':'04',
+    'avila':'05','badajoz':'06','balears':'07','baleares':'07','barcelona':'08','burgos':'09',
+    'caceres':'10','cadiz':'11','castellon':'12','castello':'12','ciudad real':'13','cordoba':'14',
+    'coruna':'15','cuenca':'16','girona':'17','gerona':'17','granada':'18','guadalajara':'19',
+    'gipuzkoa':'20','guipuzcoa':'20','huelva':'21','huesca':'22','jaen':'23','leon':'24',
+    'lleida':'25','lerida':'25','rioja':'26','lugo':'27','madrid':'28','malaga':'29','murcia':'30',
+    'navarra':'31','nafarroa':'31','ourense':'32','orense':'32','asturias':'33','palencia':'34',
+    'palmas':'35','pontevedra':'36','salamanca':'37','tenerife':'38','cantabria':'39','segovia':'40',
+    'sevilla':'41','soria':'42','tarragona':'43','teruel':'44','toledo':'45','valencia':'46',
+    'valladolid':'47','bizkaia':'48','vizcaya':'48','zamora':'49','zaragoza':'50','ceuta':'51','melilla':'52'
+  };
+
+  var els = {};
+  KEYS.forEach(function(k){ els[k] = document.getElementById('inp-'+k); });
+
+  var mode = 'parked';
+  try{ mode = localStorage.getItem(MODE_KEY) || 'parked'; }catch(e){}
+
+  function num(el){ var v = parseFloat(el.value); return isFinite(v) ? v : 0; }
+  function clamp(v,a,b){ return Math.min(b, Math.max(a, v)); }
+  function fmt(n,d){
+    d = (d===undefined) ? 2 : d;
+    if(!isFinite(n)) return '\u2014';
+    return n.toLocaleString('es-ES',{minimumFractionDigits:d, maximumFractionDigits:d});
+  }
+  function esc(s){
+    return String(s).replace(/[&<>"']/g,function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function norm(s){
+    return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  }
+  function fmtTime(h){
+    if(!isFinite(h)||h<=0) return '\u2014';
+    var m = Math.round(h*60), hh = Math.floor(m/60), mm = m%60;
+    if(hh===0) return mm+' min';
+    if(mm===0) return hh+' h';
+    return hh+' h '+mm+' min';
+  }
+  function haversine(la1,lo1,la2,lo2){
+    var R=6371, dLa=(la2-la1)*Math.PI/180, dLo=(lo2-lo1)*Math.PI/180;
+    var a=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLo/2)*Math.sin(dLo/2);
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+  }
+
+  function loadSettings(){
+    try{
+      var s = JSON.parse(localStorage.getItem(STORAGE_KEY)||'null');
+      if(!s) return;
+      KEYS.forEach(function(k){ if(s[k]!==undefined) els[k].value = s[k]; });
+    }catch(e){}
+  }
+  function saveSettings(){
+    try{
+      var o={}; KEYS.forEach(function(k){ o[k]=num(els[k]); });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(o));
+    }catch(e){}
+  }
+
+  var lastCalc = null;
+
+  function render(){
+    var fuelPrice=num(els.fuelPrice), fuelCons=num(els.fuelConsumption),
+        elecCons=num(els.elecConsumption), chargeEff=num(els.chargeEff),
+        chargerPrice=num(els.chargerPrice), sessionFee=num(els.sessionFee),
+        power=num(els.chargerPower), battery=num(els.battery),
+        bandLo=num(els.bandLo), bandHi=num(els.bandHi);
+
+    var eff = clamp(chargeEff,1,100)/100;
+    var costPerKmFuel = (fuelPrice*fuelCons)/100;
+    var maxBilled = elecCons>0 ? (costPerKmFuel/(elecCons/100))*eff : 0;
+
+    // kWh de la sesion segun modo
+    var sessionKwh, chargeHours, finalSoc = null, currentSoc = 0, capped = false;
+    if(mode === 'parked'){
+      var hours = Math.max(0, num(els.parkHours));
+      currentSoc = clamp(num(els.currentSoc),0,100);
+      var roomKwh = battery*(100-currentSoc)/100;      // energia que cabe EN la bateria
+      var billedForRoom = eff>0 ? roomKwh/eff : 0;     // kWh facturados para llenarla
+      var billedByTime = hours*power;
+      sessionKwh = Math.min(billedByTime, billedForRoom);
+      capped = billedForRoom < billedByTime;
+      chargeHours = power>0 ? sessionKwh/power : 0;
+      var energyIn = sessionKwh*eff;
+      finalSoc = battery>0 ? clamp(currentSoc + (energyIn/battery)*100, 0, 100) : 0;
+    } else {
+      sessionKwh = Math.max(0, num(els.sessionKwh));
+      chargeHours = power>0 ? sessionKwh/power : 0;
+    }
+
+    var feePerKwh = sessionKwh>0 ? sessionFee/sessionKwh : 0;
+    var paid = chargerPrice + feePerKwh;
+    var margin = maxBilled - paid;
+    var compensates = margin >= 0;
+    var tight = Math.abs(margin) < 0.03;
+
+    var usable = sessionKwh*eff;
+    var km = elecCons>0 ? (usable/elecCons)*100 : 0;
+    var sessionCost = chargerPrice*sessionKwh + sessionFee;
+    var equivFuel = costPerKmFuel*km;
+    var gross = equivFuel - sessionCost;
+
+    var detourKm = mode==='trip' ? Math.max(0,num(els.detourKm)) : 0;
+    var detourCost = detourKm*2*costPerKmFuel;
+    var net = gross - detourCost;
+
+    // HERO
+    var accent = compensates ? VOLT : FLAME;
+    document.getElementById('hero-number').innerHTML =
+      fmt(maxBilled,3)+'<span class="hero-unit"> '+EURO+'/kWh</span>';
+    var badge = document.getElementById('badge');
+    badge.textContent = tight ? 'MARGEN MUY AJUSTADO'
+      : (compensates ? 'COMPENSA CARGAR AQU\u00cd' : 'MEJOR REPOSTAR GASOLINA');
+    badge.style.background = tight ? AMBER : accent;
+    var hero = document.getElementById('hero');
+    hero.style.borderColor = accent;
+    hero.style.background = 'linear-gradient(135deg, '+
+      (compensates?'rgba(62,217,163,0.14)':'rgba(255,148,82,0.14)')+', rgba(23,29,33,0))';
+    document.getElementById('hero-sub').innerHTML =
+      'Pagando <span class="num">'+fmt(paid,3)+' '+EURO+'/kWh</span> efectivos, tu margen es '+
+      '<span class="num" style="color:'+accent+'">'+(margin>=0?'+':'')+fmt(margin,3)+' '+EURO+'/kWh</span>';
+
+    // GAUGE
+    var gMax = Math.max(0.6, maxBilled*1.35, paid*1.35, bandHi*1.2);
+    var pT = clamp((maxBilled/gMax)*100,0,100);
+    var pC = clamp((paid/gMax)*100,0,100);
+    var pLo = clamp((bandLo/gMax)*100,0,100);
+    var pHi = clamp((bandHi/gMax)*100,0,100);
+    document.getElementById('gauge-max-label').textContent = fmt(gMax,2)+' '+EURO+'/kWh';
+    document.getElementById('gauge-track').style.background =
+      'linear-gradient(90deg, '+VOLT+' 0%, '+VOLT+' '+pT+'%, '+FLAME+' '+pT+'%, '+FLAME+' 100%)';
+    var band = document.getElementById('gauge-band');
+    band.style.left = pLo+'%'; band.style.width = Math.max(0,pHi-pLo)+'%';
+    document.getElementById('gauge-threshold').style.left = pT+'%';
+    document.getElementById('gauge-marker').style.left = pC+'%';
+    document.getElementById('gauge-marker-dot').style.borderColor = accent;
+    document.getElementById('gauge-footnote').innerHTML =
+      'L\u00ednea = tu l\u00edmite de equilibrio &middot; Banda clara = tu rango ('+fmt(bandLo,2)+
+      '\u2013'+fmt(bandHi,2)+' '+EURO+'/kWh) &middot; Punto = precio actual';
+
+    // BLOQUE SEGUN MODO
+    if(mode === 'parked'){
+      document.getElementById('pk-kwh').textContent = fmt(sessionKwh,1)+' kWh en '+fmtTime(chargeHours);
+      var pctNow = clamp(currentSoc,0,100);
+      var pctGain = clamp((finalSoc||0)-pctNow,0,100);
+      document.getElementById('fill-now').style.width = pctNow+'%';
+      var gainEl = document.getElementById('fill-gain');
+      gainEl.style.left = pctNow+'%'; gainEl.style.width = pctGain+'%';
+      document.getElementById('fill-legend').innerHTML =
+        'Bater\u00eda: '+fmt(pctNow,0)+'% \u2192 <strong style="color:'+VOLT+'">'+fmt(finalSoc||0,0)+'%</strong>'+
+        (capped ? ' (se llena antes de que te vayas)' : '');
+      document.getElementById('pk-km').textContent = '\u2248 '+fmt(km,1)+' km';
+      document.getElementById('pk-cost').textContent = fmt(sessionCost)+' '+EURO;
+      document.getElementById('pk-equiv').textContent = fmt(equivFuel)+' '+EURO;
+      document.getElementById('pk-savings-label').textContent = net>=0 ? 'Ahorras enchufando' : 'Pierdes enchufando';
+      var pkSav = document.getElementById('pk-savings');
+      pkSav.textContent = (net>=0?'+':'')+fmt(net)+' '+EURO;
+      pkSav.style.color = net>=0 ? VOLT : FLAME;
+
+      var pkNote = document.getElementById('pk-note');
+      if(net > 0 && capped){
+        pkNote.innerHTML = 'La bater\u00eda se llena antes de que te vayas: con '+
+          fmtTime(chargeHours)+' te basta. El tiempo de m\u00e1s no suma nada.';
+      } else if(net > 0){
+        pkNote.innerHTML = 'Como ibas a estar aparcada aqu\u00ed igualmente, este ahorro es limpio: '+
+          'no te cuesta tiempo ni desv\u00edo.';
+      } else if(net < 0){
+        pkNote.innerHTML = '<span style="color:'+FLAME+'">A este precio sale m\u00e1s caro que la gasolina</span>, '+
+          'aunque no te cueste tiempo. Mejor no enchufar aqu\u00ed.';
+      } else { pkNote.textContent = ''; }
+
+    } else {
+      document.getElementById('tr-km').textContent = '\u2248 '+fmt(km,1)+' km';
+      document.getElementById('tr-cost').textContent = fmt(sessionCost)+' '+EURO;
+      document.getElementById('tr-equiv').textContent = fmt(equivFuel)+' '+EURO;
+      var rowD = document.getElementById('tr-row-detour');
+      if(detourKm>0){
+        rowD.style.display='';
+        var dEl = document.getElementById('tr-detour');
+        dEl.textContent = '\u2212'+fmt(detourCost)+' '+EURO;
+        dEl.style.color = FLAME;
+      } else { rowD.style.display='none'; }
+      document.getElementById('tr-savings-label').textContent = net>=0 ? 'Ahorras en esta parada' : 'Pierdes en esta parada';
+      var trSav = document.getElementById('tr-savings');
+      trSav.textContent = (net>=0?'+':'')+fmt(net)+' '+EURO;
+      trSav.style.color = net>=0 ? VOLT : FLAME;
+      document.getElementById('tr-time').textContent = fmtTime(chargeHours);
+      var perHour = chargeHours>0 ? net/chargeHours : 0;
+      var phEl = document.getElementById('tr-perhour');
+      phEl.textContent = chargeHours>0 ? ((perHour>=0?'+':'')+fmt(perHour)+' '+EURO+'/h') : '\u2014';
+      phEl.style.color = perHour>=0 ? VOLT : FLAME;
+
+      var trNote = document.getElementById('tr-note');
+      if(detourKm>0 && gross>0 && net<0){
+        trNote.innerHTML = '<span style="color:'+FLAME+'">El desv\u00edo se come todo el ahorro.</span> '+
+          'Sin el rodeo s\u00ed compensar\u00eda ('+fmt(gross)+' '+EURO+').';
+      } else if(chargeHours>0 && net>0 && perHour<1.0){
+        trNote.innerHTML = '<span style="color:'+AMBER+'">Ahorro bajo por hora de espera.</span> '+
+          'Plant\u00e9ate cambiar al modo &laquo;aparcada&raquo; y cargar cuando ya vayas a estar parada.';
+      } else { trNote.textContent=''; }
+    }
+
+    // 100 km
+    var per100Fuel = fuelPrice*fuelCons;
+    var per100Elec = paid*(eff>0?elecCons/eff:0);
+    var sav100 = per100Fuel-per100Elec;
+    document.getElementById('bd-fuel').textContent = fmt(per100Fuel)+' '+EURO;
+    document.getElementById('bd-elec').textContent = fmt(per100Elec)+' '+EURO;
+    document.getElementById('bd-savings-label').textContent = sav100>=0?'Ahorro cargando aqu\u00ed':'Sobrecoste cargando aqu\u00ed';
+    var bdS = document.getElementById('bd-savings');
+    bdS.textContent = (sav100>=0?'+':'')+fmt(sav100)+' '+EURO;
+    bdS.style.color = sav100>=0?VOLT:FLAME;
+
+    var beFuel = (eff>0 && fuelCons>0) ? (paid*elecCons)/(eff*fuelCons) : 0;
+    var beNote = document.getElementById('breakeven-note');
+    if(isFinite(beFuel) && beFuel>0){
+      beNote.innerHTML = 'Con este cargador dejar\u00eda de compensar si la gasolina bajara de '+
+        '<span class="num" style="color:'+AMBER+'">'+fmt(beFuel,3)+' '+EURO+'/L</span>.';
+    } else { beNote.textContent=''; }
+
+    lastCalc = { maxBilled:maxBilled, chargerPrice:chargerPrice, sessionCost:sessionCost, savings:net, km:km };
+    renderCompare(maxBilled);
+    saveSettings();
+  }
+
+  function renderCompare(threshold){
+    var rows = [0,1,2].map(function(i){
+      var n = document.getElementById('cmp-name-'+i).value.trim();
+      var p = parseFloat(document.getElementById('cmp-price-'+i).value);
+      return { name: n || ('Cargador '+(i+1)), price:p };
+    }).filter(function(r){ return isFinite(r.price) && r.price>0; });
+    var out = document.getElementById('compare-results');
+    if(!rows.length){
+      out.innerHTML = '<div class="compare-empty">Introduce al menos un precio para compararlos</div>';
+      return;
+    }
+    rows.sort(function(a,b){ return a.price-b.price; });
+    var best = rows[0];
+    out.innerHTML = rows.map(function(r){
+      var ok = (threshold-r.price)>=0, color = ok?VOLT:FLAME, isBest = (r===best);
+      return '<div class="compare-item" style="border-left-color:'+(isBest?color:'transparent')+'">'+
+        '<span class="name">'+(isBest?'\u2605 ':'')+esc(r.name)+'</span>'+
+        '<span><span class="price num">'+fmt(r.price,2)+' '+EURO+'/kWh</span>'+
+        '<span class="tag" style="background:'+color+';color:#0E1316;">'+(ok?'COMPENSA':'NO')+'</span></span></div>';
+    }).join('');
+  }
+
+  function loadHistory(){ try{ return JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'); }catch(e){ return []; } }
+  function saveHistory(l){ try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(l)); }catch(e){} }
+
+  function renderHistory(){
+    var list = loadHistory();
+    document.getElementById('hist-count').textContent = list.length;
+    var total = list.reduce(function(s,e){ return s+e.savings; },0);
+    var tEl = document.getElementById('hist-total');
+    tEl.textContent = (total>=0?'+':'')+fmt(total)+' '+EURO;
+    tEl.style.color = total>=0?VOLT:FLAME;
+
+    var proj = document.getElementById('hist-projection');
+    if(list.length>=3){
+      var days = Math.max(1,(new Date(list[list.length-1].date)-new Date(list[0].date))/86400000);
+      if(days>=7){
+        var annual = (total/days)*365;
+        proj.innerHTML = 'A este ritmo tu ahorro anual ser\u00eda de unos <span class="num" style="color:'+
+          (annual>=0?VOLT:FLAME)+'">'+fmt(annual,0)+' '+EURO+'</span> ('+Math.round(days)+' d\u00edas de registro).';
+      } else { proj.textContent = 'Guarda recargas durante al menos una semana para ver la proyecci\u00f3n anual.'; }
+    } else { proj.textContent=''; }
+
+    var le = document.getElementById('hist-list');
+    if(!list.length){
+      le.innerHTML = '<div class="compare-empty">A\u00fan no has guardado ninguna recarga</div>';
+      return;
+    }
+    le.innerHTML = list.slice(-6).reverse().map(function(e){
+      var d = new Date(e.date).toLocaleDateString('es-ES',{day:'2-digit',month:'short'});
+      var c = e.savings>=0?VOLT:FLAME;
+      return '<div class="hist-entry"><span>'+d+' &middot; '+fmt(e.chargerPrice,2)+' '+EURO+'/kWh</span>'+
+        '<span class="num" style="color:'+c+'">'+(e.savings>=0?'+':'')+fmt(e.savings)+' '+EURO+'</span></div>';
+    }).join('');
+  }
+
+  function renderCalibration(){
+    var dot=document.getElementById('calib-dot'), main=document.getElementById('calib-main'),
+        sub=document.getElementById('calib-sub'), raw=null;
+    try{ raw = localStorage.getItem(CALIB_KEY); }catch(e){}
+    if(!raw){
+      dot.style.background=AMBER; main.style.color=AMBER;
+      main.textContent='Sin registro todav\u00eda';
+      sub.textContent='La bater\u00eda LFP necesita llegar al 100% una vez por semana para que el sistema recalibre su lectura de carga.';
+      return;
+    }
+    var last=new Date(raw), days=Math.floor((Date.now()-last)/86400000);
+    var ds=last.toLocaleDateString('es-ES',{day:'2-digit',month:'short'});
+    if(days<=7){
+      dot.style.background=VOLT; main.style.color=VOLT;
+      main.textContent = days===0?'Calibrada hoy':'Calibrada hace '+days+(days===1?' d\u00eda':' d\u00edas');
+      sub.textContent='\u00daltima carga completa: '+ds+'. Todo en orden.';
+    } else if(days<=14){
+      dot.style.background=AMBER; main.style.color=AMBER;
+      main.textContent='Toca cargar al 100%';
+      sub.textContent='Han pasado '+days+' d\u00edas desde la \u00faltima carga completa ('+ds+').';
+    } else {
+      dot.style.background=FLAME; main.style.color=FLAME;
+      main.textContent='Calibraci\u00f3n pendiente';
+      sub.textContent='Han pasado '+days+' d\u00edas ('+ds+'). El indicador de bater\u00eda puede estar desviado.';
+    }
+  }
+
+  function flash(btn,txt){
+    var o=btn.textContent; btn.textContent=txt;
+    setTimeout(function(){ btn.textContent=o; },1400);
+  }
+  function saveSession(btn){
+    if(!lastCalc) return;
+    var l=loadHistory();
+    l.push({ date:new Date().toISOString(), chargerPrice:lastCalc.chargerPrice,
+             sessionCost:lastCalc.sessionCost, savings:lastCalc.savings, km:lastCalc.km });
+    saveHistory(l); renderHistory(); flash(btn,'\u2713 Guardada');
+  }
+
+  function setMode(m){
+    mode = m;
+    try{ localStorage.setItem(MODE_KEY,m); }catch(e){}
+    document.getElementById('mode-parked').classList.toggle('active', m==='parked');
+    document.getElementById('mode-trip').classList.toggle('active', m==='trip');
+    document.getElementById('block-parked').classList.toggle('hidden', m!=='parked');
+    document.getElementById('block-trip').classList.toggle('hidden', m!=='trip');
+    render();
+  }
+
+  // ---- precio real desde la API del Ministerio ----
+  function fetchRealPrices(){
+    var btn=document.getElementById('btn-refresh'),
+        label=document.getElementById('refresh-btn-label'),
+        hint=document.getElementById('fuel-hint'),
+        note=document.getElementById('refresh-note'),
+        listEl=document.getElementById('station-list');
+
+    function reset(){ btn.disabled=false; label.textContent='Precio real de gasolineras cercanas'; }
+    function fail(msg, extra){
+      reset();
+      note.innerHTML = '<span style="color:'+AMBER+'">'+msg+'</span>'+(extra?' '+extra:'')+' Puedes introducir el precio a mano, o '+
+        '<a href="https://geoportalgasolineras.es/geoportal-instalaciones/Inicio" target="_blank" '+
+        'rel="noopener" style="color:'+VOLT+'">consultarlo en el Geoportal del Ministerio</a>.';
+    }
+    function stationPrice(s){
+      var keys=['Precio Gasolina 95 E5','Precio Gasolina 95 E10','Precio Gasolina 95 E5 Premium','Precio Gasolina 98 E5','Precio Gasolina 98 E10'];
+      for(var i=0;i<keys.length;i++){
+        var p=parseFloat(String(s[keys[i]]||'').replace(',','.'));
+        if(isFinite(p)&&p>0) return { price:p, grade:keys[i] };
+      }
+      return null;
+    }
+
+    if(!navigator.geolocation){ fail('Tu navegador no permite geolocalizaci\u00f3n.'); return; }
+    btn.disabled=true; label.textContent='Localizando...';
+
+    navigator.geolocation.getCurrentPosition(function(pos){
+      var lat=pos.coords.latitude, lon=pos.coords.longitude, acc=pos.coords.accuracy;
+      label.textContent='Buscando provincia...';
+      fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+lat+'&lon='+lon+'&zoom=8')
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          var a=(d&&d.address)||{};
+          var cand=[a.province,a.county,a.state,a.region].filter(Boolean).map(norm);
+          var code=null;
+          for(var i=0;i<cand.length && !code;i++){
+            for(var key in PROVINCES){
+              if(cand[i].indexOf(key)!==-1){ code=PROVINCES[key]; break; }
+            }
+          }
+          if(!code) throw new Error('no-province');
+          label.textContent='Consultando Ministerio...';
+          return fetch('https://sedeaplicaciones.minetur.gob.es/ServiciosRESTCarburantes/PreciosCarburantes/EstacionesTerrestres/FiltroProvincia/'+code);
+        })
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          var list=(data&&data.ListaEESSPrecio)||[];
+          if(!list.length) throw new Error('empty-province');
+
+          var withCoords=[];
+          for(var i=0;i<list.length;i++){
+            var s=list[i];
+            var pr=stationPrice(s);
+            if(!pr) continue;
+            var sla=parseFloat(String(s['Latitud']||'').replace(',','.'));
+            var slo=parseFloat(String(s['Longitud (WGS84)']||'').replace(',','.'));
+            if(!isFinite(sla)||!isFinite(slo)) continue;
+            withCoords.push({ price:pr.price, grade:pr.grade, dist:haversine(lat,lon,sla,slo),
+              name:s['Rótulo']||s['Rotulo']||'Gasolinera', addr:s['Dirección']||s['Direccion']||'' });
+          }
+          if(!withCoords.length) throw new Error('no-coords');
+
+          // radio progresivo: si no hay nada cerca, se ampl\u00eda en vez de rendirse
+          var radii=[8,20,50,999999], near=[], usedRadius=0;
+          for(var r=0;r<radii.length;r++){
+            near = withCoords.filter(function(x){ return x.dist<=radii[r]; });
+            if(near.length){ usedRadius=radii[r]; break; }
+          }
+          if(!near.length) throw new Error('no-stations');
+
+          near.sort(function(a,b){ return a.price-b.price; });
+          var top=near.slice(0,4);
+          var avg=near.reduce(function(s,x){ return s+x.price; },0)/near.length;
+          var usesFallbackGrade = top.some(function(x){ return x.grade!=='Precio Gasolina 95 E5'; });
+
+          els.fuelPrice.value = avg.toFixed(3);
+          hint.textContent = usedRadius>=999999
+            ? 'Media de '+near.length+' gasolineras de tu provincia (ninguna a menos de 50 km)'
+            : 'Media de '+near.length+' gasolineras a menos de '+usedRadius+' km';
+          hint.classList.add('live');
+          note.innerHTML = 'Datos oficiales del Ministerio'+(data.Fecha ? ' \u2014 '+esc(data.Fecha) : '')+
+            (usesFallbackGrade ? '. Alguna estaci\u00f3n mostrada no vende 95 E5 est\u00e1ndar; se indica el grado usado.' : '.');
+
+          listEl.style.display='block';
+          listEl.innerHTML = '<div class="section-title">M\u00e1s baratas cerca de ti</div>'+
+            top.map(function(s){
+              var gradeNote = s.grade!=='Precio Gasolina 95 E5' ? ' \u00b7 '+esc(s.grade.replace('Precio ','')) : '';
+              return '<div class="station"><div><div class="n">'+esc(s.name)+'</div>'+
+                '<div class="d">'+esc(s.addr)+' \u00b7 '+fmt(s.dist,1)+' km'+gradeNote+'</div></div>'+
+                '<div class="p num">'+fmt(s.price,3)+' '+EURO+'</div></div>';
+            }).join('')+
+            '<div class="field-hint" style="margin-top:4px;">Toca un precio y c\u00e1mbialo arriba si vas a repostar en una concreta.</div>';
+
+          render(); reset();
+        })
+        .catch(function(err){
+          var accTxt = (typeof acc==='number') ? ' (precisi\u00f3n GPS: \u00b1'+Math.round(acc)+' m)' : '';
+          if(err && err.message==='no-province') fail('No he podido identificar tu provincia a partir de tu ubicaci\u00f3n'+accTxt+'.');
+          else if(err && err.message==='empty-province') fail('El Ministerio no ha devuelto datos para tu provincia ahora mismo.');
+          else if(err && err.message==='no-coords') fail('Los datos han llegado pero sin coordenadas v\u00e1lidas; puede ser un problema temporal del servicio.');
+          else if(err && err.message==='no-stations') fail('No hay ninguna gasolinera con precio de 95 en toda tu provincia'+accTxt+', lo cual es muy raro \u2014 puede que la ubicaci\u00f3n detectada est\u00e9 mal.');
+          else fail('El servicio del Ministerio no ha respondido (puede bloquear peticiones desde el navegador).');
+        });
+    }, function(){ fail('No has dado permiso de ubicaci\u00f3n.'); }, { timeout:8000 });
+  }
+
+  // ---- eventos ----
+  KEYS.forEach(function(k){ els[k].addEventListener('input', render); });
+  [0,1,2].forEach(function(i){
+    document.getElementById('cmp-name-'+i).addEventListener('input', function(){ if(lastCalc) renderCompare(lastCalc.maxBilled); });
+    document.getElementById('cmp-price-'+i).addEventListener('input', function(){ if(lastCalc) renderCompare(lastCalc.maxBilled); });
+  });
+  document.getElementById('mode-parked').addEventListener('click', function(){ setMode('parked'); });
+  document.getElementById('mode-trip').addEventListener('click', function(){ setMode('trip'); });
+  document.getElementById('btn-save-parked').addEventListener('click', function(){ saveSession(this); });
+  document.getElementById('btn-save-trip').addEventListener('click', function(){ saveSession(this); });
+  document.getElementById('btn-mark-full').addEventListener('click', function(){
+    try{ localStorage.setItem(CALIB_KEY,new Date().toISOString()); }catch(e){}
+    renderCalibration(); flash(this,'\u2713 Registrado');
+  });
+  document.getElementById('btn-clear-history').addEventListener('click', function(){
+    if(!confirm('\u00bfBorrar todo el historial de recargas guardadas?')) return;
+    saveHistory([]); renderHistory();
+  });
+  document.getElementById('preset-row').addEventListener('click', function(e){
+    var b=e.target.closest('.preset-btn'); if(!b) return;
+    els.elecConsumption.value = PRESETS[b.getAttribute('data-preset')];
+    document.querySelectorAll('.preset-btn').forEach(function(x){ x.classList.toggle('active',x===b); });
+    render();
+  });
+  els.elecConsumption.addEventListener('input', function(){
+    document.querySelectorAll('.preset-btn').forEach(function(x){ x.classList.remove('active'); });
+  });
+  var tg=document.getElementById('settings-toggle'), pn=document.getElementById('settings-panel');
+  tg.addEventListener('click', function(){ pn.classList.toggle('open'); tg.classList.toggle('open'); });
+  document.getElementById('btn-reset-defaults').addEventListener('click', function(){
+    if(!confirm('\u00bfRestablecer todos los ajustes a los valores de f\u00e1brica?')) return;
+    KEYS.forEach(function(k){ els[k].value = DEFAULTS[k]; });
+    document.querySelectorAll('.preset-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-preset')==='mixto');
+    });
+    render();
+  });
+  document.getElementById('btn-refresh').addEventListener('click', fetchRealPrices);
+
+  loadSettings();
+  renderCalibration();
+  renderHistory();
+  setMode(mode);
+})();
+</script>
+</body>
+</html>
