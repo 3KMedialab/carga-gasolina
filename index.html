@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -168,7 +167,7 @@
   <p class="subtitle">Calculadora de equilibrio entre electricidad p&uacute;blica y gasolina.</p>
 
   <div class="mode-switch">
-    <button class="mode-btn active" id="mode-parked">Aparcada aqu&iacute;<br>igualmente</button>
+    <button class="mode-btn active" id="mode-parked">Aparcado aqu&iacute;<br>igualmente</button>
     <button class="mode-btn" id="mode-trip">Parada solo<br>para cargar</button>
   </div>
 
@@ -198,6 +197,14 @@
       <div class="field-hint">El que ves en la app del punto de carga</div>
     </div>
   </div>
+  <div class="field">
+    <label>Potencia de este cargador</label>
+    <div class="field-input-wrap highlight">
+      <input class="num" id="inp-chargerPower" type="number" inputmode="decimal" step="0.1" value="6.6">
+      <span class="field-unit">kW</span>
+    </div>
+    <div class="field-hint">La del punto en el que est&aacute;s, no la del coche. Muchos p&uacute;blicos son de 3,7 u 11 kW; tu coche no pasa de 6,6</div>
+  </div>
 
   <button class="refresh-btn" id="btn-refresh">
     <span style="font-size:15px;line-height:1;">&#8635;</span>
@@ -212,7 +219,7 @@
     <div class="section-title">Cu&aacute;nto tiempo estar&aacute;s aqu&iacute;</div>
     <div class="field-row">
       <div class="field">
-        <label>Tiempo aparcada</label>
+        <label>Tiempo aparcado</label>
         <div class="field-input-wrap highlight">
           <input class="num" id="inp-parkHours" type="number" inputmode="decimal" step="0.25" value="1.5">
           <span class="field-unit">horas</span>
@@ -365,14 +372,6 @@
     <div class="settings-sub">Carga</div>
     <div class="field-row">
       <div class="field">
-        <label>Potencia del cargador</label>
-        <div class="field-input-wrap">
-          <input class="num" id="inp-chargerPower" type="number" inputmode="decimal" step="0.1" value="6.6">
-          <span class="field-unit">kW</span>
-        </div>
-        <div class="field-hint">Tu coche admite 6,6 m&aacute;x.</div>
-      </div>
-      <div class="field">
         <label>Capacidad de bater&iacute;a</label>
         <div class="field-input-wrap">
           <input class="num" id="inp-battery" type="number" inputmode="decimal" step="0.5" value="18">
@@ -380,8 +379,6 @@
         </div>
         <div class="field-hint">Atto 2 DM-i Boost: 18</div>
       </div>
-    </div>
-    <div class="field-row">
       <div class="field">
         <label>Eficiencia de carga AC</label>
         <div class="field-input-wrap">
@@ -390,14 +387,14 @@
         </div>
         <div class="field-hint">BYD declara 84&ndash;87%</div>
       </div>
-      <div class="field">
-        <label>Coste fijo de sesi&oacute;n</label>
-        <div class="field-input-wrap">
-          <input class="num" id="inp-sessionFee" type="number" inputmode="decimal" step="0.1" value="0">
-          <span class="field-unit">&euro;</span>
-        </div>
-        <div class="field-hint">Tarifa de conexi&oacute;n</div>
+    </div>
+    <div class="field">
+      <label>Coste fijo de sesi&oacute;n</label>
+      <div class="field-input-wrap">
+        <input class="num" id="inp-sessionFee" type="number" inputmode="decimal" step="0.1" value="0">
+        <span class="field-unit">&euro;</span>
       </div>
+      <div class="field-hint">Tarifa de conexi&oacute;n, si la hay</div>
     </div>
 
     <div class="settings-sub">Tu rango de referencia</div>
@@ -423,14 +420,14 @@
 
   <div class="methodology">
     <div class="methodology-title">C&oacute;mo se calcula</div>
-    <p>El precio m&aacute;ximo iguala el coste por km en gasolina con el coste por km en el&eacute;ctrico, descontando las p&eacute;rdidas de la carga en AC. En modo <strong>aparcada</strong> el tiempo no se cuenta como coste, porque el coche iba a estar ah&iacute; de todas formas: solo limita cu&aacute;ntos kWh caben. En modo <strong>parada dedicada</strong> s&iacute; se descuenta el desv&iacute;o y se valora la espera.</p>
+    <p>El precio m&aacute;ximo iguala el coste por km en gasolina con el coste por km en el&eacute;ctrico, descontando las p&eacute;rdidas de la carga en AC. En modo <strong>aparcado</strong> el tiempo no se cuenta como coste, porque el coche iba a estar ah&iacute; de todas formas: solo limita cu&aacute;ntos kWh caben. En modo <strong>parada dedicada</strong> s&iacute; se descuenta el desv&iacute;o y se valora la espera.</p>
     <p>Los precios de gasolina vienen de la API oficial del Ministerio (actualizada a diario). Tus datos se guardan solo en este tel&eacute;fono.</p>
   </div>
 </div>
 
 <script>
 (function(){
-  var CURRENT_VERSION = "2026-08-29-1";
+  var CURRENT_VERSION = "2026-08-29-2";
   (function checkForUpdates(){
     try{
       var already = sessionStorage.getItem('atto2_update_check');
@@ -630,7 +627,7 @@
         pkNote.innerHTML = 'La bater\u00eda se llena antes de que te vayas: con '+
           fmtTime(chargeHours)+' te basta. El tiempo de m\u00e1s no suma nada.';
       } else if(net > 0){
-        pkNote.innerHTML = 'Como ibas a estar aparcada aqu\u00ed igualmente, este ahorro es limpio: '+
+        pkNote.innerHTML = 'Como ibas a estar aparcado aqu\u00ed igualmente, este ahorro es limpio: '+
           'no te cuesta tiempo ni desv\u00edo.';
       } else if(net < 0){
         pkNote.innerHTML = '<span style="color:'+FLAME+'">A este precio sale m\u00e1s caro que la gasolina</span>, '+
@@ -664,7 +661,7 @@
           'Sin el rodeo s\u00ed compensar\u00eda ('+fmt(gross)+' '+EURO+').';
       } else if(chargeHours>0 && net>0 && perHour<1.0){
         trNote.innerHTML = '<span style="color:'+AMBER+'">Ahorro bajo por hora de espera.</span> '+
-          'Plant\u00e9ate cambiar al modo &laquo;aparcada&raquo; y cargar cuando ya vayas a estar parada.';
+          'Plant\u00e9ate cambiar al modo &laquo;aparcado&raquo; y cargar cuando ya vayas a estar parado.';
       } else { trNote.textContent=''; }
     }
 
@@ -867,9 +864,12 @@
           }
           if(!near.length) throw new Error('no-stations');
 
-          var cheapestPrice = near.reduce(function(m,x){ return Math.min(m,x.price); }, Infinity);
           near.sort(function(a,b){ return a.dist-b.dist; });
-          var top=near.slice(0,5);
+          var nearest = near.slice(0,5);
+          var cheapest = near.reduce(function(best,x){ return (!best || x.price<best.price) ? x : best; }, null);
+          var top = nearest.slice();
+          if(cheapest && top.indexOf(cheapest)===-1){ top.push(cheapest); }
+          top.sort(function(a,b){ return a.dist-b.dist; });
           var avg=near.reduce(function(s,x){ return s+x.price; },0)/near.length;
           var usesFallbackGrade = top.some(function(x){ return x.grade!=='Precio Gasolina 95 E5'; });
 
@@ -886,7 +886,7 @@
           listEl.innerHTML = '<div class="section-title">Gasolineras m\u00e1s cercanas</div>'+
             top.map(function(s,idx){
               var gradeNote = s.grade!=='Precio Gasolina 95 E5' ? ' \u00b7 '+esc(s.grade.replace('Precio ','')) : '';
-              var cheapTag = s.price===cheapestPrice ? ' <span class="tag" style="background:'+VOLT+';color:#0E1316;">M\u00c1S BARATA</span>' : '';
+              var cheapTag = (s===cheapest) ? ' <span class="tag" style="background:'+VOLT+';color:#0E1316;">M\u00c1S BARATA</span>' : '';
               return '<div class="station" data-idx="'+idx+'"><div><div class="n">'+esc(s.name)+cheapTag+'</div>'+
                 '<div class="d">'+esc(s.addr)+' \u00b7 '+fmt(s.dist,1)+' km'+gradeNote+'</div></div>'+
                 '<div class="p num">'+fmt(s.price,3)+' '+EURO+'</div></div>';
