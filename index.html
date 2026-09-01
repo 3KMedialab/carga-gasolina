@@ -175,7 +175,19 @@
   .btn-primary{ width:100%; background:var(--ink); border:none; border-radius:8px; padding:13px;
     color:var(--bg); font-size:14px; font-weight:500; }
 
+  .wrap-select{ padding:0; }
+  .sel{ flex:1; background:transparent; border:none; color:var(--ink); font-size:15px;
+    font-weight:500; outline:none; padding:9px 11px; font-family:inherit; }
+  .ta{ flex:1; background:transparent; border:none; color:var(--ink); font-size:15px;
+    font-weight:500; outline:none; resize:none; font-family:inherit; line-height:1.45; }
+  .wrap-ta{ align-items:flex-start; }
+  .note-box{ font-size:12px; color:var(--sub); background:var(--panel); border-radius:8px;
+    padding:10px 12px; margin:-6px 0 14px; line-height:1.45; white-space:pre-wrap; }
+  .cold-btn{ width:100%; text-align:left; padding:10px 12px; margin-bottom:8px; }
+  .hint-tight{ margin:0 0 16px; }
+  .hint-cons{ margin:-8px 0 14px; }
   button{ font-family:inherit; cursor:pointer; -webkit-appearance:none; appearance:none; }
+  select{ -webkit-appearance:none; appearance:none; }
   input[type="number"]{ -moz-appearance:textfield; }
   .hidden{ display:none !important; }
   @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
@@ -237,6 +249,18 @@
     </div>
 
     <div class="field">
+      <label>Tipo de bater&iacute;a</label>
+      <div class="field-input-wrap wrap-select">
+        <select id="ov-chem" class="sel">
+          <option value="unknown">No lo s&eacute;</option>
+          <option value="lfp">LFP (litio-ferrofosfato)</option>
+          <option value="nmc">NMC / NCA (litio-n&iacute;quel)</option>
+        </select>
+      </div>
+      <div class="field-hint">Cambia el consejo de carga. Si no lo sabes, b&uacute;scalo como &laquo;qu&iacute;mica de la bater&iacute;a&raquo; de tu modelo: BYD y algunos MG usan LFP; la mayor&iacute;a del resto, NMC.</div>
+    </div>
+
+    <div class="field">
       <label>Eficiencia de carga</label>
       <div class="field-input-wrap">
         <input class="num" id="ov-chargeEff" type="number" inputmode="decimal" step="1" value="85">
@@ -248,6 +272,86 @@
     <button class="btn-primary" id="ov-save">Guardar veh&iacute;culo</button>
     <button class="btn-secondary" id="ov-cancel" style="margin-top:10px;">Cancelar</button>
     <button class="btn-danger" id="ov-delete">Eliminar este veh&iacute;culo</button>
+  </div>
+</div>
+
+<!-- FICHA DE CARGADOR -->
+<div class="overlay" id="ch-overlay">
+  <div class="sheet">
+    <h2 id="ch-title">Guardar cargador</h2>
+    <p class="lead">Guarda los datos de este punto para no volver a escribirlos.</p>
+    <div class="err" id="ch-err"></div>
+
+    <div class="field">
+      <label>Nombre</label>
+      <div class="field-input-wrap">
+        <input id="ch-name" type="text" placeholder="Mercadona, Trabajo..." maxlength="24">
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Potencia del punto</label>
+        <div class="field-input-wrap">
+          <input class="num" id="ch-power" type="number" inputmode="decimal" step="0.1" placeholder="7.4">
+          <span class="field-unit">kW</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Cobra por</label>
+        <div class="field-input-wrap wrap-select">
+          <select id="ch-mode" class="sel">
+            <option value="0">Energ&iacute;a</option>
+            <option value="1">Tiempo</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="field" id="ch-field-kwh">
+      <label>Precio</label>
+      <div class="field-input-wrap">
+        <input class="num" id="ch-price" type="number" inputmode="decimal" step="0.01" placeholder="0.25">
+        <span class="field-unit">&euro;/kWh</span>
+      </div>
+    </div>
+    <div class="field hidden" id="ch-field-min">
+      <label>Precio</label>
+      <div class="field-input-wrap">
+        <input class="num" id="ch-permin" type="number" inputmode="decimal" step="0.01" placeholder="0.10">
+        <span class="field-unit">&euro;/min</span>
+      </div>
+    </div>
+
+    <div class="panel-sub">Recargo por exceso de tiempo</div>
+    <p class="lead" style="margin-bottom:14px;">Muchos supermercados cobran un extra si ocupas la plaza demasiado rato. D&eacute;jalo vac&iacute;o si este punto no lo hace.</p>
+    <div class="field-row">
+      <div class="field">
+        <label>A partir de</label>
+        <div class="field-input-wrap">
+          <input class="num" id="ch-freehours" type="number" inputmode="decimal" step="0.25" placeholder="1.5">
+          <span class="field-unit">horas</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Cobra</label>
+        <div class="field-input-wrap">
+          <input class="num" id="ch-overmin" type="number" inputmode="decimal" step="0.01" placeholder="0.07">
+          <span class="field-unit">&euro;/min</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Notas</label>
+      <div class="field-input-wrap wrap-ta">
+        <textarea id="ch-note" class="ta" rows="3" maxlength="220" placeholder="C&oacute;mo se paga, qu&eacute; app hace falta, d&oacute;nde est&aacute; la toma..."></textarea>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="ch-save">Guardar</button>
+    <button class="btn-secondary" id="ch-cancel" style="margin-top:10px;">Cancelar</button>
+    <button class="btn-danger" id="ch-delete">Eliminar este cargador</button>
   </div>
 </div>
 
@@ -270,20 +374,37 @@
 
   <div class="field-row">
     <div class="field">
-      <label>Precio del cargador</label>
+      <label>El cargador cobra por</label>
+      <div class="field-input-wrap wrap-select">
+        <select id="inp-pricingMode" class="sel">
+          <option value="0">Energ&iacute;a (&euro;/kWh)</option>
+          <option value="1">Tiempo (&euro;/min)</option>
+        </select>
+      </div>
+    </div>
+    <div class="field" id="field-price-kwh">
+      <label>Precio</label>
       <div class="field-input-wrap key">
         <input class="num" id="inp-chargerPrice" type="number" inputmode="decimal" step="0.01" value="0.30">
         <span class="field-unit">&euro;/kWh</span>
       </div>
     </div>
-    <div class="field">
-      <label>Gasolina</label>
-      <div class="field-input-wrap">
-        <input class="num" id="inp-fuelPrice" type="number" inputmode="decimal" step="0.01" value="1.744">
-        <span class="field-unit">&euro;/L</span>
+    <div class="field hidden" id="field-price-min">
+      <label>Precio</label>
+      <div class="field-input-wrap key">
+        <input class="num" id="inp-pricePerMin" type="number" inputmode="decimal" step="0.01" value="0.10">
+        <span class="field-unit">&euro;/min</span>
       </div>
-      <div class="field-hint" id="fuel-hint">Escr&iacute;belo o b&uacute;scalo abajo</div>
     </div>
+  </div>
+
+  <div class="field">
+    <label>Gasolina</label>
+    <div class="field-input-wrap">
+      <input class="num" id="inp-fuelPrice" type="number" inputmode="decimal" step="0.01" value="1.744">
+      <span class="field-unit">&euro;/L</span>
+    </div>
+    <div class="field-hint" id="fuel-hint">Escr&iacute;belo o b&uacute;scalo abajo</div>
   </div>
 
   <div class="field-row">
@@ -305,6 +426,7 @@
   </div>
 
   <div id="saved-chargers"></div>
+  <div id="charger-note" class="note-box hidden"></div>
 
   <button class="refresh-btn" id="btn-refresh">
     <span style="font-size:15px;line-height:1;">&#8635;</span>
@@ -330,6 +452,7 @@
       <div class="row"><span class="l">Km el&eacute;ctricos que ganas</span><span class="v num" id="pk-km">&mdash;</span></div>
       <div class="row"><span class="l">Te cuesta</span><span class="v num" id="pk-cost">&mdash;</span></div>
       <div class="row"><span class="l">En gasolina habr&iacute;an sido</span><span class="v num" id="pk-equiv">&mdash;</span></div>
+      <div class="row" id="pk-row-over" style="display:none;"><span class="l">Recargo por exceso</span><span class="v num" id="pk-over">&mdash;</span></div>
       <div class="note-inline" id="pk-note"></div>
       <button class="btn-save" id="btn-save-parked">Guardar esta recarga</button>
     </div>
@@ -361,18 +484,19 @@
       <div class="row"><span class="l">Km el&eacute;ctricos que ganas</span><span class="v num" id="tr-km">&mdash;</span></div>
       <div class="row"><span class="l">Te cuesta</span><span class="v num" id="tr-cost">&mdash;</span></div>
       <div class="row"><span class="l">En gasolina habr&iacute;an sido</span><span class="v num" id="tr-equiv">&mdash;</span></div>
+      <div class="row" id="tr-row-over" style="display:none;"><span class="l">Recargo por exceso</span><span class="v num" id="tr-over">&mdash;</span></div>
       <div class="row" id="tr-row-detour" style="display:none;"><span class="l">Menos el desv&iacute;o</span><span class="v num" id="tr-detour">&mdash;</span></div>
       <div class="note-inline" id="tr-note"></div>
       <button class="btn-save" id="btn-save-trip">Guardar esta recarga</button>
     </div>
   </div>
 
-  <div class="card">
+  <div class="card" id="calib-card">
     <div class="calib">
       <div class="calib-dot" id="calib-dot"></div>
       <div>
         <div class="calib-main" id="calib-main">Sin registro todav&iacute;a</div>
-        <div class="calib-sub" id="calib-sub">Si tu bater&iacute;a es de tipo LFP, conviene llegar al 100% una vez por semana para que el coche no pierda precisi&oacute;n al medir la carga.</div>
+        <div class="calib-sub" id="calib-sub">Conviene llegar al 100% una vez por semana para que el coche no pierda precisi&oacute;n al medir la carga.</div>
       </div>
     </div>
     <button class="btn-save" id="btn-mark-full">Hoy he cargado al 100%</button>
@@ -392,19 +516,33 @@
     <span class="chev">&#9662;</span>
   </button>
   <div class="panel" id="settings-panel">
-    <div class="panel-sub first">Consumo el&eacute;ctrico ahora</div>
+    <div class="panel-sub first">C&oacute;mo vas a conducir</div>
     <div class="preset-row" id="preset-row">
       <button class="preset-btn" data-preset="ciudad">Ciudad</button>
       <button class="preset-btn active" data-preset="mixto">Mixto</button>
       <button class="preset-btn" data-preset="carretera">Carretera</button>
     </div>
-    <div class="field">
-      <div class="field-input-wrap">
-        <input class="num" id="inp-elecConsumption" type="number" inputmode="decimal" step="0.5" value="22">
-        <span class="field-unit">kWh/100km</span>
+    <button class="preset-btn cold-btn" id="btn-cold">
+      <span id="cold-mark">&#9675;</span> &nbsp;Fr&iacute;o &mdash; el coche ha estado a la intemperie
+    </button>
+    <div class="field-hint hint-tight" id="cold-hint">Act&iacute;valo si hace fr&iacute;o y el coche no ha dormido en garaje</div>
+    <div class="field-row">
+      <div class="field">
+        <label>El&eacute;ctrico</label>
+        <div class="field-input-wrap">
+          <input class="num" id="inp-elecConsumption" type="number" inputmode="decimal" step="0.5" value="22">
+          <span class="field-unit">kWh/100km</span>
+        </div>
       </div>
-      <div class="field-hint" id="cons-hint">Los botones escalan sobre el consumo mixto de tu veh&iacute;culo</div>
+      <div class="field">
+        <label>Gasolina</label>
+        <div class="field-input-wrap">
+          <input class="num" id="inp-fuelConsumption" type="number" inputmode="decimal" step="0.1" value="5.0">
+          <span class="field-unit">L/100km</span>
+        </div>
+      </div>
     </div>
+    <div class="field-hint hint-cons" id="cons-hint">Los botones escalan los dos consumos sobre los datos de tu veh&iacute;culo</div>
 
     <div class="panel-sub">Esta sesi&oacute;n</div>
     <div class="field">
@@ -425,7 +563,10 @@
       <p><strong>Eficiencia de carga.</strong> No todos los kWh que pagas llegan a la bater&iacute;a: una parte se pierde por el camino. Con un 85%, de cada 10 kWh que te cobran entran unos 8,5. La app lo tiene en cuenta al comparar.</p>
       <p><strong>Los dos modos.</strong> En <em>Aparcado</em> el tiempo no cuenta como coste, porque el coche iba a estar ah&iacute; de todas formas; solo limita cu&aacute;ntos kWh caben. En <em>Parada Dedicada</em> s&iacute; se descuenta el desv&iacute;o, porque son km que no habr&iacute;as hecho.</p>
       <p><strong>Coste del desv&iacute;o.</strong> Se valora a precio de gasolina, que es el supuesto m&aacute;s conservador: si el rodeo lo haces en el&eacute;ctrico, te costar&aacute; algo menos de lo que dice.</p>
-      <p><strong>Calibraci&oacute;n al 100%.</strong> En las bater&iacute;as LFP el voltaje apenas var&iacute;a entre el 20% y el 80%, as&iacute; que el coche calcula el porcentaje sumando la energ&iacute;a que entra y sale, y ese c&aacute;lculo se desv&iacute;a con el tiempo. Al llegar al 100% el sistema encuentra una referencia clara y se recalibra. Si tu bater&iacute;a es de otra qu&iacute;mica (NMC), esto no aplica y puedes ignorar el aviso.</p>
+      <p><strong>El fr&iacute;o.</strong> Con el coche fr&iacute;o la calefacci&oacute;n consume unos 2 kW casi constantes, y eso pesa mucho m&aacute;s por kil&oacute;metro yendo despacio que r&aacute;pido: por eso la penalizaci&oacute;n es mayor en ciudad (+45% de consumo el&eacute;ctrico) que en carretera (+18%). La gasolina tambi&eacute;n sube con el fr&iacute;o, pero menos, as&iacute; que el interruptor ajusta las dos cosas a la vez. Act&iacute;valo solo si el coche ha estado a la intemperie: uno que sale de un garaje templado apenas lo nota.</p>
+      <p><strong>El l&iacute;mite del modo fr&iacute;o.</strong> Muchos h&iacute;bridos enchufables arrancan el motor de gasolina para calefactar el habit&aacute;culo cuando hace fr&iacute;o. Si el tuyo lo hace, en invierno no est&aacute;s haciendo kil&oacute;metros el&eacute;ctricos puros y ning&uacute;n factor de esta app lo corrige: los resultados seguir&aacute;n siendo optimistas. Comprueba si tu coche permite calefactar sin arrancar el motor, o si tiene precalentamiento con el coche enchufado &mdash; en ese caso el calor sale de la red y no de la bater&iacute;a, que es mucho mejor negocio.</p>
+      <p><strong>Por qu&eacute; el final tarda m&aacute;s.</strong> Al acercarse al 100% el coche baja la corriente para proteger las celdas, as&iacute; que el &uacute;ltimo tramo tarda bastante m&aacute;s que el resto. Pasa en cualquier bater&iacute;a de litio, pero no igual: una LFP aguanta el ritmo hasta cerca del 90% y luego cae de golpe; una NMC empieza a frenar antes, sobre el 80%, de forma m&aacute;s gradual. La app aplica una u otra seg&uacute;n lo que hayas indicado. Son aproximaciones razonables, no la curva medida de tu modelo concreto: si al cargar de verdad ves tiempos muy distintos, av&iacute;sanos.</p>
+      <p><strong>LFP y NMC.</strong> Son las dos qu&iacute;micas de bater&iacute;a habituales, y piden cuidados opuestos. En una <em>LFP</em> el voltaje apenas var&iacute;a entre el 20% y el 80%, as&iacute; que el coche calcula el porcentaje sumando la energ&iacute;a que entra y sale, y ese c&aacute;lculo se desv&iacute;a con el tiempo: llegar al 100% una vez por semana le da una referencia clara y lo corrige. En una <em>NMC</em>, en cambio, pasar mucho tiempo cerca del 100% acelera el desgaste, as&iacute; que lo recomendable es moverse entre el 20% y el 80% y llenar solo antes de un viaje largo.</p>
       <p><strong>Comparar dos coches.</strong> Crea un perfil por veh&iacute;culo y alterna entre ellos con el mismo precio de cargador y de gasolina: la diferencia que veas es la real. Cada veh&iacute;culo lleva su propio historial y su propia calibraci&oacute;n.</p>
       <p><strong>Por qu&eacute; los ahorros son peque&ntilde;os.</strong> Un h&iacute;brido enchufable tiene poca bater&iacute;a, as&iacute; que el ahorro por recarga suele quedarse en pocos euros. La ventaja est&aacute; en repetirlo muchas veces, no en cada carga suelta.</p>
     </div>
@@ -434,7 +575,7 @@
 
 <script>
 (function(){
-  var CURRENT_VERSION = "2026-08-29-20";
+  var CURRENT_VERSION = "2026-08-29-26";
   (function checkForUpdates(){
     try{
       if(sessionStorage.getItem('atto2_update_check') === CURRENT_VERSION) return;
@@ -449,11 +590,16 @@
     }catch(e){}
   })();
 
-  var PRESET_FACTORS = { ciudad:0.86, mixto:1.0, carretera:1.18 };
+  var PRESET_FACTORS = {
+    ciudad:    { elec:0.86, fuel:1.20, coldElec:1.45, coldFuel:1.20 },
+    mixto:     { elec:1.00, fuel:1.00, coldElec:1.30, coldFuel:1.12 },
+    carretera: { elec:1.18, fuel:0.92, coldElec:1.18, coldFuel:1.06 }
+  };
+  var COLD_EFF = 0.95;
   var SESSION_KEYS = ['chargerPrice','fuelPrice','chargerPower','currentSoc','parkHours',
-                      'sessionKwh','detourKm','elecConsumption','sessionFee'];
-  var SESSION_DEFAULTS = { chargerPrice:0.30, fuelPrice:1.744, chargerPower:7.4, currentSoc:30,
-    parkHours:1.5, sessionKwh:12, detourKm:0, elecConsumption:22, sessionFee:0 };
+                      'sessionKwh','detourKm','elecConsumption','fuelConsumption','sessionFee','pricingMode','pricePerMin'];  var SESSION_DEFAULTS = { chargerPrice:0.30, fuelPrice:1.744, chargerPower:7.4, currentSoc:30,
+    parkHours:1.5, sessionKwh:12, detourKm:0, elecConsumption:22, fuelConsumption:5.0,
+    sessionFee:0, pricingMode:0, pricePerMin:0.10 };
 
   var PROFILES_KEY='cvg_profiles_v1', SESSION_KEY='cvg_session_v1',
       CHARGERS_KEY='cvg_chargers_v1', MODE_KEY='cvg_mode_v1';
@@ -487,10 +633,9 @@
   };
 
   var els={};
-  SESSION_KEYS.forEach(function(k){ els[k]=document.getElementById('inp-'+k); });
+  SESSION_KEYS.forEach(function(k){ els[k]=$('inp-'+k); });
 
-  var mode='parked';
-  try{ mode = localStorage.getItem(MODE_KEY) || 'parked'; }catch(e){}
+  var mode = ls(MODE_KEY) || 'parked';
 
   function num(el){ var v=parseFloat(el.value); return isFinite(v)?v:0; }
   function clamp(v,a,b){ return Math.min(b,Math.max(a,v)); }
@@ -512,6 +657,24 @@
     if(mm===0) return hh+' h';
     return hh+' h '+mm+' min';
   }
+  // --- utilidades ---
+  var _el={};
+  function $(id){ return _el[id]||(_el[id]=$(id)); }
+  function ls(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  function lsJSON(k,fallback){
+    try{ var v=JSON.parse(localStorage.getItem(k)||'null'); return v===null?fallback:v; }
+    catch(e){ return fallback; }
+  }
+  function lsPut(k,v){ lsSet(k,JSON.stringify(v)); }
+  function byId(list,id){
+    for(var i=0;i<list.length;i++){ if(list[i].id===id) return list[i]; }
+    return null;
+  }
+  function show(el,on){ el.classList.toggle('hidden', !on); }
+  function openOverlay(id,on){ $(id).classList.toggle('open', !!on); }
+
   function haversine(la1,lo1,la2,lo2){
     var R=6371, dLa=(la2-la1)*Math.PI/180, dLo=(lo2-lo1)*Math.PI/180;
     var a=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLo/2)*Math.sin(dLo/2);
@@ -520,20 +683,13 @@
 
   // ---------- PERFILES ----------
   function loadProfiles(){
-    try{
-      var d=JSON.parse(localStorage.getItem(PROFILES_KEY)||'null');
-      if(d && d.list && d.list.length) return d;
-    }catch(e){}
-    return { list:[], activeId:null };
+    var d=lsJSON(PROFILES_KEY,null);
+    return (d && d.list && d.list.length) ? d : { list:[], activeId:null };
   }
-  function saveProfiles(d){
-    try{ localStorage.setItem(PROFILES_KEY,JSON.stringify(d)); }catch(e){}
-  }
+  function saveProfiles(d){ lsPut(PROFILES_KEY,d); }
   function activeProfile(){
     var d=loadProfiles();
-    if(!d.list.length) return null;
-    for(var i=0;i<d.list.length;i++){ if(d.list[i].id===d.activeId) return d.list[i]; }
-    return d.list[0];
+    return d.list.length ? (byId(d.list,d.activeId)||d.list[0]) : null;
   }
   function histKey(id){ return 'cvg_hist_'+id; }
   function calibKey(id){ return 'cvg_calib_'+id; }
@@ -544,12 +700,13 @@
       return '<button class="veh'+(act&&p.id===act.id?' active':'')+'" data-veh="'+p.id+'">'+esc(p.name)+'</button>';
     }).join('');
     html+='<button class="veh veh-add" id="veh-add">+ Veh\u00edculo</button>';
-    document.getElementById('veh-row').innerHTML=html;
+    $('veh-row').innerHTML=html;
 
-    var sum=document.getElementById('veh-summary');
+    var sum=$('veh-summary');
     if(act){
+      var chemLabel = act.chem==='lfp' ? 'LFP' : (act.chem==='nmc' ? 'NMC' : 'qu\u00edmica sin indicar');
       sum.innerHTML='<p><strong>'+esc(act.name)+'</strong><br>'+
-        'Bater\u00eda '+fmt(act.battery,1)+' kWh \u00b7 carga m\u00e1x. '+fmt(act.maxPower,1)+' kW \u00b7 '+
+        'Bater\u00eda '+fmt(act.battery,1)+' kWh ('+chemLabel+') \u00b7 carga m\u00e1x. '+fmt(act.maxPower,1)+' kW \u00b7 '+
         'eficiencia '+fmt(act.chargeEff,0)+'%<br>'+
         'Consumo mixto '+fmt(act.elecCons,1)+' kWh/100km \u00b7 '+fmt(act.fuelCons,1)+' L/100km</p>';
     } else { sum.innerHTML=''; }
@@ -557,203 +714,399 @@
 
   // ---------- SESION ----------
   function loadSession(){
-    try{
-      var s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');
-      if(!s) return;
-      SESSION_KEYS.forEach(function(k){ if(s[k]!==undefined) els[k].value=s[k]; });
-    }catch(e){}
+    var s=lsJSON(SESSION_KEY,null);
+    if(s) SESSION_KEYS.forEach(function(k){ if(s[k]!==undefined) els[k].value=s[k]; });
   }
   function saveSession(){
-    try{
-      var o={}; SESSION_KEYS.forEach(function(k){ o[k]=num(els[k]); });
-      localStorage.setItem(SESSION_KEY,JSON.stringify(o));
-    }catch(e){}
+    var o={}; SESSION_KEYS.forEach(function(k){ o[k]=num(els[k]); });
+    lsPut(SESSION_KEY,o);
   }
 
   var lastCalc=null, lastStations=[];
+
+  // Calculo puro: mismas matematicas para el veredicto y para la hora limite
+  function simulate(c){
+    var power=Math.min(c.chargerPower, c.maxPower>0?c.maxPower:c.chargerPower);
+    var powerCapped = c.maxPower>0 && c.chargerPower>c.maxPower;
+    var eff=clamp(c.chargeEff,1,100)/100;
+    var effPenalty = power<2.5?0.82:(power<4?0.93:(power<6?0.98:1));
+    eff=clamp(eff*effPenalty,0.30,0.99);
+    var KNEE = c.chem==='lfp'?90:(c.chem==='nmc'?80:85);
+    var SLOW = c.chem==='lfp'?2.5:(c.chem==='nmc'?2.0:2.2);
+    function timeFactor(from,to){
+      if(to<=KNEE) return 1;
+      var fast=Math.max(0,Math.min(to,KNEE)-Math.min(from,KNEE));
+      var slow=Math.max(0,to-Math.max(from,KNEE));
+      var t=fast+slow; if(t<=0) return 1;
+      return (fast+slow*SLOW)/t;
+    }
+    var soc=clamp(c.currentSoc,0,100);
+    var billedForRoom = eff>0 ? (c.battery*(100-soc)/100)/eff : 0;
+
+    var sessionKwh, capped;
+    if(c.mode==='parked'){
+      var ha=Math.max(0,c.parkHours);
+      var kToKnee=Math.max(0, eff>0 ? (c.battery*Math.max(0,KNEE-soc)/100)/eff : 0);
+      var hToKnee=power>0?kToKnee/power:0;
+      sessionKwh = ha<=hToKnee ? ha*power : kToKnee+(ha-hToKnee)*(power/SLOW);
+      sessionKwh=Math.min(sessionKwh,billedForRoom);
+      capped = billedForRoom <= sessionKwh+0.0001 && billedForRoom < ha*power;
+    } else {
+      sessionKwh=Math.min(Math.max(0,c.sessionKwh), billedForRoom);
+      capped = billedForRoom < c.sessionKwh;
+    }
+    var energyIn=sessionKwh*eff;
+    var finalSoc = c.battery>0 ? clamp(soc+(energyIn/c.battery)*100,0,100) : 0;
+    var chargeHours = power>0 ? (sessionKwh/power)*timeFactor(soc,finalSoc) : 0;
+    var nothingToCharge = sessionKwh<=0.001;
+
+    // tiempo que ocupas la plaza
+    var occupiedHours = c.mode==='parked' ? Math.max(0,c.parkHours) : chargeHours;
+    var energyCost = c.byMinute ? c.pricePerMin*chargeHours*60 : c.chargerPrice*sessionKwh;
+    // recargo por exceso de tiempo
+    var overHours = (c.overMin>0 && c.freeHours>=0) ? Math.max(0, occupiedHours-c.freeHours) : 0;
+    var overCost = overHours*60*(c.overMin||0);
+
+    var costPerKmFuel=(c.fuelPrice*c.fuelCons)/100;
+    var km = c.elecCons>0 ? (energyIn/c.elecCons)*100 : 0;
+    var sessionCost = energyCost + overCost + (c.sessionFee||0);
+    var equivFuel = costPerKmFuel*km;
+    var gross = equivFuel - sessionCost;
+    var detourCost = (c.mode==='trip' ? Math.max(0,c.detourKm) : 0)*2*costPerKmFuel;
+    var net = gross - detourCost;
+
+    return { power:power, powerCapped:powerCapped, eff:eff, effReduced:effPenalty<1,
+      sessionKwh:sessionKwh, capped:capped, energyIn:energyIn, finalSoc:finalSoc,
+      chargeHours:chargeHours, occupiedHours:occupiedHours, nothingToCharge:nothingToCharge,
+      energyCost:energyCost, overCost:overCost, overHours:overHours,
+      km:km, sessionCost:sessionCost, equivFuel:equivFuel, gross:gross,
+      detourCost:detourCost, net:net,
+      effectivePerKwh: sessionKwh>0 ? energyCost/sessionKwh : 0 };
+  }
+
+  // Hora a partir de la cual el recargo se come el ahorro
+  function findLimitHours(cfg){
+    if(!(cfg.overMin>0)) return null;
+    var best=null;
+    for(var h=cfg.freeHours; h<=12; h+=0.05){
+      var r=simulate(Object.assign({},cfg,{parkHours:h, mode:'parked'}));
+      if(r.net<0){ best=h; break; }
+    }
+    return best;
+  }
 
   function render(){
     var prof=activeProfile();
     if(!prof) return;
 
-    var fuelPrice=num(els.fuelPrice), chargerPrice=num(els.chargerPrice),
-        sessionFee=num(els.sessionFee), elecCons=num(els.elecConsumption),
-        fuelCons=prof.fuelCons, battery=prof.battery;
+    var ch = selectedCharger();
+    var cfg = {
+      mode: mode,
+      chargerPower: num(els.chargerPower), maxPower: prof.maxPower,
+      chargeEff: prof.chargeEff, chem: prof.chem||'unknown',
+      battery: prof.battery, currentSoc: num(els.currentSoc),
+      parkHours: num(els.parkHours), sessionKwh: num(els.sessionKwh),
+      detourKm: num(els.detourKm),
+      chargerPrice: num(els.chargerPrice), byMinute: num(els.pricingMode)===1,
+      pricePerMin: num(els.pricePerMin), sessionFee: num(els.sessionFee),
+      fuelPrice: num(els.fuelPrice), fuelCons: num(els.fuelConsumption),
+      elecCons: num(els.elecConsumption),
+      freeHours: ch && ch.overMin>0 ? ch.freeHours : 0,
+      overMin: ch && ch.overMin>0 ? ch.overMin : 0
+    };
+    var r = simulate(cfg);
 
-    var powerRaw=num(els.chargerPower), maxPower=prof.maxPower;
-    var power=Math.min(powerRaw, maxPower>0?maxPower:powerRaw);
-    var powerCapped = maxPower>0 && powerRaw>maxPower;
+    var worth = !r.nothingToCharge && r.net > 0;
+    var tight = !r.nothingToCharge && r.net >= 0 && Math.abs(r.net) < 0.10;
+    var accent = r.nothingToCharge||tight ? AMBER : (worth ? VOLT : FLAME);
 
-    var eff=clamp(prof.chargeEff,1,100)/100;
-    var costPerKmFuel=(fuelPrice*fuelCons)/100;
-
-    var currentSoc=clamp(num(els.currentSoc),0,100);
-    var billedForRoom = eff>0 ? (battery*(100-currentSoc)/100)/eff : 0;
-
-    var sessionKwh, capped, requestedKwh=0;
-    if(mode==='parked'){
-      var byTime=Math.max(0,num(els.parkHours))*power;
-      sessionKwh=Math.min(byTime,billedForRoom);
-      capped = billedForRoom < byTime;
-    } else {
-      requestedKwh=Math.max(0,num(els.sessionKwh));
-      sessionKwh=Math.min(requestedKwh,billedForRoom);
-      capped = billedForRoom < requestedKwh;
-    }
-    var chargeHours = power>0 ? sessionKwh/power : 0;
-    var energyIn=sessionKwh*eff;
-    var finalSoc = battery>0 ? clamp(currentSoc+(energyIn/battery)*100,0,100) : 0;
-    var nothingToCharge = sessionKwh <= 0.001;
-
-    var km = elecCons>0 ? (energyIn/elecCons)*100 : 0;
-    var sessionCost = chargerPrice*sessionKwh + sessionFee;
-    var equivFuel = costPerKmFuel*km;
-    var gross = equivFuel - sessionCost;
-    var detourKm = mode==='trip' ? Math.max(0,num(els.detourKm)) : 0;
-    var detourCost = detourKm*2*costPerKmFuel;
-    var net = gross - detourCost;
-
-    var worth = !nothingToCharge && net > 0;
-    var tight = !nothingToCharge && net >= 0 && Math.abs(net) < 0.10;
-
-    var accent = nothingToCharge||tight ? AMBER : (worth ? VOLT : FLAME);
-    var badge=document.getElementById('badge');
-    badge.textContent = nothingToCharge ? 'Bater\u00eda llena'
+    var badge=$('badge');
+    badge.textContent = r.nothingToCharge ? 'Bater\u00eda llena'
       : (tight ? 'Casi igual' : (worth ? 'Compensa cargar' : 'Mejor repostar'));
     badge.style.color=accent;
 
-    var amountEl=document.getElementById('amount');
-    amountEl.innerHTML=(net>=0?'+':'\u2212')+fmt(Math.abs(net))+'<span class="unit"> '+EURO+'</span>';
-    amountEl.style.color = nothingToCharge ? AMBER : (net>=0?VOLT:FLAME);
-    document.getElementById('amount-label').textContent = nothingToCharge
+    var amountEl=$('amount');
+    amountEl.innerHTML=(r.net>=0?'+':'\u2212')+fmt(Math.abs(r.net))+'<span class="unit"> '+EURO+'</span>';
+    amountEl.style.color = r.nothingToCharge ? AMBER : (r.net>=0?VOLT:FLAME);
+    $('amount-label').textContent = (r.nothingToCharge
       ? 'no cabe energ\u00eda en la bater\u00eda'
-      : (net>=0 ? 'de ahorro en esta recarga' : 'de sobrecoste en esta recarga');
+      : (r.net>=0 ? 'de ahorro en esta recarga' : 'de sobrecoste en esta recarga'))
+      + (coldOn ? ' \u00b7 calculado con fr\u00edo' : '');
+    $('verdict').style.borderLeftColor=accent;
 
-    document.getElementById('verdict').style.borderLeftColor=accent;
-
-    var detail=document.getElementById('detail');
-    if(nothingToCharge){
-      detail.innerHTML='Tu bater\u00eda ya est\u00e1 al '+fmt(currentSoc,0)+'%.'+
-        (sessionFee>0?' Enchufar aqu\u00ed solo te costar\u00eda la tarifa fija de '+fmt(sessionFee)+' '+EURO+'.':'');
-    } else if(equivFuel>0){
-      var pct=Math.abs(net)/equivFuel*100;
-      detail.innerHTML='Hacer esos <strong class="num">'+fmt(km,0)+' km</strong> enchufado te sale un '+
-        '<strong class="num">'+fmt(pct,0)+'%</strong> '+(net>=0?'m\u00e1s barato':'m\u00e1s caro')+' que en gasolina.';
+    var detail=$('detail');
+    if(r.nothingToCharge){
+      detail.innerHTML='Tu bater\u00eda ya est\u00e1 al '+fmt(cfg.currentSoc,0)+'%.'+
+        (cfg.sessionFee>0?' Enchufar aqu\u00ed solo te costar\u00eda la tarifa fija de '+fmt(cfg.sessionFee)+' '+EURO+'.':'');
+    } else if(r.equivFuel>0){
+      var pct=Math.abs(r.net)/r.equivFuel*100;
+      detail.innerHTML='Hacer esos <strong class="num">'+fmt(r.km,0)+' km</strong> enchufado te sale un '+
+        '<strong class="num">'+fmt(pct,0)+'%</strong> '+(r.net>=0?'m\u00e1s barato':'m\u00e1s caro')+' que en gasolina.'+
+        (cfg.byMinute ? ' Pagando por minuto, te salen <strong class="num">'+fmt(r.effectivePerKwh,2)+' '+EURO+'/kWh</strong>.' : '');
     } else { detail.textContent=''; }
 
     var pre = mode==='parked'?'pk':'tr';
-    var pctNow=clamp(currentSoc,0,100), pctGain=clamp(finalSoc-pctNow,0,100);
-    document.getElementById(pre+'-fill-now').style.width=pctNow+'%';
-    var g=document.getElementById(pre+'-fill-gain');
+    var pctNow=clamp(cfg.currentSoc,0,100), pctGain=clamp(r.finalSoc-pctNow,0,100);
+    $(pre+'-fill-now').style.width=pctNow+'%';
+    var g=$(pre+'-fill-gain');
     g.style.left=pctNow+'%'; g.style.width=pctGain+'%';
-    document.getElementById(pre+'-legend').innerHTML=
-      'Bater\u00eda '+fmt(pctNow,0)+'% \u2192 <strong style="color:'+VOLT+'">'+fmt(finalSoc,0)+'%</strong>';
-    document.getElementById(pre+'-kwh').textContent=fmt(sessionKwh,1)+' kWh en '+fmtTime(chargeHours);
-    document.getElementById(pre+'-km').textContent='\u2248 '+fmt(km,0)+' km';
-    document.getElementById(pre+'-cost').textContent=fmt(sessionCost)+' '+EURO;
-    document.getElementById(pre+'-equiv').textContent=fmt(equivFuel)+' '+EURO;
+    $(pre+'-legend').innerHTML=
+      'Bater\u00eda '+fmt(pctNow,0)+'% \u2192 <strong style="color:'+VOLT+'">'+fmt(r.finalSoc,0)+'%</strong>';
+    $(pre+'-kwh').textContent=fmt(r.sessionKwh,1)+' kWh en '+fmtTime(r.chargeHours);
+    $(pre+'-km').textContent='\u2248 '+fmt(r.km,0)+' km';
+    $(pre+'-cost').textContent=fmt(r.sessionCost)+' '+EURO;
+    $(pre+'-equiv').textContent=fmt(r.equivFuel)+' '+EURO;
+
+    // fila de recargo
+    var overRow=$(pre+'-row-over');
+    if(r.overCost>0){
+      overRow.style.display='';
+      var oe=$(pre+'-over');
+      oe.textContent='+'+fmt(r.overCost)+' '+EURO+' ('+fmtTime(r.overHours)+' de m\u00e1s)';
+      oe.style.color=FLAME;
+    } else { overRow.style.display='none'; }
 
     if(mode==='parked'){
-      var pkNote=document.getElementById('pk-note');
-      if(nothingToCharge) pkNote.innerHTML='<span style="color:'+AMBER+'">No tiene sentido enchufar</span>: tu bater\u00eda ya est\u00e1 llena.';
-      else if(capped) pkNote.innerHTML='La bater\u00eda se llena en '+fmtTime(chargeHours)+', antes de que te vayas. El tiempo de m\u00e1s no suma nada.';
-      else if(worth) pkNote.innerHTML='Ahorro limpio: no te cuesta ni tiempo ni desv\u00edo, porque ibas a estar aqu\u00ed igualmente.';
-      else pkNote.innerHTML='<span style="color:'+FLAME+'">Sale m\u00e1s caro que la gasolina</span>, aunque no te cueste tiempo.';
+      var pkNote=$('pk-note');
+      var limit = ch && ch.overMin>0 ? findLimitHours(cfg) : null;
+      if(r.nothingToCharge){
+        pkNote.innerHTML='<span style="color:'+AMBER+'">No tiene sentido enchufar</span>: tu bater\u00eda ya est\u00e1 llena.';
+      } else if(limit!==null && cfg.parkHours>=limit){
+        pkNote.innerHTML='<span style="color:'+FLAME+'">Llevas demasiado tiempo.</span> A partir de '+
+          fmtTime(limit)+' el recargo se come el ahorro. Desconecta antes.';
+      } else if(limit!==null){
+        pkNote.innerHTML='<span style="color:'+AMBER+'">Desconecta antes de '+fmtTime(limit)+'</span>'+
+          ' o el recargo empezar\u00e1 a costarte dinero.';
+      } else if(r.capped){
+        pkNote.innerHTML='La bater\u00eda se llena en '+fmtTime(r.chargeHours)+', antes de que te vayas. El tiempo de m\u00e1s no suma nada.';
+      } else if(worth){
+        pkNote.innerHTML='Ahorro limpio: no te cuesta ni tiempo ni desv\u00edo, porque ibas a estar aqu\u00ed igualmente.';
+      } else {
+        pkNote.innerHTML='<span style="color:'+FLAME+'">Sale m\u00e1s caro que la gasolina</span>, aunque no te cueste tiempo.';
+      }
     } else {
-      var rowD=document.getElementById('tr-row-detour');
-      if(detourKm>0){
+      var rowD=$('tr-row-detour');
+      if(cfg.detourKm>0){
         rowD.style.display='';
-        var dEl=document.getElementById('tr-detour');
-        dEl.textContent='\u2212'+fmt(detourCost)+' '+EURO; dEl.style.color=FLAME;
+        var dEl=$('tr-detour');
+        dEl.textContent='\u2212'+fmt(r.detourCost)+' '+EURO; dEl.style.color=FLAME;
       } else rowD.style.display='none';
-      var trNote=document.getElementById('tr-note');
-      var perHour=chargeHours>0?net/chargeHours:0;
-      if(nothingToCharge) trNote.innerHTML='<span style="color:'+AMBER+'">No tiene sentido desviarte</span>: tu bater\u00eda ya est\u00e1 llena.';
-      else if(capped) trNote.innerHTML='Pediste '+fmt(requestedKwh,0)+' kWh pero solo caben '+fmt(billedForRoom,1)+' antes del 100%. El c\u00e1lculo usa esa cifra.';
-      else if(detourKm>0 && gross>0 && net<0) trNote.innerHTML='<span style="color:'+FLAME+'">El desv\u00edo se come el ahorro.</span> Sin el rodeo habr\u00edas ahorrado '+fmt(gross)+' '+EURO+'.';
-      else if(worth) trNote.innerHTML='Son '+fmtTime(chargeHours)+' de espera para ahorrar '+fmt(net)+' '+EURO+' \u2014 unos '+fmt(perHour)+' '+EURO+' por hora.';
+      var trNote=$('tr-note');
+      var perHour=r.chargeHours>0?r.net/r.chargeHours:0;
+      if(r.nothingToCharge) trNote.innerHTML='<span style="color:'+AMBER+'">No tiene sentido desviarte</span>: tu bater\u00eda ya est\u00e1 llena.';
+      else if(r.capped) trNote.innerHTML='Pediste '+fmt(cfg.sessionKwh,0)+' kWh pero solo caben '+fmt(r.sessionKwh,1)+' antes del 100%. El c\u00e1lculo usa esa cifra.';
+      else if(cfg.detourKm>0 && r.gross>0 && r.net<0) trNote.innerHTML='<span style="color:'+FLAME+'">El desv\u00edo se come el ahorro.</span> Sin el rodeo habr\u00edas ahorrado '+fmt(r.gross)+' '+EURO+'.';
+      else if(worth) trNote.innerHTML='Son '+fmtTime(r.chargeHours)+' de espera para ahorrar '+fmt(r.net)+' '+EURO+' \u2014 unos '+fmt(perHour)+' '+EURO+' por hora.';
       else trNote.innerHTML='<span style="color:'+FLAME+'">No merece la pena esta parada</span> a este precio.';
     }
 
-    var ph=document.getElementById('power-hint');
-    ph.textContent = powerCapped
-      ? esc(prof.name)+' tope a '+fmt(maxPower,1)+' kW: se usa ese l\u00edmite'
-      : 'La del punto donde est\u00e1s';
-    ph.classList.toggle('warn',powerCapped);
+    var ph=$('power-hint');
+    if(r.powerCapped){
+      ph.textContent = prof.name+' tope a '+fmt(prof.maxPower,1)+' kW: se usa ese l\u00edmite';
+      ph.classList.add('warn');
+    } else if(r.effReduced){
+      ph.textContent = 'A '+fmt(r.power,1)+' kW se pierde m\u00e1s energ\u00eda: eficiencia ajustada a '+fmt(r.eff*100,0)+'%';
+      ph.classList.add('warn');
+    } else {
+      ph.textContent = 'La del punto donde est\u00e1s';
+      ph.classList.remove('warn');
+    }
 
-    document.getElementById('cons-hint').textContent =
-      'Mixto de '+esc(prof.name)+': '+fmt(prof.elecCons,1)+' kWh/100km. Los botones escalan sobre ese valor.';
+    $('field-price-kwh').classList.toggle('hidden', cfg.byMinute);
+    $('field-price-min').classList.toggle('hidden', !cfg.byMinute);
 
-    lastCalc={ chargerPrice:chargerPrice, savings:net, km:km };
+    $('cons-hint').textContent =
+      'Mixto de '+prof.name+': '+fmt(prof.elecCons,1)+' kWh/100km y '+fmt(prof.fuelCons,1)+
+      ' L/100km. Los botones escalan sobre esos valores.';
+
+    var noteEl=$('charger-note');
+    noteEl.textContent = ch && ch.note ? ch.note : '';
+    show(noteEl, !!(ch && ch.note));
+
+    lastCalc={ chargerPrice: cfg.byMinute ? r.effectivePerKwh : cfg.chargerPrice, savings:r.net, km:r.km };
     renderChargers();
     saveSession();
   }
 
   // ---------- CARGADORES GUARDADOS ----------
-  function loadChargers(){ try{ return JSON.parse(localStorage.getItem(CHARGERS_KEY)||'[]'); }catch(e){ return []; } }
-  function saveChargers(l){ try{ localStorage.setItem(CHARGERS_KEY,JSON.stringify(l)); }catch(e){} }
-  function renderChargers(){
-    var list=loadChargers(), cp=num(els.chargerPrice), cw=num(els.chargerPower);
-    var html='<div class="saved-row">'+list.map(function(c,i){
-      var on=Math.abs(c.price-cp)<0.005 && Math.abs(c.power-cw)<0.05;
-      return '<span class="chip'+(on?' active':'')+'" data-idx="'+i+'">'+esc(c.name)+
-        ' <span class="price">'+fmt(c.price,2)+'</span>'+
-        '<button class="chip-del" data-del="'+i+'" aria-label="Borrar">&times;</button></span>';
-    }).join('')+'<button class="chip chip-add" id="chip-add">+ Guardar este</button></div>';
-    if(!list.length) html+='<div class="saved-hint">Guarda los puntos donde cargas habitualmente para no reescribir precio y potencia cada vez.</div>';
-    document.getElementById('saved-chargers').innerHTML=html;
+  var selectedChargerId=null;
+  var SELCH_KEY='cvg_selch_v1';
+  selectedChargerId=ls(SELCH_KEY)||null;
+
+  function loadChargers(){ return lsJSON(CHARGERS_KEY,[]); }
+  function saveChargers(l){ lsPut(CHARGERS_KEY,l); }
+  function selectedCharger(){ return selectedChargerId ? byId(loadChargers(),selectedChargerId) : null; }
+  function setSelectedCharger(id){
+    selectedChargerId=id;
+    if(id) lsSet(SELCH_KEY,id); else lsDel(SELCH_KEY);
   }
-  function addCharger(){
-    var name=prompt('Nombre del cargador (ej. Mercadona, Trabajo):');
-    if(name===null) return;
-    name=name.trim().slice(0,24);
-    if(!name) return;
+
+  function renderChargers(){
     var list=loadChargers();
-    var entry={ name:name, price:num(els.chargerPrice), power:num(els.chargerPower), updated:new Date().toISOString() };
-    var ex=-1;
-    for(var i=0;i<list.length;i++){ if(list[i].name.toLowerCase()===name.toLowerCase()){ ex=i; break; } }
-    if(ex>=0){
-      var old=list[ex];
-      if(Math.abs(old.price-entry.price)>=0.005){
-        alert('Actualizado: '+name+' pas\u00f3 de '+fmt(old.price,2)+' a '+fmt(entry.price,2)+' '+EURO+'/kWh desde el '+
-          new Date(old.updated).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+'.');
+    var html='<div class="saved-row">'+list.map(function(c){
+      var on = c.id===selectedChargerId;
+      var shown = c.mode===1 ? fmt(c.perMin||0,2)+'/min' : fmt(c.price,2);
+      var warn = c.overMin>0 ? ' \u23f1' : '';
+      return '<span class="chip'+(on?' active':'')+'" data-id="'+c.id+'">'+esc(c.name)+warn+
+        ' <span class="price">'+shown+'</span></span>';
+    }).join('')+'<button class="chip chip-add" id="chip-add">+ Guardar este</button></div>';
+    if(!list.length) html+='<div class="saved-hint">Guarda los puntos donde cargas para no reescribir sus datos, con sus notas y su recargo por exceso de tiempo.</div>';
+    else html+='<div class="saved-hint">Toca uno para usarlo. Toca el activo otra vez para editarlo. \u23f1 = tiene recargo por tiempo.</div>';
+    $('saved-chargers').innerHTML=html;
+  }
+
+  // --- ficha ---
+  var editingChargerId=null;
+  function openCharger(id){
+    editingChargerId=id||null;
+    var c = id ? byId(loadChargers(),id) : null;
+    $('ch-title').textContent = c?'Editar cargador':'Guardar cargador';
+    $('ch-name').value = c?c.name:'';
+    $('ch-power').value = c?c.power:num(els.chargerPower);
+    $('ch-mode').value = c?(c.mode||0):num(els.pricingMode);
+    $('ch-price').value = c?c.price:num(els.chargerPrice);
+    $('ch-permin').value = c?(c.perMin||''):num(els.pricePerMin);
+    $('ch-freehours').value = c&&c.overMin>0?c.freeHours:'';
+    $('ch-overmin').value = c&&c.overMin>0?c.overMin:'';
+    $('ch-note').value = c?(c.note||''):'';
+    $('ch-err').classList.remove('show');
+    $('ch-delete').style.display = c?'':'none';
+    syncChargerMode();
+    openOverlay('ch-overlay',true);
+  }
+  function closeCharger(){ openOverlay('ch-overlay',false); }
+  function syncChargerMode(){
+    var byMin=$('ch-mode').value==='1';
+    $('ch-field-kwh').classList.toggle('hidden',byMin);
+    $('ch-field-min').classList.toggle('hidden',!byMin);
+  }
+
+  function saveCharger(){
+    var err=$('ch-err');
+    function bad(m){ err.textContent=m; err.classList.add('show'); return false; }
+    var name=$('ch-name').value.trim().slice(0,24);
+    var power=parseFloat($('ch-power').value);
+    var chMode=parseInt($('ch-mode').value,10)||0;
+    var price=parseFloat($('ch-price').value);
+    var perMin=parseFloat($('ch-permin').value);
+    var freeHours=parseFloat($('ch-freehours').value);
+    var overMin=parseFloat($('ch-overmin').value);
+    var note=$('ch-note').value.trim().slice(0,220);
+
+    if(!name) return bad('Ponle un nombre.');
+    if(!isFinite(power)||power<=0) return bad('Indica la potencia del punto.');
+    if(chMode===0 && (!isFinite(price)||price<0)) return bad('Indica el precio por kWh.');
+    if(chMode===1 && (!isFinite(perMin)||perMin<0)) return bad('Indica el precio por minuto.');
+    var hasOver = isFinite(overMin) && overMin>0;
+    if(hasOver && (!isFinite(freeHours)||freeHours<0)) return bad('Indica a partir de cu\u00e1ntas horas se cobra el recargo.');
+    if(isFinite(freeHours) && freeHours>0 && !hasOver) return bad('Indica cu\u00e1nto cobra por minuto tras ese tiempo.');
+
+    var list=loadChargers();
+    var entry={ id: editingChargerId || ('c'+Date.now()), name:name, power:power, mode:chMode,
+      price: isFinite(price)?price:0, perMin: isFinite(perMin)?perMin:0,
+      freeHours: hasOver?freeHours:0, overMin: hasOver?overMin:0,
+      note:note, updated:new Date().toISOString() };
+
+    if(editingChargerId){
+      var old=byId(list,editingChargerId);
+      if(old){
+        var oldVal=(old.mode||0)===1?(old.perMin||0):old.price;
+        var newVal=entry.mode===1?entry.perMin:entry.price;
+        if((old.mode||0)===entry.mode && Math.abs(oldVal-newVal)>=0.005){
+          alert(name+' pas\u00f3 de '+fmt(oldVal,2)+' a '+fmt(newVal,2)+' desde el '+
+            new Date(old.updated).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+'.');
+        }
+        list[list.indexOf(old)]=entry;
       }
-      list[ex]=entry;
     } else {
-      if(list.length>=6){ alert('Puedes guardar hasta 6 cargadores. Borra alguno primero.'); return; }
+      for(var j=0;j<list.length;j++){
+        if(list[j].name.toLowerCase()===name.toLowerCase()) return bad('Ya tienes un cargador con ese nombre.');
+      }
+      if(list.length>=8) return bad('Puedes guardar hasta 8 cargadores. Borra alguno primero.');
       list.push(entry);
     }
-    saveChargers(list); renderChargers();
+    saveChargers(list);
+    setSelectedCharger(entry.id);
+    applyCharger(entry);
+    closeCharger();
+    renderChargers();
+    render();
+    return true;
+  }
+
+  function deleteCharger(){
+    if(!editingChargerId) return;
+    var l=loadChargers(), c=byId(l,editingChargerId);
+    if(!c) return;
+    if(!confirm('\u00bfBorrar "'+c.name+'"?')) return;
+    saveChargers(l.filter(function(x){ return x.id!==editingChargerId; }));
+    if(selectedChargerId===editingChargerId) setSelectedCharger(null);
+    closeCharger(); renderChargers(); render();
+  }
+
+  function applyCharger(c){
+    els.chargerPower.value=c.power;
+    els.pricingMode.value=c.mode||0;
+    if(c.mode===1) els.pricePerMin.value=c.perMin; else els.chargerPrice.value=c.price;
   }
 
   // ---------- HISTORIAL / CALIBRACION (por vehiculo) ----------
+  // ---------- HISTORIAL / CALIBRACION (por vehiculo) ----------
   function loadHistory(){
-    var p=activeProfile(); if(!p) return [];
-    try{ return JSON.parse(localStorage.getItem(histKey(p.id))||'[]'); }catch(e){ return []; }
+    var p=activeProfile();
+    return p ? lsJSON(histKey(p.id),[]) : [];
   }
   function storeHistory(l){
-    var p=activeProfile(); if(!p) return;
-    try{ localStorage.setItem(histKey(p.id),JSON.stringify(l)); }catch(e){}
+    var p=activeProfile();
+    if(p) lsPut(histKey(p.id),l);
   }
   function renderHistory(){
     var p=activeProfile();
     var list=loadHistory();
-    document.getElementById('hist-count').textContent=list.length;
+    $('hist-count').textContent=list.length;
     var total=list.reduce(function(s,e){ return s+e.savings; },0);
-    var t=document.getElementById('hist-total');
+    var t=$('hist-total');
     t.textContent=(total>=0?'+':'\u2212')+fmt(Math.abs(total))+' '+EURO;
     t.style.color= total>=0?VOLT:FLAME;
-    document.getElementById('hist-note').textContent = p ? 'Historial de '+p.name+'.' : '';
+    $('hist-note').textContent = p ? 'Historial de '+p.name+'.' : '';
   }
   function renderCalibration(){
     var p=activeProfile();
-    var dot=document.getElementById('calib-dot'), main=document.getElementById('calib-main'),
-        sub=document.getElementById('calib-sub'), raw=null;
-    if(p){ try{ raw=localStorage.getItem(calibKey(p.id)); }catch(e){} }
+    var card=$('calib-card');
+    var dot=$('calib-dot'), main=$('calib-main'),
+        sub=$('calib-sub'), btn=$('btn-mark-full');
+    var chem = p ? (p.chem||'unknown') : 'unknown';
+
+    if(chem==='nmc'){
+      card.classList.remove('hidden');
+      btn.classList.add('hidden');
+      dot.style.background=cssVar('--muted')||'#5A676D';
+      main.style.color='';
+      main.textContent='No cargues al 100% por costumbre';
+      sub.textContent='Tu bater\u00eda es NMC: mantenerla cerca del 100% acelera su desgaste. '+
+        'Para el d\u00eda a d\u00eda basta con quedarte entre el 20% y el 80%, y llegar al 100% solo antes de un viaje largo.';
+      return;
+    }
+
+    btn.classList.remove('hidden');
+    card.classList.remove('hidden');
+
+    if(chem==='unknown'){
+      dot.style.background=cssVar('--muted')||'#5A676D';
+      main.style.color='';
+      main.textContent='Indica el tipo de bater\u00eda';
+      sub.textContent='El consejo de carga cambia seg\u00fan sea LFP o NMC. Ponlo en los datos de tu veh\u00edculo '+
+        'y aqu\u00ed ver\u00e1s el que te corresponde.';
+      btn.classList.add('hidden');
+      return;
+    }
+
+    var raw = p ? ls(calibKey(p.id)) : null;
     if(!raw){
       dot.style.background=AMBER; main.style.color=AMBER;
       main.textContent='Sin registro todav\u00eda';
-      sub.textContent='Si tu bater\u00eda es de tipo LFP, conviene llegar al 100% una vez por semana para que el coche no pierda precisi\u00f3n al medir la carga.';
+      sub.textContent='Tu bater\u00eda es LFP: conviene llegar al 100% una vez por semana para que el coche '+
+        'no pierda precisi\u00f3n al medir la carga.';
       return;
     }
     var last=new Date(raw), days=Math.floor((Date.now()-last)/86400000);
@@ -785,57 +1138,54 @@
 
   function openVehicle(id){
     editingId=id||null;
-    var p=null;
-    if(id){ var d=loadProfiles(); for(var i=0;i<d.list.length;i++){ if(d.list[i].id===id) p=d.list[i]; } }
-    document.getElementById('ov-title').textContent = p?'Editar veh\u00edculo':'Configura tu veh\u00edculo';
-    document.getElementById('ov-lead').textContent = p
+    var p = id ? byId(loadProfiles().list,id) : null;
+    $('ov-title').textContent = p?'Editar veh\u00edculo':'Configura tu veh\u00edculo';
+    $('ov-lead').textContent = p
       ? 'Cambia lo que necesites. Los c\u00e1lculos se actualizar\u00e1n al guardar.'
       : 'Todos los c\u00e1lculos dependen de estos datos. Los encontrar\u00e1s en la ficha t\u00e9cnica, el manual o la web del fabricante.';
-    document.getElementById('ov-name').value = p?p.name:'';
-    document.getElementById('ov-battery').value = p?p.battery:'';
-    document.getElementById('ov-maxPower').value = p?p.maxPower:'';
-    document.getElementById('ov-elecCons').value = p?p.elecCons:'';
-    document.getElementById('ov-fuelCons').value = p?p.fuelCons:'';
-    document.getElementById('ov-chargeEff').value = p?p.chargeEff:85;
-    document.getElementById('ov-err').classList.remove('show');
+    $('ov-name').value = p?p.name:'';
+    $('ov-battery').value = p?p.battery:'';
+    $('ov-maxPower').value = p?p.maxPower:'';
+    $('ov-elecCons').value = p?p.elecCons:'';
+    $('ov-fuelCons').value = p?p.fuelCons:'';
+    $('ov-chargeEff').value = p?p.chargeEff:85;
+    $('ov-chem').value = p?(p.chem||'unknown'):'unknown';
+    $('ov-err').classList.remove('show');
     var canCancel = loadProfiles().list.length>0;
-    document.getElementById('ov-cancel').style.display = canCancel?'':'none';
-    document.getElementById('ov-delete').style.display = (p && loadProfiles().list.length>1)?'':'none';
-    document.getElementById('overlay').classList.add('open');
+    $('ov-cancel').style.display = canCancel?'':'none';
+    $('ov-delete').style.display = (p && loadProfiles().list.length>1)?'':'none';
+    openOverlay('overlay',true);
   }
-  function closeVehicle(){ document.getElementById('overlay').classList.remove('open'); }
+  function closeVehicle(){ openOverlay('overlay',false); }
 
   function saveVehicle(){
-    var err=document.getElementById('ov-err');
-    var name=document.getElementById('ov-name').value.trim().slice(0,24);
-    var battery=parseFloat(document.getElementById('ov-battery').value);
-    var maxPower=parseFloat(document.getElementById('ov-maxPower').value);
-    var elecCons=parseFloat(document.getElementById('ov-elecCons').value);
-    var fuelCons=parseFloat(document.getElementById('ov-fuelCons').value);
-    var chargeEff=parseFloat(document.getElementById('ov-chargeEff').value);
+    var err=$('ov-err');
+    var name=$('ov-name').value.trim().slice(0,24);
+    var battery=parseFloat($('ov-battery').value);
+    var maxPower=parseFloat($('ov-maxPower').value);
+    var elecCons=parseFloat($('ov-elecCons').value);
+    var fuelCons=parseFloat($('ov-fuelCons').value);
+    var chargeEff=parseFloat($('ov-chargeEff').value);
+    var chem=$('ov-chem').value;
 
     function bad(msg){ err.textContent=msg; err.classList.add('show'); }
+    function needPositive(v,msg){ return (!isFinite(v)||v<=0) ? bad(msg)||true : false; }
     if(!name) return bad('Ponle un nombre al veh\u00edculo.');
-    if(!isFinite(battery)||battery<=0) return bad('La capacidad de bater\u00eda debe ser mayor que cero.');
-    if(!isFinite(maxPower)||maxPower<=0) return bad('La potencia m\u00e1xima debe ser mayor que cero.');
-    if(!isFinite(elecCons)||elecCons<=0) return bad('El consumo el\u00e9ctrico debe ser mayor que cero.');
-    if(!isFinite(fuelCons)||fuelCons<=0) return bad('El consumo en h\u00edbrido debe ser mayor que cero.');
+    if(needPositive(battery,'La capacidad de bater\u00eda debe ser mayor que cero.')) return;
+    if(needPositive(maxPower,'La potencia m\u00e1xima debe ser mayor que cero.')) return;
+    if(needPositive(elecCons,'El consumo el\u00e9ctrico debe ser mayor que cero.')) return;
+    if(needPositive(fuelCons,'El consumo en h\u00edbrido debe ser mayor que cero.')) return;
     if(!isFinite(chargeEff)||chargeEff<=0||chargeEff>100) return bad('La eficiencia debe estar entre 1 y 100%.');
 
     var d=loadProfiles();
+    var entry={ id:editingId||('v'+Date.now()), name:name, battery:battery, maxPower:maxPower,
+                elecCons:elecCons, fuelCons:fuelCons, chargeEff:chargeEff, chem:chem };
     if(editingId){
-      for(var i=0;i<d.list.length;i++){
-        if(d.list[i].id===editingId){
-          d.list[i]={ id:editingId, name:name, battery:battery, maxPower:maxPower,
-                      elecCons:elecCons, fuelCons:fuelCons, chargeEff:chargeEff };
-        }
-      }
+      var cur=byId(d.list,editingId);
+      if(cur) d.list[d.list.indexOf(cur)]=entry;
     } else {
-      var id='v'+Date.now();
-      d.list.push({ id:id, name:name, battery:battery, maxPower:maxPower,
-                    elecCons:elecCons, fuelCons:fuelCons, chargeEff:chargeEff });
-      d.activeId=id;
-      els.elecConsumption.value=elecCons;
+      d.list.push(entry);
+      d.activeId=entry.id;
     }
     saveProfiles(d);
     closeVehicle();
@@ -846,14 +1196,13 @@
     if(!editingId) return;
     var d=loadProfiles();
     if(d.list.length<=1){ alert('Debe quedar al menos un veh\u00edculo.'); return; }
-    var p=null;
-    for(var i=0;i<d.list.length;i++){ if(d.list[i].id===editingId) p=d.list[i]; }
+    var p=byId(d.list,editingId);
     if(!p) return;
     if(!confirm('\u00bfEliminar "'+p.name+'" y su historial?')) return;
     d.list=d.list.filter(function(x){ return x.id!==editingId; });
     if(d.activeId===editingId) d.activeId=d.list[0].id;
     saveProfiles(d);
-    try{ localStorage.removeItem(histKey(editingId)); localStorage.removeItem(calibKey(editingId)); }catch(e){}
+    lsDel(histKey(editingId)); lsDel(calibKey(editingId));
     closeVehicle();
     refreshAll();
   }
@@ -862,29 +1211,49 @@
     var d=loadProfiles();
     d.activeId=id; saveProfiles(d);
     var p=activeProfile();
-    if(p){
-      els.elecConsumption.value=p.elecCons;
-      document.querySelectorAll('.preset-btn').forEach(function(b){
-        b.classList.toggle('active', b.getAttribute('data-preset')==='mixto');
-      });
-    }
+    if(p){ applyConditions(); }
     refreshAll();
   }
 
   function refreshAll(){
     renderVehicles();
+    applyConditions();
     renderCalibration();
     renderHistory();
     render();
   }
 
+  var COLD_KEY='cvg_cold_v1', PRESET_KEY='cvg_preset_v1';
+  var coldOn = ls(COLD_KEY)==='1';
+  var activePreset = ls(PRESET_KEY)||'mixto';
+
+  function applyConditions(){
+    var p=activeProfile(); if(!p) return;
+    var f=PRESET_FACTORS[activePreset]||PRESET_FACTORS.mixto;
+    var e=p.elecCons*f.elec, g=p.fuelCons*f.fuel;
+    if(coldOn){ e*=f.coldElec; g*=f.coldFuel; }
+    els.elecConsumption.value=Math.round(e*10)/10;
+    els.fuelConsumption.value=Math.round(g*10)/10;
+    lsSet(COLD_KEY, coldOn?'1':'0');
+    lsSet(PRESET_KEY, activePreset||'');
+    syncConditionUI();
+  }
+  function syncConditionUI(){
+    document.querySelectorAll('#preset-row .preset-btn').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-preset')===activePreset);
+    });
+    var cb=$('btn-cold');
+    cb.classList.toggle('active', coldOn);
+    $('cold-mark').innerHTML = coldOn ? '&#9679;' : '&#9675;';
+  }
+
   // ---------- PRECIOS REALES ----------
   function fetchRealPrices(){
-    var btn=document.getElementById('btn-refresh'),
-        label=document.getElementById('refresh-btn-label'),
-        hint=document.getElementById('fuel-hint'),
-        note=document.getElementById('refresh-note'),
-        listEl=document.getElementById('station-list');
+    var btn=$('btn-refresh'),
+        label=$('refresh-btn-label'),
+        hint=$('fuel-hint'),
+        note=$('refresh-note'),
+        listEl=$('station-list');
     function reset(){ btn.disabled=false; label.textContent='Buscar gasolineras cercanas'; }
     function fail(msg){
       reset();
@@ -965,7 +1334,7 @@
   // ---------- EVENTOS ----------
   SESSION_KEYS.forEach(function(k){ els[k].addEventListener('input', render); });
 
-  document.getElementById('veh-row').addEventListener('click', function(e){
+  $('veh-row').addEventListener('click', function(e){
     if(e.target.closest('#veh-add')){ openVehicle(null); return; }
     var b=e.target.closest('[data-veh]');
     if(!b) return;
@@ -973,61 +1342,76 @@
     if(activeProfile() && activeProfile().id===id) openVehicle(id);
     else switchVehicle(id);
   });
-  document.getElementById('ov-save').addEventListener('click', saveVehicle);
-  document.getElementById('ov-cancel').addEventListener('click', closeVehicle);
-  document.getElementById('ov-delete').addEventListener('click', deleteVehicle);
-  document.getElementById('btn-edit-vehicle').addEventListener('click', function(){
+  $('ov-save').addEventListener('click', saveVehicle);
+  $('ov-cancel').addEventListener('click', closeVehicle);
+  $('ov-delete').addEventListener('click', deleteVehicle);
+  $('btn-edit-vehicle').addEventListener('click', function(){
     var p=activeProfile(); if(p) openVehicle(p.id);
   });
 
-  document.getElementById('mode-parked').addEventListener('click', function(){ setMode('parked'); });
-  document.getElementById('mode-trip').addEventListener('click', function(){ setMode('trip'); });
-  document.getElementById('btn-save-parked').addEventListener('click', function(){ saveRecharge(this); });
-  document.getElementById('btn-save-trip').addEventListener('click', function(){ saveRecharge(this); });
-  document.getElementById('btn-mark-full').addEventListener('click', function(){
+  $('mode-parked').addEventListener('click', function(){ setMode('parked'); });
+  $('mode-trip').addEventListener('click', function(){ setMode('trip'); });
+  $('btn-save-parked').addEventListener('click', function(){ saveRecharge(this); });
+  $('btn-save-trip').addEventListener('click', function(){ saveRecharge(this); });
+  $('btn-mark-full').addEventListener('click', function(){
     var p=activeProfile(); if(!p) return;
-    try{ localStorage.setItem(calibKey(p.id),new Date().toISOString()); }catch(e){}
+    lsSet(calibKey(p.id), new Date().toISOString());
     renderCalibration(); flash(this,'\u2713 Registrado');
   });
-  document.getElementById('btn-clear-history').addEventListener('click', function(){
+  $('btn-clear-history').addEventListener('click', function(){
     var p=activeProfile(); if(!p) return;
     if(!confirm('\u00bfBorrar el historial de '+p.name+'?')) return;
     storeHistory([]); renderHistory();
   });
-  document.getElementById('preset-row').addEventListener('click', function(e){
+  $('preset-row').addEventListener('click', function(e){
     var b=e.target.closest('.preset-btn'); if(!b) return;
-    var p=activeProfile(); if(!p) return;
-    var f=PRESET_FACTORS[b.getAttribute('data-preset')]||1;
-    els.elecConsumption.value=Math.round(p.elecCons*f*10)/10;
-    document.querySelectorAll('.preset-btn').forEach(function(x){ x.classList.toggle('active',x===b); });
+    activePreset=b.getAttribute('data-preset');
+    applyConditions();
     render();
   });
-  els.elecConsumption.addEventListener('input', function(){
-    document.querySelectorAll('.preset-btn').forEach(function(x){ x.classList.remove('active'); });
+  $('btn-cold').addEventListener('click', function(){
+    coldOn=!coldOn;
+    applyConditions();
+    render();
   });
-  var tg=document.getElementById('settings-toggle'), pn=document.getElementById('settings-panel');
+  ['elecConsumption','fuelConsumption'].forEach(function(k){
+    els[k].addEventListener('input', function(){
+      activePreset=null; coldOn=false;
+      lsSet(COLD_KEY,'0');
+      syncConditionUI();
+    });
+  });
+  var tg=$('settings-toggle'), pn=$('settings-panel');
   tg.addEventListener('click', function(){ pn.classList.toggle('open'); tg.classList.toggle('open'); });
-  document.getElementById('btn-refresh').addEventListener('click', fetchRealPrices);
-  document.getElementById('saved-chargers').addEventListener('click', function(e){
-    var del=e.target.closest('[data-del]');
-    if(del){
-      var di=parseInt(del.getAttribute('data-del'),10), l=loadChargers();
-      if(l[di]&&confirm('\u00bfBorrar "'+l[di].name+'"?')){ l.splice(di,1); saveChargers(l); renderChargers(); }
-      return;
-    }
-    if(e.target.closest('#chip-add')){ addCharger(); return; }
+  $('btn-refresh').addEventListener('click', fetchRealPrices);
+  $('saved-chargers').addEventListener('click', function(e){
+    if(e.target.closest('#chip-add')){ openCharger(null); return; }
     var chip=e.target.closest('.chip');
-    if(!chip||!chip.hasAttribute('data-idx')) return;
-    var c=loadChargers()[parseInt(chip.getAttribute('data-idx'),10)];
-    if(!c) return;
-    els.chargerPrice.value=c.price; els.chargerPower.value=c.power; render();
+    if(!chip||!chip.hasAttribute('data-id')) return;
+    var id=chip.getAttribute('data-id');
+    if(id===selectedChargerId){ openCharger(id); return; }
+    var c=byId(loadChargers(),id);
+    if(c){ setSelectedCharger(id); applyCharger(c); }
+    renderChargers(); render();
   });
-  document.getElementById('station-list').addEventListener('click', function(e){
+  $('ch-save').addEventListener('click', saveCharger);
+  $('ch-cancel').addEventListener('click', closeCharger);
+  $('ch-delete').addEventListener('click', deleteCharger);
+  $('ch-mode').addEventListener('change', syncChargerMode);
+
+  // editar los datos del punto a mano deselecciona el cargador guardado
+  ['chargerPrice','chargerPower','pricePerMin','pricingMode'].forEach(function(k){
+    els[k].addEventListener('input', function(){
+      if(selectedChargerId){ setSelectedCharger(null); renderChargers(); }
+    });
+  });
+
+  $('station-list').addEventListener('click', function(e){
     var row=e.target.closest('.station'); if(!row) return;
     var st=lastStations[parseInt(row.getAttribute('data-idx'),10)];
     if(!st) return;
     els.fuelPrice.value=st.price.toFixed(3);
-    var hint=document.getElementById('fuel-hint');
+    var hint=$('fuel-hint');
     hint.textContent=st.name+' \u00b7 '+fmt(st.dist,1)+' km';
     hint.classList.add('live');
     document.querySelectorAll('.station').forEach(function(el){ el.style.borderColor=''; });
@@ -1037,11 +1421,11 @@
 
   function setMode(m){
     mode=m;
-    try{ localStorage.setItem(MODE_KEY,m); }catch(e){}
-    document.getElementById('mode-parked').classList.toggle('active',m==='parked');
-    document.getElementById('mode-trip').classList.toggle('active',m==='trip');
-    document.getElementById('block-parked').classList.toggle('hidden',m!=='parked');
-    document.getElementById('block-trip').classList.toggle('hidden',m!=='trip');
+    lsSet(MODE_KEY,m);
+    $('mode-parked').classList.toggle('active',m==='parked');
+    $('mode-trip').classList.toggle('active',m==='trip');
+    $('block-parked').classList.toggle('hidden',m!=='parked');
+    $('block-trip').classList.toggle('hidden',m!=='trip');
     render();
   }
 
