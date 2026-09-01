@@ -574,7 +574,7 @@
 
 <script>
 (function(){
-  var CURRENT_VERSION = "2026-08-29-26";
+  var CURRENT_VERSION = "2026-08-29-27";
   (function checkForUpdates(){
     try{
       if(sessionStorage.getItem('atto2_update_check') === CURRENT_VERSION) return;
@@ -631,6 +631,24 @@
     'valladolid':'47','bizkaia':'48','vizcaya':'48','zamora':'49','zaragoza':'50','ceuta':'51','melilla':'52'
   };
 
+  // --- utilidades ---
+  var _el={};
+  function $(id){ return _el[id]||(_el[id]=document.getElementById(id)); }
+  function ls(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
+  function lsJSON(k,fallback){
+    try{ var v=JSON.parse(localStorage.getItem(k)||'null'); return v===null?fallback:v; }
+    catch(e){ return fallback; }
+  }
+  function lsPut(k,v){ lsSet(k,JSON.stringify(v)); }
+  function byId(list,id){
+    for(var i=0;i<list.length;i++){ if(list[i].id===id) return list[i]; }
+    return null;
+  }
+  function show(el,on){ el.classList.toggle('hidden', !on); }
+  function openOverlay(id,on){ $(id).classList.toggle('open', !!on); }
+
   var els={};
   SESSION_KEYS.forEach(function(k){ els[k]=$('inp-'+k); });
 
@@ -656,24 +674,6 @@
     if(mm===0) return hh+' h';
     return hh+' h '+mm+' min';
   }
-  // --- utilidades ---
-  var _el={};
-  function $(id){ return _el[id]||(_el[id]=$(id)); }
-  function ls(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
-  function lsSet(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
-  function lsDel(k){ try{ localStorage.removeItem(k); }catch(e){} }
-  function lsJSON(k,fallback){
-    try{ var v=JSON.parse(localStorage.getItem(k)||'null'); return v===null?fallback:v; }
-    catch(e){ return fallback; }
-  }
-  function lsPut(k,v){ lsSet(k,JSON.stringify(v)); }
-  function byId(list,id){
-    for(var i=0;i<list.length;i++){ if(list[i].id===id) return list[i]; }
-    return null;
-  }
-  function show(el,on){ el.classList.toggle('hidden', !on); }
-  function openOverlay(id,on){ $(id).classList.toggle('open', !!on); }
-
   function haversine(la1,lo1,la2,lo2){
     var R=6371, dLa=(la2-la1)*Math.PI/180, dLo=(lo2-lo1)*Math.PI/180;
     var a=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(la1*Math.PI/180)*Math.cos(la2*Math.PI/180)*Math.sin(dLo/2)*Math.sin(dLo/2);
