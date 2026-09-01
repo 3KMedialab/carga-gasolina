@@ -589,7 +589,7 @@
 
 <script>
 (function(){
-  var CURRENT_VERSION = "2026-08-29-34";
+  var CURRENT_VERSION = "2026-08-29-35";
   (function checkForUpdates(){
     try{
       if(sessionStorage.getItem('atto2_update_check') === CURRENT_VERSION) return;
@@ -949,16 +949,11 @@
   selectedChargerId=ls(SELCH_KEY)||null;
 
   function loadChargers(){
+    // Los cargadores guardados antes de la ficha no tienen id, y sin id no se pueden
+    // seleccionar ni editar. El resto de campos ya se leen con valor por defecto.
     var l=lsJSON(CHARGERS_KEY,[]), changed=false;
     for(var i=0;i<l.length;i++){
-      var c=l[i];
-      if(!c.id){ c.id='c'+Date.now()+i; changed=true; }          // guardados antes de la ficha
-      if(c.mode===undefined){ c.mode=0; changed=true; }
-      if(c.perMin===undefined){ c.perMin=0; changed=true; }
-      if(c.freeHours===undefined){ c.freeHours=0; changed=true; }
-      if(c.overMin===undefined){ c.overMin=0; changed=true; }
-      if(c.note===undefined){ c.note=''; changed=true; }
-      if(!c.updated){ c.updated=new Date().toISOString(); changed=true; }
+      if(!l[i].id){ l[i].id='c'+Date.now()+i; changed=true; }
     }
     if(changed) saveChargers(l);
     return l;
@@ -1042,7 +1037,7 @@
         var newVal=entry.mode===1?entry.perMin:entry.price;
         if((old.mode||0)===entry.mode && Math.abs(oldVal-newVal)>=0.005){
           alert(name+' pas\u00f3 de '+fmt(oldVal,2)+' a '+fmt(newVal,2)+' desde el '+
-            new Date(old.updated).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+'.');
+            new Date(old.updated||Date.now()).toLocaleDateString('es-ES',{day:'2-digit',month:'short'})+'.');
         }
         list[list.indexOf(old)]=entry;
       }
