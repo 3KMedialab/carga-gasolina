@@ -71,6 +71,9 @@
   @media (max-width:380px){ .field-row{ grid-template-columns:1fr; } }
   .field{ margin-bottom:14px; }
   .field label{ display:block; font-size:12px; color:var(--muted); margin-bottom:5px; }
+  .label-row{ display:flex !important; justify-content:space-between; align-items:baseline; gap:8px; }
+  .link-btn{ background:none; border:none; padding:0; color:var(--neutral); font-size:11.5px;
+    font-weight:500; text-decoration:underline; }
   .field-input-wrap{ display:flex; align-items:baseline; background:var(--surface);
     border:1px solid var(--line); border-radius:7px; padding:9px 11px; }
   .field-input-wrap.key{ border-color:var(--line-strong); }
@@ -275,6 +278,29 @@
   </div>
 </div>
 
+<!-- AYUDA -->
+<div class="overlay" id="help-overlay">
+  <div class="sheet">
+    <h2>Ayuda</h2>
+    <div class="glossary">
+      <p><strong>C&oacute;mo se usa.</strong> Pon el precio y la potencia del punto donde est&aacute;s, el precio de la gasolina y el estado de tu bater&iacute;a. La app te dice si compensa enchufar y cu&aacute;nto ahorras o pierdes.</p>
+      <p><strong>Cargadores guardados.</strong> Guarda los puntos donde cargas para no reescribir sus datos. Toca uno para usarlo; toca el que ya est&aacute; activo para editarlo o eliminarlo. El reloj &#9201;&#65039; indica que ese punto cobra un recargo si ocupas la plaza demasiado tiempo.</p>
+      <p><strong>Buscar gasolineras.</strong> Usa tu ubicaci&oacute;n y los precios oficiales del Ministerio, actualizados a diario. Solo funciona en Espa&ntilde;a. Toca una gasolinera de la lista para usar su precio exacto.</p>
+
+      <p><strong>Eficiencia de carga.</strong> No todos los kWh que pagas llegan a la bater&iacute;a: una parte se pierde por el camino. Con un 85%, de cada 10 kWh que te cobran entran unos 8,5. La app lo tiene en cuenta al comparar.</p>
+      <p><strong>Los dos modos.</strong> En <em>Aparcado</em> el tiempo no cuenta como coste, porque el coche iba a estar ah&iacute; de todas formas; solo limita cu&aacute;ntos kWh caben. En <em>Parada Dedicada</em> s&iacute; se descuenta el desv&iacute;o, porque son km que no habr&iacute;as hecho.</p>
+      <p><strong>Coste del desv&iacute;o.</strong> Se valora a precio de gasolina, que es el supuesto m&aacute;s conservador: si el rodeo lo haces en el&eacute;ctrico, te costar&aacute; algo menos de lo que dice.</p>
+      <p><strong>El fr&iacute;o.</strong> Con el coche fr&iacute;o la calefacci&oacute;n consume unos 2 kW casi constantes, y eso pesa mucho m&aacute;s por kil&oacute;metro yendo despacio que r&aacute;pido: por eso la penalizaci&oacute;n es mayor en ciudad (+45% de consumo el&eacute;ctrico) que en carretera (+18%). La gasolina tambi&eacute;n sube con el fr&iacute;o, pero menos, as&iacute; que el interruptor ajusta las dos cosas a la vez. Act&iacute;valo solo si el coche ha estado a la intemperie: uno que sale de un garaje templado apenas lo nota.</p>
+      <p><strong>El l&iacute;mite del modo fr&iacute;o.</strong> Muchos h&iacute;bridos enchufables arrancan el motor de gasolina para calefactar el habit&aacute;culo cuando hace fr&iacute;o. Si el tuyo lo hace, en invierno no est&aacute;s haciendo kil&oacute;metros el&eacute;ctricos puros y ning&uacute;n factor de esta app lo corrige: los resultados seguir&aacute;n siendo optimistas. Comprueba si tu coche permite calefactar sin arrancar el motor, o si tiene precalentamiento con el coche enchufado &mdash; en ese caso el calor sale de la red y no de la bater&iacute;a, que es mucho mejor negocio.</p>
+      <p><strong>Por qu&eacute; el final tarda m&aacute;s.</strong> Al acercarse al 100% el coche baja la corriente para proteger las celdas, as&iacute; que el &uacute;ltimo tramo tarda bastante m&aacute;s que el resto. Pasa en cualquier bater&iacute;a de litio, pero no igual: una LFP aguanta el ritmo hasta cerca del 90% y luego cae de golpe; una NMC empieza a frenar antes, sobre el 80%, de forma m&aacute;s gradual. La app aplica una u otra seg&uacute;n lo que hayas indicado. Son aproximaciones razonables, no la curva medida de tu modelo concreto: si al cargar de verdad ves tiempos muy distintos, av&iacute;sanos.</p>
+      <p><strong>LFP y NMC.</strong> Son las dos qu&iacute;micas de bater&iacute;a habituales, y piden cuidados opuestos. En una <em>LFP</em> el voltaje apenas var&iacute;a entre el 20% y el 80%, as&iacute; que el coche calcula el porcentaje sumando la energ&iacute;a que entra y sale, y ese c&aacute;lculo se desv&iacute;a con el tiempo: llegar al 100% una vez por semana le da una referencia clara y lo corrige. En una <em>NMC</em>, en cambio, pasar mucho tiempo cerca del 100% acelera el desgaste, as&iacute; que lo recomendable es moverse entre el 20% y el 80% y llenar solo antes de un viaje largo.</p>
+      <p><strong>Comparar dos coches.</strong> Crea un perfil por veh&iacute;culo y alterna entre ellos con el mismo precio de cargador y de gasolina: la diferencia que veas es la real. Cada veh&iacute;culo lleva su propio historial y su propia calibraci&oacute;n.</p>
+      <p><strong>Por qu&eacute; los ahorros son peque&ntilde;os.</strong> Un h&iacute;brido enchufable tiene poca bater&iacute;a, as&iacute; que el ahorro por recarga suele quedarse en pocos euros. La ventaja est&aacute; en repetirlo muchas veces, no en cada carga suelta.</p>
+    </div>
+    <button class="btn-secondary" id="help-close" style="margin-top:6px;">Cerrar</button>
+  </div>
+</div>
+
 <!-- FICHA DE CARGADOR -->
 <div class="overlay" id="ch-overlay">
   <div class="sheet">
@@ -356,7 +382,9 @@
 </div>
 
 <div class="wrap">
-  <h1>&iquest;Compensa cargar aqu&iacute;?</h1>
+  <div class="head">
+    <button class="help-btn" id="btn-help" aria-label="Ayuda">?</button>
+  </div>
 
   <div class="veh-row" id="veh-row"></div>
 
@@ -372,25 +400,24 @@
     <div class="verdict-detail" id="detail"></div>
   </div>
 
+  <select id="inp-pricingMode" class="hidden">
+    <option value="0">Energ&iacute;a</option>
+    <option value="1">Tiempo</option>
+  </select>
   <div class="field-row">
-    <div class="field">
-      <label>El cargador cobra por</label>
-      <div class="field-input-wrap wrap-select">
-        <select id="inp-pricingMode" class="sel">
-          <option value="0">Energ&iacute;a (&euro;/kWh)</option>
-          <option value="1">Tiempo (&euro;/min)</option>
-        </select>
-      </div>
-    </div>
     <div class="field" id="field-price-kwh">
-      <label>Precio</label>
+      <label class="label-row">Precio del cargador
+        <button class="link-btn" id="btn-switch-pricing">cobra por tiempo</button>
+      </label>
       <div class="field-input-wrap key">
         <input class="num" id="inp-chargerPrice" type="number" inputmode="decimal" step="0.01" value="0.30">
         <span class="field-unit">&euro;/kWh</span>
       </div>
     </div>
     <div class="field hidden" id="field-price-min">
-      <label>Precio</label>
+      <label class="label-row">Precio del cargador
+        <button class="link-btn" id="btn-switch-pricing2">cobra por energ&iacute;a</button>
+      </label>
       <div class="field-input-wrap key">
         <input class="num" id="inp-pricePerMin" type="number" inputmode="decimal" step="0.01" value="0.10">
         <span class="field-unit">&euro;/min</span>
@@ -404,7 +431,7 @@
       <input class="num" id="inp-fuelPrice" type="number" inputmode="decimal" step="0.01" value="1.744">
       <span class="field-unit">&euro;/L</span>
     </div>
-    <div class="field-hint" id="fuel-hint">Escr&iacute;belo o b&uacute;scalo abajo</div>
+    <div class="field-hint" id="fuel-hint"></div>
   </div>
 
   <div class="field-row">
@@ -432,7 +459,7 @@
     <span style="font-size:15px;line-height:1;">&#8635;</span>
     <span id="refresh-btn-label">Buscar gasolineras cercanas</span>
   </button>
-  <p class="refresh-note" id="refresh-note">Precios oficiales del Ministerio (Espa&ntilde;a), actualizados a diario.</p>
+  <p class="refresh-note" id="refresh-note"></p>
 
   <div class="station-list" id="station-list"></div>
 
@@ -491,18 +518,16 @@
     </div>
   </div>
 
-  <div class="card" id="calib-card">
-    <div class="calib">
+  <div class="card">
+    <div class="calib" id="calib-card">
       <div class="calib-dot" id="calib-dot"></div>
       <div>
         <div class="calib-main" id="calib-main">Sin registro todav&iacute;a</div>
-        <div class="calib-sub" id="calib-sub">Conviene llegar al 100% una vez por semana para que el coche no pierda precisi&oacute;n al medir la carga.</div>
+        <div class="calib-sub" id="calib-sub"></div>
       </div>
     </div>
     <button class="btn-save" id="btn-mark-full">Hoy he cargado al 100%</button>
-  </div>
-
-  <div class="card">
+    <div class="divider" style="margin:14px 0 12px;"></div>
     <div class="totals">
       <div class="total"><div class="n num" id="hist-count">0</div><div class="l">recargas guardadas</div></div>
       <div class="total"><div class="n num" id="hist-total">0,00 &euro;</div><div class="l">ahorrados en total</div></div>
@@ -557,25 +582,14 @@
     <div class="panel-sub">Veh&iacute;culo activo</div>
     <div id="veh-summary" class="glossary"></div>
     <button class="btn-secondary" id="btn-edit-vehicle">Editar datos del veh&iacute;culo</button>
+    <button class="btn-secondary" id="btn-add-vehicle" style="margin-top:8px;">A&ntilde;adir otro veh&iacute;culo</button>
 
-    <div class="panel-sub">Qu&eacute; significa cada cosa</div>
-    <div class="glossary">
-      <p><strong>Eficiencia de carga.</strong> No todos los kWh que pagas llegan a la bater&iacute;a: una parte se pierde por el camino. Con un 85%, de cada 10 kWh que te cobran entran unos 8,5. La app lo tiene en cuenta al comparar.</p>
-      <p><strong>Los dos modos.</strong> En <em>Aparcado</em> el tiempo no cuenta como coste, porque el coche iba a estar ah&iacute; de todas formas; solo limita cu&aacute;ntos kWh caben. En <em>Parada Dedicada</em> s&iacute; se descuenta el desv&iacute;o, porque son km que no habr&iacute;as hecho.</p>
-      <p><strong>Coste del desv&iacute;o.</strong> Se valora a precio de gasolina, que es el supuesto m&aacute;s conservador: si el rodeo lo haces en el&eacute;ctrico, te costar&aacute; algo menos de lo que dice.</p>
-      <p><strong>El fr&iacute;o.</strong> Con el coche fr&iacute;o la calefacci&oacute;n consume unos 2 kW casi constantes, y eso pesa mucho m&aacute;s por kil&oacute;metro yendo despacio que r&aacute;pido: por eso la penalizaci&oacute;n es mayor en ciudad (+45% de consumo el&eacute;ctrico) que en carretera (+18%). La gasolina tambi&eacute;n sube con el fr&iacute;o, pero menos, as&iacute; que el interruptor ajusta las dos cosas a la vez. Act&iacute;valo solo si el coche ha estado a la intemperie: uno que sale de un garaje templado apenas lo nota.</p>
-      <p><strong>El l&iacute;mite del modo fr&iacute;o.</strong> Muchos h&iacute;bridos enchufables arrancan el motor de gasolina para calefactar el habit&aacute;culo cuando hace fr&iacute;o. Si el tuyo lo hace, en invierno no est&aacute;s haciendo kil&oacute;metros el&eacute;ctricos puros y ning&uacute;n factor de esta app lo corrige: los resultados seguir&aacute;n siendo optimistas. Comprueba si tu coche permite calefactar sin arrancar el motor, o si tiene precalentamiento con el coche enchufado &mdash; en ese caso el calor sale de la red y no de la bater&iacute;a, que es mucho mejor negocio.</p>
-      <p><strong>Por qu&eacute; el final tarda m&aacute;s.</strong> Al acercarse al 100% el coche baja la corriente para proteger las celdas, as&iacute; que el &uacute;ltimo tramo tarda bastante m&aacute;s que el resto. Pasa en cualquier bater&iacute;a de litio, pero no igual: una LFP aguanta el ritmo hasta cerca del 90% y luego cae de golpe; una NMC empieza a frenar antes, sobre el 80%, de forma m&aacute;s gradual. La app aplica una u otra seg&uacute;n lo que hayas indicado. Son aproximaciones razonables, no la curva medida de tu modelo concreto: si al cargar de verdad ves tiempos muy distintos, av&iacute;sanos.</p>
-      <p><strong>LFP y NMC.</strong> Son las dos qu&iacute;micas de bater&iacute;a habituales, y piden cuidados opuestos. En una <em>LFP</em> el voltaje apenas var&iacute;a entre el 20% y el 80%, as&iacute; que el coche calcula el porcentaje sumando la energ&iacute;a que entra y sale, y ese c&aacute;lculo se desv&iacute;a con el tiempo: llegar al 100% una vez por semana le da una referencia clara y lo corrige. En una <em>NMC</em>, en cambio, pasar mucho tiempo cerca del 100% acelera el desgaste, as&iacute; que lo recomendable es moverse entre el 20% y el 80% y llenar solo antes de un viaje largo.</p>
-      <p><strong>Comparar dos coches.</strong> Crea un perfil por veh&iacute;culo y alterna entre ellos con el mismo precio de cargador y de gasolina: la diferencia que veas es la real. Cada veh&iacute;culo lleva su propio historial y su propia calibraci&oacute;n.</p>
-      <p><strong>Por qu&eacute; los ahorros son peque&ntilde;os.</strong> Un h&iacute;brido enchufable tiene poca bater&iacute;a, as&iacute; que el ahorro por recarga suele quedarse en pocos euros. La ventaja est&aacute; en repetirlo muchas veces, no en cada carga suelta.</p>
-    </div>
   </div>
 </div>
 
 <script>
 (function(){
-  var CURRENT_VERSION = "2026-08-29-32";
+  var CURRENT_VERSION = "2026-08-29-34";
   (function checkForUpdates(){
     try{
       if(sessionStorage.getItem('atto2_update_check') === CURRENT_VERSION) return;
@@ -699,8 +713,9 @@
     var html=d.list.map(function(p){
       return '<button class="veh'+(act&&p.id===act.id?' active':'')+'" data-veh="'+p.id+'">'+esc(p.name)+'</button>';
     }).join('');
-    html+='<button class="veh veh-add" id="veh-add">+ Veh\u00edculo</button>';
+    if(d.list.length>1) html+='<button class="veh veh-add" id="veh-add">+ Veh\u00edculo</button>';
     $('veh-row').innerHTML=html;
+    show($('veh-row'), d.list.length>1);
 
     var sum=$('veh-summary');
     if(act){
@@ -964,9 +979,7 @@
       return '<span class="chip'+(on?' active':'')+'" data-id="'+c.id+'">'+warn+esc(c.name)+
         ' <span class="price">'+shown+'</span></span>';
     }).join('')+'<button class="chip chip-add" id="chip-add">+ Guardar este</button></div>';
-    if(!list.length) html+='<div class="saved-hint">Guarda los puntos donde cargas para no reescribir sus datos, con sus notas y su recargo por exceso de tiempo.</div>';
-    else html+='<div class="saved-hint">Toca uno para usarlo. Toca el activo otra vez para editarlo. '+
-      '\u23f1\ufe0f = tiene recargo por tiempo.</div>';
+    if(!list.length) html+='<div class="saved-hint">Guarda aqu\u00ed los puntos donde cargas.</div>';
     $('saved-chargers').innerHTML=html;
   }
 
@@ -1367,6 +1380,7 @@
   $('btn-edit-vehicle').addEventListener('click', function(){
     var p=activeProfile(); if(p) openVehicle(p.id);
   });
+  $('btn-add-vehicle').addEventListener('click', function(){ openVehicle(null); });
 
   $('mode-parked').addEventListener('click', function(){ setMode('parked'); });
   $('mode-trip').addEventListener('click', function(){ setMode('trip'); });
@@ -1417,6 +1431,15 @@
   $('ch-cancel').addEventListener('click', closeCharger);
   $('ch-delete').addEventListener('click', deleteCharger);
   $('ch-mode').addEventListener('change', syncChargerMode);
+  $('btn-help').addEventListener('click', function(){ openOverlay('help-overlay',true); });
+  function switchPricing(){
+    els.pricingMode.value = num(els.pricingMode)===1 ? 0 : 1;
+    if(selectedChargerId){ setSelectedCharger(null); renderChargers(); }
+    render();
+  }
+  $('btn-switch-pricing').addEventListener('click', switchPricing);
+  $('btn-switch-pricing2').addEventListener('click', switchPricing);
+  $('help-close').addEventListener('click', function(){ openOverlay('help-overlay',false); });
 
   // editar los datos del punto a mano deselecciona el cargador guardado
   ['chargerPrice','chargerPower','pricePerMin','pricingMode'].forEach(function(k){
