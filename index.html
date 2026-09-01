@@ -98,10 +98,7 @@
   .chip .price{ color:var(--dim); font-size:11.5px; font-variant-numeric:tabular-nums; }
   .chip.active .price{ color:var(--sub); }
   .chip-add{ background:transparent; border-style:dashed; border-color:var(--line-strong); }
-  .chip-dot{ width:6px; height:6px; border-radius:50%; background:var(--warn);
-    display:inline-block; flex-shrink:0; }
-  .hint-dot{ width:6px; height:6px; border-radius:50%; background:var(--warn);
-    display:inline-block; vertical-align:middle; }
+  .chip-clock{ font-size:11px; line-height:1; flex-shrink:0; }
   .chip-del{ background:none; border:none; color:var(--dim); font-size:15px; padding:0 0 0 2px;
     line-height:1; }
   .saved-hint{ font-size:11.5px; color:var(--dim); margin:-6px 0 14px; line-height:1.4; }
@@ -578,7 +575,7 @@
 
 <script>
 (function(){
-  var CURRENT_VERSION = "2026-08-29-30";
+  var CURRENT_VERSION = "2026-08-29-32";
   (function checkForUpdates(){
     try{
       if(sessionStorage.getItem('atto2_update_check') === CURRENT_VERSION) return;
@@ -936,7 +933,21 @@
   var SELCH_KEY='cvg_selch_v1';
   selectedChargerId=ls(SELCH_KEY)||null;
 
-  function loadChargers(){ return lsJSON(CHARGERS_KEY,[]); }
+  function loadChargers(){
+    var l=lsJSON(CHARGERS_KEY,[]), changed=false;
+    for(var i=0;i<l.length;i++){
+      var c=l[i];
+      if(!c.id){ c.id='c'+Date.now()+i; changed=true; }          // guardados antes de la ficha
+      if(c.mode===undefined){ c.mode=0; changed=true; }
+      if(c.perMin===undefined){ c.perMin=0; changed=true; }
+      if(c.freeHours===undefined){ c.freeHours=0; changed=true; }
+      if(c.overMin===undefined){ c.overMin=0; changed=true; }
+      if(c.note===undefined){ c.note=''; changed=true; }
+      if(!c.updated){ c.updated=new Date().toISOString(); changed=true; }
+    }
+    if(changed) saveChargers(l);
+    return l;
+  }
   function saveChargers(l){ lsPut(CHARGERS_KEY,l); }
   function selectedCharger(){ return selectedChargerId ? byId(loadChargers(),selectedChargerId) : null; }
   function setSelectedCharger(id){
@@ -949,13 +960,13 @@
     var html='<div class="saved-row">'+list.map(function(c){
       var on = c.id===selectedChargerId;
       var shown = c.mode===1 ? fmt(c.perMin||0,2)+'/min' : fmt(c.price,2);
-      var warn = c.overMin>0 ? '<span class="chip-dot" title="Tiene recargo por tiempo"></span>' : '';
+      var warn = c.overMin>0 ? '<span class="chip-clock" title="Tiene recargo por tiempo">\u23f1\ufe0f</span> ' : '';
       return '<span class="chip'+(on?' active':'')+'" data-id="'+c.id+'">'+warn+esc(c.name)+
         ' <span class="price">'+shown+'</span></span>';
     }).join('')+'<button class="chip chip-add" id="chip-add">+ Guardar este</button></div>';
     if(!list.length) html+='<div class="saved-hint">Guarda los puntos donde cargas para no reescribir sus datos, con sus notas y su recargo por exceso de tiempo.</div>';
     else html+='<div class="saved-hint">Toca uno para usarlo. Toca el activo otra vez para editarlo. '+
-      '<span class="hint-dot"></span> = tiene recargo por tiempo.</div>';
+      '\u23f1\ufe0f = tiene recargo por tiempo.</div>';
     $('saved-chargers').innerHTML=html;
   }
 
