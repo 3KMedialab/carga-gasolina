@@ -98,6 +98,10 @@
   .chip .price{ color:var(--dim); font-size:11.5px; font-variant-numeric:tabular-nums; }
   .chip.active .price{ color:var(--sub); }
   .chip-add{ background:transparent; border-style:dashed; border-color:var(--line-strong); }
+  .chip-dot{ width:6px; height:6px; border-radius:50%; background:var(--warn);
+    display:inline-block; flex-shrink:0; }
+  .hint-dot{ width:6px; height:6px; border-radius:50%; background:var(--warn);
+    display:inline-block; vertical-align:middle; }
   .chip-del{ background:none; border:none; color:var(--dim); font-size:15px; padding:0 0 0 2px;
     line-height:1; }
   .saved-hint{ font-size:11.5px; color:var(--dim); margin:-6px 0 14px; line-height:1.4; }
@@ -574,7 +578,7 @@
 
 <script>
 (function(){
-  var CURRENT_VERSION = "2026-08-29-27";
+  var CURRENT_VERSION = "2026-08-29-30";
   (function checkForUpdates(){
     try{
       if(sessionStorage.getItem('atto2_update_check') === CURRENT_VERSION) return;
@@ -945,12 +949,13 @@
     var html='<div class="saved-row">'+list.map(function(c){
       var on = c.id===selectedChargerId;
       var shown = c.mode===1 ? fmt(c.perMin||0,2)+'/min' : fmt(c.price,2);
-      var warn = c.overMin>0 ? ' \u23f1' : '';
-      return '<span class="chip'+(on?' active':'')+'" data-id="'+c.id+'">'+esc(c.name)+warn+
+      var warn = c.overMin>0 ? '<span class="chip-dot" title="Tiene recargo por tiempo"></span>' : '';
+      return '<span class="chip'+(on?' active':'')+'" data-id="'+c.id+'">'+warn+esc(c.name)+
         ' <span class="price">'+shown+'</span></span>';
     }).join('')+'<button class="chip chip-add" id="chip-add">+ Guardar este</button></div>';
     if(!list.length) html+='<div class="saved-hint">Guarda los puntos donde cargas para no reescribir sus datos, con sus notas y su recargo por exceso de tiempo.</div>';
-    else html+='<div class="saved-hint">Toca uno para usarlo. Toca el activo otra vez para editarlo. \u23f1 = tiene recargo por tiempo.</div>';
+    else html+='<div class="saved-hint">Toca uno para usarlo. Toca el activo otra vez para editarlo. '+
+      '<span class="hint-dot"></span> = tiene recargo por tiempo.</div>';
     $('saved-chargers').innerHTML=html;
   }
 
@@ -1197,7 +1202,11 @@
     if(d.list.length<=1){ alert('Debe quedar al menos un veh\u00edculo.'); return; }
     var p=byId(d.list,editingId);
     if(!p) return;
-    if(!confirm('\u00bfEliminar "'+p.name+'" y su historial?')) return;
+    var hist=lsJSON(histKey(editingId),[]);
+    var msg='\u00bfEliminar "'+p.name+'"?';
+    if(hist.length) msg+='\n\nSe borrar\u00e1n tambi\u00e9n sus '+hist.length+
+      (hist.length===1?' recarga guardada':' recargas guardadas')+' y su calibraci\u00f3n. No se puede deshacer.';
+    if(!confirm(msg)) return;
     d.list=d.list.filter(function(x){ return x.id!==editingId; });
     if(d.activeId===editingId) d.activeId=d.list[0].id;
     saveProfiles(d);
