@@ -145,6 +145,16 @@
   .btn-danger{ width:100%; background:transparent; border:1px solid var(--line-strong);
     border-radius:8px; padding:10px; color:var(--bad); font-size:13px; font-weight:500; margin-top:8px; }
 
+  .steps{ margin-bottom:18px; }
+  .step{ display:flex; gap:11px; align-items:flex-start; font-size:12.5px; color:var(--sub);
+    line-height:1.5; margin-bottom:11px; }
+  .step strong{ color:var(--ink); font-weight:500; }
+  .step-n{ width:20px; height:20px; border-radius:50%; background:var(--panel); color:var(--muted);
+    font-size:11.5px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+  .meas-item{ display:flex; justify-content:space-between; align-items:center; padding:9px 0;
+    border-bottom:1px solid var(--line); font-size:12.5px; color:var(--sub); }
+  .meas-item:last-child{ border-bottom:none; }
+  .meas-del{ background:none; border:none; color:var(--dim); font-size:15px; padding:0 0 0 8px; }
   .totals{ display:flex; gap:10px; }
   .total{ flex:1; background:var(--panel); border-radius:8px; padding:11px 12px; }
   .total .n{ font-size:19px; font-weight:500; font-variant-numeric:tabular-nums; }
@@ -283,6 +293,9 @@
   <div class="sheet">
     <h2>Ayuda</h2>
     <div class="glossary">
+      <p><strong>Medir tu coche.</strong> Los c&aacute;lculos parten de dos datos que nadie publica, as&iacute; que de entrada tienen un margen de error de un 30%. En Ajustes puedes medir tu coche de verdad: carga hasta tu nivel habitual, anota el cuentakil&oacute;metros, conduce unos d&iacute;as y vuelve a cargar hasta el mismo nivel. Con 5 u 8 medidas el margen baja a un 5%. No hace falta agotar la bater&iacute;a: basta con volver siempre al mismo punto de carga, igual que se rellena una cantimplora hasta la misma marca.</p>
+      <p><strong>Cargar en casa.</strong> Se configura como un cargador m&aacute;s, con su potencia y su precio. Si tienes tarifa por horas, guarda dos (&laquo;Casa valle&raquo; y &laquo;Casa punta&raquo;) y alterna entre ellos. Ojo con el enchufe normal: a 2,3 kW se pierde mucha m&aacute;s energ&iacute;a que en una wallbox, y de los mismos kWh facturados sacas alrededor de un 18% menos de kil&oacute;metros. En hora punta y con enchufe dom&eacute;stico, cargar puede llegar a no compensar frente a la gasolina.</p>
+      <p><strong>Cargar gratis.</strong> Cuando no pagas nada, la app no decide: solo te dice a cu&aacute;nta gasolina equivale. Gu&aacute;rdala igualmente en el historial, porque suele ser de donde sale la mayor parte del ahorro de tener un enchufable. Excepci&oacute;n: si el punto es gratuito solo un rato y luego cobra por minuto, s&iacute; hace falta el c&aacute;lculo completo, y ah&iacute; es donde m&aacute;s dinero se pierde por descuido.</p>
       <p><strong>C&oacute;mo se usa.</strong> Pon el precio y la potencia del punto donde est&aacute;s, el precio de la gasolina y el estado de tu bater&iacute;a. La app te dice si compensa enchufar y cu&aacute;nto ahorras o pierdes.</p>
       <p><strong>Cargadores guardados.</strong> Guarda los puntos donde cargas para no reescribir sus datos. Toca uno para usarlo; toca el que ya est&aacute; activo para editarlo o eliminarlo. El reloj &#9201;&#65039; indica que ese punto cobra un recargo si ocupas la plaza demasiado tiempo.</p>
       <p><strong>Buscar gasolineras.</strong> Usa tu ubicaci&oacute;n y los precios oficiales del Ministerio, actualizados a diario. Solo funciona en Espa&ntilde;a. Toca una gasolinera de la lista para usar su precio exacto.</p>
@@ -298,6 +311,67 @@
       <p><strong>Por qu&eacute; los ahorros son peque&ntilde;os.</strong> Un h&iacute;brido enchufable tiene poca bater&iacute;a, as&iacute; que el ahorro por recarga suele quedarse en pocos euros. La ventaja est&aacute; en repetirlo muchas veces, no en cada carga suelta.</p>
     </div>
     <button class="btn-secondary" id="help-close" style="margin-top:6px;">Cerrar</button>
+  </div>
+</div>
+
+<!-- MEDICION -->
+<div class="overlay" id="meas-overlay">
+  <div class="sheet">
+    <h2>Medir mi coche</h2>
+    <p class="lead">Los c&aacute;lculos parten de datos que ning&uacute;n fabricante publica. Midiendo tu coche unas cuantas veces, dejan de ser estimaciones.</p>
+
+    <div class="steps">
+      <div class="step"><span class="step-n">1</span><div><strong>Carga hasta tu nivel de referencia</strong><br><span id="meas-level">Elige un nivel y usa siempre el mismo.</span></div></div>
+      <div class="step"><span class="step-n">2</span><div><strong>Anota el cuentakil&oacute;metros</strong> al desenchufar.</div></div>
+      <div class="step"><span class="step-n">3</span><div><strong>Conduce con normalidad.</strong> No hace falta conducir de ninguna forma especial ni por ning&uacute;n sitio concreto.</div></div>
+      <div class="step"><span class="step-n">4</span><div><strong>Vuelve a cargar hasta el mismo nivel</strong>, mejor antes de que se agote la bater&iacute;a. Anota los kil&oacute;metros y los kWh de esa recarga.</div></div>
+    </div>
+
+    <div class="note-box" style="margin-bottom:18px;">Cuenta <strong>todos</strong> los kWh que entraron en ese periodo: p&uacute;blicos, gratuitos del trabajo y los de casa. Si cargaste en alg&uacute;n sitio donde no puedas leer los kWh, esa medida no vale.<br><br>Haz ventanas <strong>cortas</strong>, de un solo ciclo de carga y al menos 30 km. Si dejas pasar varios d&iacute;as, el motor de gasolina habr&aacute; funcionado mucho y la medida pierde valor.</div>
+
+    <div class="err" id="meas-err"></div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Km al empezar</label>
+        <div class="field-input-wrap">
+          <input class="num" id="meas-km1" type="number" inputmode="decimal" step="1" placeholder="52140">
+          <span class="field-unit">km</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Km al terminar</label>
+        <div class="field-input-wrap">
+          <input class="num" id="meas-km2" type="number" inputmode="decimal" step="1" placeholder="52390">
+          <span class="field-unit">km</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>kWh cargados en total</label>
+        <div class="field-input-wrap key">
+          <input class="num" id="meas-kwh" type="number" inputmode="decimal" step="0.1" placeholder="24.5">
+          <span class="field-unit">kWh</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Gasolina gastada</label>
+        <div class="field-input-wrap">
+          <input class="num" id="meas-lit" type="number" inputmode="decimal" step="0.1" value="0">
+          <span class="field-unit">litros</span>
+        </div>
+        <div class="field-hint">Del ordenador de a bordo. Pon 0 si el motor no lleg&oacute; a arrancar</div>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="meas-save">Guardar medida</button>
+    <button class="btn-secondary" id="meas-close" style="margin-top:10px;">Cerrar</button>
+
+    <div class="panel-sub">Tus medidas</div>
+    <div id="meas-summary" class="glossary"></div>
+    <div id="meas-list"></div>
   </div>
 </div>
 
@@ -583,13 +657,14 @@
     <div id="veh-summary" class="glossary"></div>
     <button class="btn-secondary" id="btn-edit-vehicle">Editar datos del veh&iacute;culo</button>
     <button class="btn-secondary" id="btn-add-vehicle" style="margin-top:8px;">A&ntilde;adir otro veh&iacute;culo</button>
+    <button class="btn-secondary" id="btn-measure" style="margin-top:8px;">Medir mi coche con datos reales</button>
 
   </div>
 </div>
 
 <script>
 (function(){
-  var CURRENT_VERSION = "2026-08-29-35";
+  var CURRENT_VERSION = "2026-08-29-38";
   (function checkForUpdates(){
     try{
       if(sessionStorage.getItem('atto2_update_check') === CURRENT_VERSION) return;
@@ -831,13 +906,18 @@
     };
     var r = simulate(cfg);
 
+    // gratis y sin ataduras: no hay nada que decidir
+    var precio = cfg.byMinute ? cfg.pricePerMin : cfg.chargerPrice;
+    var isFree = precio<=0 && cfg.sessionFee<=0 && cfg.overMin<=0 && cfg.detourKm<=0;
+
     var worth = !r.nothingToCharge && r.net > 0;
-    var tight = !r.nothingToCharge && r.net >= 0 && Math.abs(r.net) < 0.10;
+    var tight = !r.nothingToCharge && !isFree && r.net >= 0 && Math.abs(r.net) < 0.10;
     var accent = r.nothingToCharge||tight ? AMBER : (worth ? VOLT : FLAME);
 
     var badge=$('badge');
     badge.textContent = r.nothingToCharge ? 'Bater\u00eda llena'
-      : (tight ? 'Casi igual' : (worth ? 'Compensa cargar' : 'Mejor repostar'));
+      : (isFree ? 'Gratis'
+      : (tight ? 'Casi igual' : (worth ? 'Compensa cargar' : 'Mejor repostar')));
     badge.style.color=accent;
 
     var amountEl=$('amount');
@@ -845,7 +925,8 @@
     amountEl.style.color = r.nothingToCharge ? AMBER : (r.net>=0?VOLT:FLAME);
     $('amount-label').textContent = (r.nothingToCharge
       ? 'no cabe energ\u00eda en la bater\u00eda'
-      : (r.net>=0 ? 'de ahorro en esta recarga' : 'de sobrecoste en esta recarga'))
+      : (isFree ? 'que te habr\u00edas gastado en gasolina'
+      : (r.net>=0 ? 'de ahorro en esta recarga' : 'de sobrecoste en esta recarga')))
       + (coldOn ? ' \u00b7 calculado con fr\u00edo' : '');
     $('verdict').style.borderLeftColor=accent;
 
@@ -853,6 +934,8 @@
     if(r.nothingToCharge){
       detail.innerHTML='Tu bater\u00eda ya est\u00e1 al '+fmt(cfg.currentSoc,0)+'%.'+
         (cfg.sessionFee>0?' Enchufar aqu\u00ed solo te costar\u00eda la tarifa fija de '+fmt(cfg.sessionFee)+' '+EURO+'.':'');
+    } else if(isFree){
+      detail.innerHTML='<strong class="num">'+fmt(r.km,0)+' km</strong> sin coste.';
     } else if(r.equivFuel>0){
       var pct=Math.abs(r.net)/r.equivFuel*100;
       detail.innerHTML='Hacer esos <strong class="num">'+fmt(r.km,0)+' km</strong> enchufado te sale un '+
@@ -886,6 +969,8 @@
       var limit = ch && ch.overMin>0 ? findLimitHours(cfg) : null;
       if(r.nothingToCharge){
         pkNote.innerHTML='<span style="color:'+AMBER+'">No tiene sentido enchufar</span>: tu bater\u00eda ya est\u00e1 llena.';
+      } else if(isFree){
+        pkNote.innerHTML='Enchufa el tiempo que quieras: no hay nada que decidir.';
       } else if(limit!==null && cfg.parkHours>=limit){
         pkNote.innerHTML='<span style="color:'+FLAME+'">Llevas demasiado tiempo.</span> A partir de '+
           fmtTime(limit)+' el recargo se come el ahorro. Desconecta antes.';
@@ -938,7 +1023,7 @@
     noteEl.textContent = ch && ch.note ? ch.note : '';
     show(noteEl, !!(ch && ch.note));
 
-    lastCalc={ chargerPrice: cfg.byMinute ? r.effectivePerKwh : cfg.chargerPrice, savings:r.net, km:r.km };
+    lastCalc={ chargerPrice: cfg.byMinute ? r.effectivePerKwh : cfg.chargerPrice, savings:r.net, km:r.km, free: r.sessionCost<=0 };
     renderChargers();
     saveSession();
   }
@@ -1087,11 +1172,23 @@
     var p=activeProfile();
     var list=loadHistory();
     $('hist-count').textContent=list.length;
-    var total=list.reduce(function(s,e){ return s+e.savings; },0);
+    var total=0, gratis=0, pagado=0;
+    list.forEach(function(e){
+      total+=e.savings;
+      if(e.free) gratis+=e.savings; else pagado+=e.savings;
+    });
     var t=$('hist-total');
     t.textContent=(total>=0?'+':'\u2212')+fmt(Math.abs(total))+' '+EURO;
     t.style.color= total>=0?VOLT:FLAME;
-    $('hist-note').textContent = p ? 'Historial de '+p.name+'.' : '';
+
+    var nota='';
+    if(list.length && gratis>0 && pagado!==0){
+      nota=fmt(gratis/total*100,0)+'% viene de cargar gratis ('+fmt(gratis)+' '+EURO+
+           ') y el resto de decisiones de pago ('+fmt(pagado)+' '+EURO+').';
+    } else if(list.length && gratis>0){
+      nota='Todo el ahorro viene de cargar gratis.';
+    } else if(p){ nota='Historial de '+p.name+'.'; }
+    $('hist-note').textContent=nota;
   }
   function renderCalibration(){
     var p=activeProfile();
@@ -1152,7 +1249,8 @@
   function saveRecharge(btn){
     if(!lastCalc||!activeProfile()) return;
     var l=loadHistory();
-    l.push({ date:new Date().toISOString(), chargerPrice:lastCalc.chargerPrice, savings:lastCalc.savings, km:lastCalc.km });
+    l.push({ date:new Date().toISOString(), chargerPrice:lastCalc.chargerPrice,
+             savings:lastCalc.savings, km:lastCalc.km, free:!!lastCalc.free });
     storeHistory(l); renderHistory(); flash(btn,'\u2713 Guardada');
   }
 
@@ -1229,7 +1327,7 @@
     d.list=d.list.filter(function(x){ return x.id!==editingId; });
     if(d.activeId===editingId) d.activeId=d.list[0].id;
     saveProfiles(d);
-    lsDel(histKey(editingId)); lsDel(calibKey(editingId));
+    lsDel(histKey(editingId)); lsDel(calibKey(editingId)); lsDel(measKey(editingId));
     closeVehicle();
     refreshAll();
   }
@@ -1257,7 +1355,7 @@
   function applyConditions(){
     var p=activeProfile(); if(!p) return;
     var f=PRESET_FACTORS[activePreset]||PRESET_FACTORS.mixto;
-    var e=p.elecCons*f.elec, g=p.fuelCons*f.fuel;
+    var e=baseElecCons(p)*f.elec, g=p.fuelCons*f.fuel;
     if(coldOn){ e*=f.coldElec; g*=f.coldFuel; }
     els.elecConsumption.value=Math.round(e*10)/10;
     els.fuelConsumption.value=Math.round(g*10)/10;
@@ -1272,6 +1370,92 @@
     var cb=$('btn-cold');
     cb.classList.toggle('active', coldOn);
     $('cold-mark').innerHTML = coldOn ? '&#9679;' : '&#9675;';
+  }
+
+  // ---------- MEDICIONES REALES (R = km por kWh facturado) ----------
+  function measKey(id){ return 'cvg_meas_'+id; }
+  function loadMeas(){ var p=activeProfile(); return p ? lsJSON(measKey(p.id),[]) : []; }
+  function storeMeas(l){ var p=activeProfile(); if(p) lsPut(measKey(p.id),l); }
+
+  // R medio y dispersion de las medidas del vehiculo activo
+  function measStats(){
+    var l=loadMeas();
+    if(!l.length) return { n:0, R:null, cv:null, band:0.30 };
+    var sum=0; l.forEach(function(m){ sum+=m.R; });
+    var mean=sum/l.length;
+    if(l.length<2) return { n:1, R:mean, cv:null, band:0.15 };
+    var v=0; l.forEach(function(m){ v+=(m.R-mean)*(m.R-mean); });
+    var sd=Math.sqrt(v/(l.length-1));
+    var cv=mean>0?sd/mean:0;
+    return { n:l.length, R:mean, cv:cv, band: 1.645*cv/Math.sqrt(l.length) };
+  }
+
+  // Consumo electrico base: medido si hay datos, declarado si no
+  function baseElecCons(prof){
+    var s=measStats();
+    if(s.R>0) return prof.chargeEff/s.R;   // eff(%)/R  ==  kWh/100km equivalente
+    return prof.elecCons;
+  }
+
+  function renderMeas(){
+    var s=measStats(), l=loadMeas(), prof=activeProfile();
+    var chem = prof ? (prof.chem||'unknown') : 'unknown';
+    $('meas-level').innerHTML = chem==='lfp'
+      ? 'Con tu bater\u00eda LFP, el <strong>100%</strong>: el coche se para solo ah\u00ed y adem\u00e1s le conviene.'
+      : (chem==='nmc'
+        ? 'Con tu bater\u00eda NMC no conviene llegar al 100%. Usa tu l\u00edmite habitual, normalmente el <strong>80%</strong>, y repite siempre el mismo.'
+        : 'Usa siempre el mismo nivel. Si tu bater\u00eda es LFP, el 100%; si es NMC, tu l\u00edmite habitual (suele ser el 80%).');
+    var sum=$('meas-summary');
+    if(!s.n){
+      sum.innerHTML='<p>Todav\u00eda no has medido nada. Mientras tanto la app usa estimaciones, '+
+        'con un margen de error de alrededor del 30%.</p>';
+    } else {
+      var base=prof?prof.chargeEff/s.R:0;
+      sum.innerHTML='<p><strong>'+s.n+(s.n===1?' medida':' medidas')+'</strong><br>'+
+        'Rindes <strong>'+fmt(s.R,2)+' km por cada kWh</strong> que te facturan.<br>'+
+        'Equivale a un consumo de '+fmt(base,1)+' kWh/100km.<br>'+
+        'Margen de error actual: \u00b1'+fmt(s.band*100,0)+'%'+
+        (s.n<3?' \u2014 con 2 o 3 medidas m\u00e1s bajar\u00e1 bastante.':'')+'</p>';
+    }
+    $('meas-list').innerHTML = l.slice().reverse().map(function(m){
+      var d=new Date(m.date).toLocaleDateString('es-ES',{day:'2-digit',month:'short'});
+      return '<div class="meas-item"><span>'+d+' \u00b7 '+fmt(m.km,0)+' km / '+fmt(m.kwh,1)+' kWh</span>'+
+        '<span><strong>'+fmt(m.R,2)+'</strong> km/kWh'+
+        '<button class="meas-del" data-mid="'+m.id+'" aria-label="Borrar">&times;</button></span></div>';
+    }).join('');
+  }
+
+  function saveMeas(){
+    var err=$('meas-err');
+    function bad(m){ err.textContent=m; err.classList.add('show'); return false; }
+    var prof=activeProfile(); if(!prof) return;
+    var km1=parseFloat($('meas-km1').value), km2=parseFloat($('meas-km2').value);
+    var kwh=parseFloat($('meas-kwh').value), lit=parseFloat($('meas-lit').value);
+    var cond=activePreset||'mixto';
+    if(!isFinite(km1)||!isFinite(km2)) return bad('Faltan los kil\u00f3metros.');
+    if(km2<=km1) return bad('Los km del final deben ser mayores que los del principio.');
+    if(!isFinite(kwh)||kwh<=0) return bad('Indica los kWh cargados en total.');
+    if(!isFinite(lit)||lit<0) lit=0;
+
+    var kmTot=km2-km1;
+    var kmGas = prof.fuelCons>0 ? (lit/prof.fuelCons)*100 : 0;   // km hechos con gasolina
+    var kmElec = kmTot - kmGas;
+    if(kmElec<=0) return bad('Seg\u00fan la gasolina gastada, todos esos km los hizo el motor. Esta medida no sirve.');
+    if(kmGas/kmTot > 0.5) return bad('M\u00e1s de la mitad de los km fueron con gasolina: la medida ser\u00eda poco fiable.');
+
+    var R = kmElec/kwh;
+    if(R<0.5 || R>15) return bad('El resultado ('+fmt(R,2)+' km/kWh) no es cre\u00edble. Revisa los datos.');
+
+    var l=loadMeas();
+    l.push({ id:'m'+Date.now(), date:new Date().toISOString(), km:kmTot, kmElec:kmElec,
+             kwh:kwh, litres:lit, cond:cond, R:R });
+    storeMeas(l);
+    ['meas-km1','meas-km2','meas-kwh'].forEach(function(id){ $(id).value=''; });
+    $('meas-lit').value='0';
+    err.classList.remove('show');
+    renderMeas();
+    applyConditions();
+    render();
   }
 
   // ---------- PRECIOS REALES ----------
@@ -1427,6 +1611,18 @@
   $('ch-delete').addEventListener('click', deleteCharger);
   $('ch-mode').addEventListener('change', syncChargerMode);
   $('btn-help').addEventListener('click', function(){ openOverlay('help-overlay',true); });
+  $('btn-measure').addEventListener('click', function(){
+    $('meas-err').classList.remove('show'); renderMeas(); openOverlay('meas-overlay',true);
+  });
+  $('meas-close').addEventListener('click', function(){ openOverlay('meas-overlay',false); });
+  $('meas-save').addEventListener('click', saveMeas);
+  $('meas-list').addEventListener('click', function(e){
+    var b=e.target.closest('[data-mid]'); if(!b) return;
+    var id=b.getAttribute('data-mid');
+    if(!confirm('\u00bfBorrar esta medida?')) return;
+    storeMeas(loadMeas().filter(function(m){ return m.id!==id; }));
+    renderMeas(); applyConditions(); render();
+  });
   function switchPricing(){
     els.pricingMode.value = num(els.pricingMode)===1 ? 0 : 1;
     if(selectedChargerId){ setSelectedCharger(null); renderChargers(); }
