@@ -111,13 +111,33 @@ export function findLimitHours(cfg){
  * R = km eléctricos por kWh facturado. Absorbe eficiencia, consumo y errores
  * de capacidad declarada, así que sustituye a las tres estimaciones.
  */
-export function measStats(list){
-  if(!list.length) return { n: 0, R: null, cv: null, band: 0.30 };
-  const mean = list.reduce((s, m) => s + m.R, 0) / list.length;
-  if(list.length < 2) return { n: 1, R: mean, cv: null, band: 0.15 };
-  const v = list.reduce((s, m) => s + (m.R - mean) ** 2, 0) / (list.length - 1);
+// Solo cuentan las medidas recientes: R se mueve mucho más con la estación
+// del año (±30%) que con el desgaste de la batería (0,5% anual), así que una
+// medida de invierno no debe seguir pesando en verano.
+export const MEAS_MAX = 8;        // como mucho, las 8 últimas
+export const MEAS_MESES = 6;      // y solo de los últimos 6 meses
+
+/** Devuelve las medidas vigentes, de más antigua a más reciente. */
+export function measVigentes(list, ahora = Date.now()){
+  const limite = ahora - MEAS_MESES * 30 * 86400000;
+  const recientes = list.filter(m => {
+    const t = new Date(m.date).getTime();
+    return isFinite(t) ? t >= limite : true;
+  });
+  // si todas son antiguas, nos quedamos con las últimas para no perder la referencia
+  const base = recientes.length ? recientes : list;
+  return base.slice(-MEAS_MAX);
+}
+
+export function measStats(list, ahora = Date.now()){
+  const usadas = measVigentes(list, ahora);
+  const descartadas = list.length - usadas.length;
+  if(!usadas.length) return { n: 0, R: null, cv: null, band: 0.30, descartadas: 0 };
+  const mean = usadas.reduce((s, m) => s + m.R, 0) / usadas.length;
+  if(usadas.length < 2) return { n: 1, R: mean, cv: null, band: 0.15, descartadas };
+  const v = usadas.reduce((s, m) => s + (m.R - mean) ** 2, 0) / (usadas.length - 1);
   const cv = mean > 0 ? Math.sqrt(v) / mean : 0;
-  return { n: list.length, R: mean, cv, band: 1.645 * cv / Math.sqrt(list.length) };
+  return { n: usadas.length, R: mean, cv, band: 1.645 * cv / Math.sqrt(usadas.length), descartadas };
 }
 
 /** Valida una medición y devuelve {ok, R, error}. */

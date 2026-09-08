@@ -7,7 +7,8 @@ import {
 } from './util.js';
 
 import {
-  PRESET_FACTORS, simulate, findLimitHours, measStats, buildMeasurement
+  PRESET_FACTORS, simulate, findLimitHours, measStats, buildMeasurement,
+  measVigentes, MEAS_MAX, MEAS_MESES
 } from './calculo.js';
 
 import * as D from './datos.js';
@@ -563,16 +564,24 @@ function renderMeas(){
       'con un margen de error de alrededor del 30%.</p>';
   } else {
     const base = prof ? prof.chargeEff / s.R : 0;
-    sum.innerHTML = `<p><strong>${s.n}${s.n === 1 ? ' medida' : ' medidas'}</strong><br>` +
+    sum.innerHTML = `<p><strong>${s.n}${s.n === 1 ? ' medida en uso' : ' medidas en uso'}</strong><br>` +
       `Rindes <strong>${fmt(s.R, 2)} km por cada kWh</strong> que te facturan.<br>` +
       `Equivale a un consumo de ${fmt(base, 1)} kWh/100km.<br>` +
       `Margen de error actual: \u00b1${fmt(s.band * 100, 0)}%` +
-      (s.n < 3 ? ' \u2014 con 2 o 3 medidas más bajará bastante.' : '') + '</p>';
+      (s.n < 3 ? ' \u2014 con 2 o 3 medidas más bajará bastante.' : '') + '</p>' +
+      (s.descartadas
+        ? `<p>Se guardan ${s.descartadas} ${s.descartadas === 1 ? 'medida más antigua' : 'medidas más antiguas'}, ` +
+          `pero no cuentan: solo se usan las ${MEAS_MAX} últimas de los ${MEAS_MESES} últimos meses. ` +
+          `R cambia mucho más con la estación del año que con el desgaste de la batería, ` +
+          `así que una medida de invierno no debe pesar en verano.</p>`
+        : '');
   }
 
+  const enUso = new Set(measVigentes(list).map(m => m.id));
   $('meas-list').innerHTML = list.slice().reverse().map(m => {
     const d = new Date(m.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-    return `<div class="meas-item"><span>${d} \u00b7 ${fmt(m.km, 0)} km / ${fmt(m.kwh, 1)} kWh</span>` +
+    const vieja = enUso.has(m.id) ? '' : ' meas-vieja';
+    return `<div class="meas-item${vieja}"><span>${d} \u00b7 ${fmt(m.km, 0)} km / ${fmt(m.kwh, 1)} kWh</span>` +
       `<span><strong>${fmt(m.R, 2)}</strong> km/kWh` +
       `<button class="meas-del" data-mid="${m.id}" aria-label="Borrar">&times;</button></span></div>`;
   }).join('');
