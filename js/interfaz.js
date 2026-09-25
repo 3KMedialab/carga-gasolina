@@ -27,6 +27,7 @@ const SESSION_KEYS = [
 // --- estado de la vista ---
 const els = {};
 let mode = 'parked';
+let parkUnit = 'h'; // 'h' o 'min' — solo cambia cómo se muestra/escribe inp-parkHours
 let coldOn = false;
 let activePreset = 'mixto';
 let selectedChargerId = null;
@@ -59,7 +60,7 @@ function render(){
     chargerPower: num(els.chargerPower), maxPower: prof.maxPower,
     chargeEff: prof.chargeEff, chem: prof.chem || 'unknown',
     battery: prof.battery, currentSoc: num(els.currentSoc),
-    parkHours: num(els.parkHours), sessionKwh: num(els.sessionKwh),
+    parkHours: parkHoursValue(), sessionKwh: num(els.sessionKwh),
     detourKm: num(els.detourKm),
     chargerPrice: num(els.chargerPrice), byMinute: num(els.pricingMode) === 1,
     pricePerMin: num(els.pricePerMin), sessionFee: num(els.sessionFee),
@@ -781,6 +782,30 @@ function setMode(m){
   render();
 }
 
+/** Valor de inp-parkHours convertido a horas, sea cual sea la unidad mostrada. */
+function parkHoursValue(){
+  const v = num(els.parkHours);
+  return parkUnit === 'min' ? v / 60 : v;
+}
+
+function syncParkUnitUI(){
+  $('btn-parkUnit').textContent = parkUnit === 'min' ? 'min' : 'horas';
+  els.parkHours.step = parkUnit === 'min' ? '1' : '0.25';
+}
+
+/** Cambia min<->horas conservando la duración real (transparente para quien escribe). */
+function toggleParkUnit(){
+  const horas = parkHoursValue(); // con la unidad todavía antigua
+  parkUnit = parkUnit === 'min' ? 'h' : 'min';
+  D.setParkUnit(parkUnit);
+  const mostrado = parkUnit === 'min' ? horas * 60 : horas;
+  const decimales = parkUnit === 'min' ? 0 : 2;
+  const factor = 10 ** decimales;
+  els.parkHours.value = Math.round(mostrado * factor) / factor;
+  syncParkUnitUI();
+  render();
+}
+
 function refreshAll(){
   renderVehicles();
   applyConditions();
@@ -812,6 +837,7 @@ function bindEvents(){
 
   $('mode-parked').addEventListener('click', () => setMode('parked'));
   $('mode-trip').addEventListener('click', () => setMode('trip'));
+  $('btn-parkUnit').addEventListener('click', toggleParkUnit);
   $('btn-save-parked').addEventListener('click', function(){ saveRecharge(this); });
   $('btn-save-trip').addEventListener('click', function(){ saveRecharge(this); });
 
@@ -939,6 +965,7 @@ export function iniciar(){
   SESSION_KEYS.forEach(k => { els[k] = $('inp-' + k); });
 
   mode = D.getMode();
+  parkUnit = D.getParkUnit();
   coldOn = D.getCold();
   activePreset = D.getPreset();
   selectedChargerId = D.getSelectedChargerId();
@@ -947,6 +974,7 @@ export function iniciar(){
   onSchemeChange(() => { if(D.activeProfile()) render(); });
 
   bindEvents();
+  syncParkUnitUI();
   D.loadSessionInto(els, SESSION_KEYS);
   setMode(mode);
 
