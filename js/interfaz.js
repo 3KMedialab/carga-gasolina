@@ -36,6 +36,8 @@ let lastCalc = null;
 let lastStations = [];
 let lastOcmResults = [];
 let selectedOcmResult = null;
+let mostrarTodosOcm = false;
+const OCM_VISIBLES = 5; // tarjetas antes de "Ver más"
 
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
@@ -694,6 +696,7 @@ async function buscarCargadoresCercanos(){
     const { resultados, radioKm } = await buscarCargadoresOCM();
     lastOcmResults = resultados;
     selectedOcmResult = null;
+    mostrarTodosOcm = false;
 
     note.textContent = 'Distancias en línea recta, no por carretera \u00b7 hasta ' +
       fmt(radioKm, 0) + ' km.';
@@ -707,34 +710,60 @@ async function buscarCargadoresCercanos(){
 
 function renderCargadoresResultados(){
   const listEl = $('cargadores-resultados');
-  listEl.innerHTML = lastOcmResults.map(r => {
+  const visibles = mostrarTodosOcm ? lastOcmResults : lastOcmResults.slice(0, OCM_VISIBLES);
+  const resto = lastOcmResults.length - visibles.length;
+
+  const tarjetas = visibles.map(r => {
     const sel = selectedOcmResult && selectedOcmResult.id === r.id;
-    const lineas = r.conexiones.map(c =>
-      `<div class="ocm-line">${c.qty > 1 ? c.qty + '\u00d7 ' : ''}Tipo 2 \u00b7 ${fmt(c.kw, c.kw % 1 ? 1 : 0)} kW</div>`
-    ).join('');
-    const fr = frescuraOCM(r.verified);
-    const avisoTiempo = pareceRecargoPorTiempo(r.price, r.note);
+    const maxKw = Math.max(...r.conexiones.map(c => c.kw));
+    const resumenKw = (r.conexiones.length > 1 ? 'hasta ' : '') + fmt(maxKw, maxKw % 1 ? 1 : 0) + ' kW';
+    const distLabel = r.distanceKm == null ? '' :
+      (r.distanceKm < 1 ? Math.round(r.distanceKm * 1000) + ' m' : fmt(r.distanceKm, 1) + ' km');
+
+    let detalle = '';
+    if(sel){
+      const lineas = r.conexiones.map(c =>
+        `<div class="ocm-line">${c.qty > 1 ? c.qty + '\u00d7 ' : ''}Tipo 2 \u00b7 ${fmt(c.kw, c.kw % 1 ? 1 : 0)} kW</div>`
+      ).join('');
+      const fr = frescuraOCM(r.verified);
+      const avisoTiempo = pareceRecargoPorTiempo(r.price, r.note);
+      detalle = `<div class="ocm-detalle">
+        ${lineas}
+        ${r.operatorName ? `<div class="ocm-operator">${esc(r.operatorName)}</div>` : ''}
+        ${r.price ? `<div class="ocm-price">${esc(r.price)} \u00b7 orientativo, conf\u00edrmalo al llegar</div>` : ''}
+        ${r.note ? `<div class="ocm-note${avisoTiempo ? ' warn' : ''}">${esc(r.note)}</div>` : ''}
+        <div class="ocm-verified ocm-verified-${fr.nivel}">${fr.label}</div>
+      </div>`;
+    }
+
     return `<button type="button" class="ocm-card${sel ? ' active' : ''}" data-ocm-id="${r.id}">
       <div class="ocm-head">
-        <strong>${esc(r.name)}${r.yaGuardado ? '<span class="tag">GUARDADO</span>' : ''}</strong>
-        <span class="ocm-dist">${r.distanceKm == null ? '' :
-          (r.distanceKm < 1 ? Math.round(r.distanceKm * 1000) + ' m' : fmt(r.distanceKm, 1) + ' km')}</span>
+        <span class="ocm-title"><span class="ocm-chevron">${sel ? '\u25be' : '\u25b8'}</span>${esc(r.name)}${r.yaGuardado ? '<span class="tag">GUARDADO</span>' : ''}</span>
+        <span class="ocm-dist">${distLabel}</span>
       </div>
-      ${lineas}
-      ${r.operatorName ? `<div class="ocm-operator">${esc(r.operatorName)}</div>` : ''}
-      ${r.price ? `<div class="ocm-price">${esc(r.price)} \u00b7 orientativo, conf\u00edrmalo al llegar</div>` : ''}
-      ${r.note ? `<div class="ocm-note${avisoTiempo ? ' warn' : ''}">${esc(r.note)}</div>` : ''}
-      <div class="ocm-verified ocm-verified-${fr.nivel}">${fr.label}</div>
+      <div class="ocm-summary">${resumenKw}</div>
+      ${detalle}
     </button>`;
   }).join('');
+
+  const toggle = resto > 0
+    ? `<button type="button" class="ocm-toggle" data-ocm-toggle="mas">Ver ${resto} m\u00e1s</button>`
+    : (mostrarTodosOcm && lastOcmResults.length > OCM_VISIBLES
+        ? `<button type="button" class="ocm-toggle" data-ocm-toggle="menos">Ver menos</button>`
+        : '');
+
+  listEl.innerHTML = tarjetas + toggle;
 }
 
 function seleccionarOcmResultado(id){
   const r = lastOcmResults.find(x => String(x.id) === String(id));
   if(!r) return;
-  selectedOcmResult = r;
-  els.chargerPower.value = Math.max(...r.conexiones.map(c => c.kw));
-  if(selectedChargerId){ setSelectedCharger(null); renderChargers(); }
+  // toca la ya seleccionada: se contrae (deselecciona), en vez de quedarse fija
+  selectedOcmResult = (selectedOcmResult && selectedOcmResult.id === r.id) ? null : r;
+  if(selectedOcmResult){
+    els.chargerPower.value = Math.max(...selectedOcmResult.conexiones.map(c => c.kw));
+    if(selectedChargerId){ setSelectedCharger(null); renderChargers(); }
+  }
   renderCargadoresResultados();
   render();
 }
@@ -819,6 +848,11 @@ function bindEvents(){
 
   $('btn-buscar-cargadores').addEventListener('click', buscarCargadoresCercanos);
   $('cargadores-resultados').addEventListener('click', e => {
+    const toggle = e.target.closest('[data-ocm-toggle]');
+    if(toggle){
+      mostrarTodosOcm = toggle.getAttribute('data-ocm-toggle') === 'mas';
+      return renderCargadoresResultados();
+    }
     const card = e.target.closest('[data-ocm-id]');
     if(card) seleccionarOcmResultado(card.getAttribute('data-ocm-id'));
   });
