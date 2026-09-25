@@ -140,6 +140,37 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   dom.desmontar();
 }
 
+// ---------- 6. buscar cargadores públicos, sin geolocalización disponible ----------
+// El simulador deja navigator.geolocation en null (como un navegador que no
+// lo soporta) y fetch siempre falla: el único camino que se puede ejercitar
+// aquí sin red real es el de error, pero es justo el que garantiza que la
+// app no se queda "colgada" (botón deshabilitado) si el usuario no da permiso.
+{
+  const dom = montar({
+    'cvg_schema': '2',
+    'cvg_profiles_v1': JSON.stringify({ list:[{ id:'v1', name:'Atto 2', battery:18, maxPower:6.6,
+      elecCons:22, fuelCons:5.0, chargeEff:86, chem:'lfp' }], activeId:'v1' }),
+    'cvg_mode_v1':'parked'
+  });
+  const { iniciar, _test } = await import('./js/interfaz.js?6');
+  iniciar();
+
+  await _test.buscarCargadoresCercanos();
+
+  ok('sin geolocalización, avisa con el mensaje correcto',
+     dom.get('cargadores-note').textContent.includes('geolocalizaci\u00f3n'),
+     dom.get('cargadores-note').textContent);
+  ok('...y no deja ningún resultado a medias',
+     dom.get('cargadores-resultados').innerHTML === '');
+  ok('...y el botón vuelve a estar disponible para reintentar',
+     dom.get('btn-buscar-cargadores').disabled === false);
+  ok('...con la etiqueta original, no "Buscando..." colgado',
+     dom.get('buscar-cargadores-label').textContent === 'Buscar cargadores cercanos',
+     dom.get('buscar-cargadores-label').textContent);
+
+  dom.desmontar();
+}
+
 // ---------- resumen ----------
 console.log('='.repeat(50));
 if(falla){
