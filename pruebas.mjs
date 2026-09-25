@@ -137,14 +137,64 @@ ok('LFP frena más arriba que NMC', taper('lfp').knee > taper('nmc').knee);
     Math.abs(bajo('lfp').sessionKwh - bajo('nmc').sessionKwh) < 1e-9);
 }
 {
-  // Ojo: en el 85% las dos curvas se cruzan y coinciden. Se comprueba a ambos lados.
-  const alto = (c, soc) => simulate({ ...base('parked'), chem:c, currentSoc:soc, parkHours:4 });
-  ok('bajo el cruce, la NMC tarda más que la LFP',
-    alto('nmc', 70).chargeHours > alto('lfp', 70).chargeHours + 0.01);
-  ok('sobre el cruce, la LFP tarda más que la NMC',
-    alto('lfp', 92).chargeHours > alto('nmc', 92).chargeHours + 0.01);
-  ok('los kWh cargados no dependen de la química',
-    Math.abs(alto('lfp', 70).sessionKwh - alto('nmc', 70).sessionKwh) < 1e-9);
+  // El cruce entre curvas (antes fijo en ~85%) solo se da tal cual a la
+  // tasa C de referencia (cargador tan potente como la batería, 1C).
+  // Se fuerza aquí con battery = maxPower para aislar el efecto.
+  const altoC = (c, soc) => simulate({
+    ...base('parked'), battery:6.6, chem:c, currentSoc:soc, parkHours:4
+  });
+  ok('a 1C, bajo el cruce la NMC tarda más que la LFP',
+    altoC('nmc', 70).chargeHours > altoC('lfp', 70).chargeHours + 0.01);
+  ok('a 1C, sobre el cruce la LFP tarda más que la NMC',
+    altoC('lfp', 92).chargeHours > altoC('nmc', 92).chargeHours + 0.01);
+  ok('a 1C, los kWh cargados no dependen de la química',
+    Math.abs(altoC('lfp', 70).sessionKwh - altoC('nmc', 70).sessionKwh) < 1e-9);
+}
+{
+  // Caso real de un enchufable en AC: el ATTO base carga a 6,6kW/18kWh =
+  // 0,37C. A una tasa tan baja, la química ya casi no cambia el tiempo.
+  const bajoC = c => simulate({ ...base('parked'), chem:c, currentSoc:70, parkHours:4 });
+  const dif = Math.abs(bajoC('lfp').chargeHours - bajoC('nmc').chargeHours);
+  ok('a 0,37C (caso real de carga en AC), LFP y NMC casi no se diferencian',
+    dif < 0.02, `dif=${dif}h`);
+}
+{
+  // Ancla del modelo: a la tasa de referencia, taper(chem, cRate) debe
+  // coincidir con taper(chem) sin tasa C (el comportamiento de siempre).
+  const a = taper('lfp', 1), b = taper('lfp');
+  ok('a la tasa de referencia el taper coincide con el calibrado por química',
+    Math.abs(a.knee - b.knee) < 1e-9 && Math.abs(a.slow - b.slow) < 1e-9);
+}
+{
+  // Bajar la tasa C nunca debe adelantar el knee ni acentuar la frenada.
+  let prevKnee = Infinity, prevSlow = -Infinity, monotono = true;
+  for(let c = 0.05; c <= 1.2; c += 0.05){
+    const { knee, slow } = taper('lfp', c);
+    if(knee > prevKnee + 1e-9) monotono = false;
+    if(slow < prevSlow - 1e-9) monotono = false;
+    prevKnee = knee; prevSlow = slow;
+  }
+  ok('a más tasa C, el knee no sube y el frenazo no se suaviza', monotono);
+}
+
+// ================= RECARGA REAL DE REFERENCIA =================
+seccion('Recarga real (Atto 2 DM-i Boost, 18kWh / 6,6kW AC / LFP)');
+
+{
+  // Medida en un cargador de 45kW, coche solo (sin repartir potencia con
+  // otro vehículo): 82% → 100% en 39 min, 3,932 kWh facturados según el
+  // punto de carga. Ancla el modelo (taper por tasa C incluido) a un
+  // caso real, no solo a invariantes teóricos.
+  const real = simulate({
+    ...base('parked'), chargerPower:45, currentSoc:82, parkHours:39/60
+  });
+  ok('llega al 100% en los 39 min, como en la recarga real',
+    real.finalSoc > 99.9, `finalSoc=${real.finalSoc}`);
+  ok('los kWh previstos están a menos del 10% de los 3,932 kWh reales',
+    Math.abs(real.sessionKwh - 3.932) / 3.932 < 0.10, `previsto=${real.sessionKwh}`);
+  ok('el tiempo previsto está a menos del 10% de los 39 min reales',
+    Math.abs(real.chargeHours * 60 - 39) / 39 < 0.10,
+    `previsto=${(real.chargeHours * 60).toFixed(1)}min`);
 }
 
 // ================= MODOS DE CONDUCCIÓN =================
