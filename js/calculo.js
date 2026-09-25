@@ -23,10 +23,30 @@ export function efficiencyPenalty(power){
 
 // Punto donde el coche empieza a bajar la corriente, y cuánto se ralentiza.
 // Depende de la química: la LFP aguanta más arriba y luego cae de golpe.
-export function taper(chem){
-  if(chem === 'lfp') return { knee: 90, slow: 2.5 };
-  if(chem === 'nmc') return { knee: 80, slow: 2.0 };
-  return { knee: 85, slow: 2.2 };
+// También depende de la tasa C (potencia de carga ÷ batería): a esa
+// frenada la impone el BMS para no forzar las celdas, así que solo hace
+// falta cuando la corriente ya es alta para el tamaño del paquete. Los
+// knee/slow de abajo están calibrados para carga rápida en torno a 1C;
+// una recarga en AC de un enchufable suele quedarse muy por debajo
+// (0,2-0,5C, ver medidas reales), y ahí apenas hace falta frenar hasta
+// el último tramo. Punto de partida razonable, no una curva medida: se
+// irá afinando con más recargas reales (sección 10 del plan de pruebas).
+const C_KNEE_MAX = 97;  // techo del knee a tasas muy bajas (0 < cRate < C_MIN)
+const C_REF = 1;        // tasa C a la que se usan los knee/slow calibrados
+const C_MIN = 0.2;      // por debajo de esto, frenada ya mínima
+
+export function taper(chem, cRate){
+  const base = chem === 'lfp' ? { knee: 90, slow: 2.5 }
+    : chem === 'nmc' ? { knee: 80, slow: 2.0 }
+    : { knee: 85, slow: 2.2 };
+
+  if(!(cRate > 0)) return base; // sin tasa C: comportamiento de siempre
+
+  const t = clamp((cRate - C_MIN) / (C_REF - C_MIN), 0, 1);
+  return {
+    knee: base.knee + (C_KNEE_MAX - base.knee) * (1 - t),
+    slow: 1 + (base.slow - 1) * t
+  };
 }
 
 /**
@@ -40,7 +60,8 @@ export function simulate(c){
   const penalty = efficiencyPenalty(power);
   const eff = clamp(clamp(c.chargeEff, 1, 100) / 100 * penalty, 0.30, 0.99);
 
-  const { knee: KNEE, slow: SLOW } = taper(c.chem);
+  const cRate = c.battery > 0 ? power / c.battery : 0;
+  const { knee: KNEE, slow: SLOW } = taper(c.chem, cRate);
 
   // Factor medio de tiempo entre dos niveles de carga
   function timeFactor(from, to){

@@ -1,7 +1,7 @@
 // gasolineras.js — consulta a la API oficial del Ministerio (solo España).
 // Aislado de la interfaz: devuelve datos o lanza un error con un código.
 
-import { norm, haversine } from './util.js';
+import { norm, haversine, position } from './util.js';
 
 const PROVINCES = {
   'alava':'01','araba':'01','albacete':'02','alicante':'03','alacant':'03','almeria':'04',
@@ -58,14 +58,6 @@ export function pickNearby(all, lat, lon){
 
   const avg = near.reduce((s, x) => s + x.price, 0) / near.length;
   return { top, cheapest, avg, count: near.length };
-}
-
-function position(){
-  return new Promise((resolve, reject) => {
-    if(!navigator.geolocation) return reject(new Error('sin-geo'));
-    navigator.geolocation.getCurrentPosition(resolve, () => reject(new Error('sin-permiso')),
-      { timeout: 8000 });
-  });
 }
 
 /** Devuelve {top, cheapest, avg, count, fecha} o lanza Error con code en .message */

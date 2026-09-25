@@ -13,6 +13,10 @@ import {
 
 import * as D from './datos.js';
 import { buscarCercanas, MENSAJES } from './gasolineras.js';
+import {
+  buscarCercanos as buscarCargadoresOCM, MENSAJES as MENSAJES_OCM,
+  pareceRecargoPorTiempo, frescura as frescuraOCM
+} from './cargadores.js';
 
 const SESSION_KEYS = [
   'chargerPrice','fuelPrice','chargerPower','currentSoc','parkHours',
@@ -30,6 +34,8 @@ let editingChargerId = null;
 let editingVehicleId = null;
 let lastCalc = null;
 let lastStations = [];
+let lastOcmResults = [];
+let selectedOcmResult = null;
 
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
@@ -354,12 +360,17 @@ function renderChargers(){
   $('saved-chargers').innerHTML = html;
 }
 
-function openCharger(id){
+// prefill (opcional): { name, power, helpText } — viene de un resultado de
+// búsqueda de cargadores públicos (OCM) que el usuario tocó "+ Guardar
+// este" sobre. helpText es el UsageCost + GeneralComments tal cual los dio
+// OCM: solo texto de ayuda, nunca rellena freeHours/overMin (ver por qué
+// en cargadores.js, junto a pareceRecargoPorTiempo).
+function openCharger(id, prefill){
   editingChargerId = id || null;
   const c = id ? byId(D.loadChargers(), id) : null;
   $('ch-title').textContent = c ? 'Editar cargador' : 'Guardar cargador';
-  $('ch-name').value      = c ? c.name : '';
-  $('ch-power').value     = c ? c.power : num(els.chargerPower);
+  $('ch-name').value      = c ? c.name : (prefill ? prefill.name : '');
+  $('ch-power').value     = c ? c.power : (prefill ? prefill.power : num(els.chargerPower));
   $('ch-mode').value      = c ? (c.mode || 0) : num(els.pricingMode);
   $('ch-price').value     = c ? c.price : num(els.chargerPrice);
   $('ch-permin').value    = c ? (c.perMin || '') : num(els.pricePerMin);
@@ -368,6 +379,12 @@ function openCharger(id){
   $('ch-note').value      = c ? (c.note || '') : '';
   $('ch-err').classList.remove('show');
   $('ch-delete').style.display = c ? '' : 'none';
+  const feeHint = $('ch-fee-hint');
+  if(feeHint){
+    const texto = !c && prefill ? prefill.helpText : '';
+    feeHint.textContent = texto || '';
+    show(feeHint, !!texto);
+  }
   syncChargerMode();
   openOverlay('ch-overlay', true);
 }
@@ -656,6 +673,72 @@ async function fetchRealPrices(){
   }
 }
 
+// ======================= CARGADORES PÚBLICOS (OCM) =======================
+
+async function buscarCargadoresCercanos(){
+  const btn = $('btn-buscar-cargadores'), label = $('buscar-cargadores-label');
+  const note = $('cargadores-note'), listEl = $('cargadores-resultados');
+
+  const reset = () => { btn.disabled = false; label.textContent = 'Buscar cargadores cercanos'; };
+  const fail = msg => {
+    reset();
+    note.innerHTML = `<span style="color:${color.warn}">${msg}</span>`;
+    listEl.innerHTML = '';
+    lastOcmResults = [];
+  };
+
+  btn.disabled = true;
+  label.textContent = 'Buscando...';
+
+  try{
+    const { resultados, radioKm } = await buscarCargadoresOCM();
+    lastOcmResults = resultados;
+    selectedOcmResult = null;
+
+    note.textContent = 'Distancias en línea recta, no por carretera \u00b7 hasta ' +
+      fmt(radioKm, 0) + ' km.';
+
+    renderCargadoresResultados();
+    reset();
+  }catch(e){
+    fail(MENSAJES_OCM[e && e.message] || MENSAJES_OCM.default);
+  }
+}
+
+function renderCargadoresResultados(){
+  const listEl = $('cargadores-resultados');
+  listEl.innerHTML = lastOcmResults.map(r => {
+    const sel = selectedOcmResult && selectedOcmResult.id === r.id;
+    const lineas = r.conexiones.map(c =>
+      `<div class="ocm-line">${c.qty > 1 ? c.qty + '\u00d7 ' : ''}Tipo 2 \u00b7 ${fmt(c.kw, c.kw % 1 ? 1 : 0)} kW</div>`
+    ).join('');
+    const fr = frescuraOCM(r.verified);
+    const avisoTiempo = pareceRecargoPorTiempo(r.price, r.note);
+    return `<button type="button" class="ocm-card${sel ? ' active' : ''}" data-ocm-id="${r.id}">
+      <div class="ocm-head">
+        <strong>${esc(r.name)}${r.yaGuardado ? '<span class="tag">GUARDADO</span>' : ''}</strong>
+        <span class="ocm-dist">${r.distanceKm == null ? '' :
+          (r.distanceKm < 1 ? Math.round(r.distanceKm * 1000) + ' m' : fmt(r.distanceKm, 1) + ' km')}</span>
+      </div>
+      ${lineas}
+      ${r.operatorName ? `<div class="ocm-operator">${esc(r.operatorName)}</div>` : ''}
+      ${r.price ? `<div class="ocm-price">${esc(r.price)} \u00b7 orientativo, conf\u00edrmalo al llegar</div>` : ''}
+      ${r.note ? `<div class="ocm-note${avisoTiempo ? ' warn' : ''}">${esc(r.note)}</div>` : ''}
+      <div class="ocm-verified ocm-verified-${fr.nivel}">${fr.label}</div>
+    </button>`;
+  }).join('');
+}
+
+function seleccionarOcmResultado(id){
+  const r = lastOcmResults.find(x => String(x.id) === String(id));
+  if(!r) return;
+  selectedOcmResult = r;
+  els.chargerPower.value = Math.max(...r.conexiones.map(c => c.kw));
+  if(selectedChargerId){ setSelectedCharger(null); renderChargers(); }
+  renderCargadoresResultados();
+  render();
+}
+
 // ======================= MODO =======================
 
 function setMode(m){
@@ -734,8 +817,25 @@ function bindEvents(){
 
   $('btn-refresh').addEventListener('click', fetchRealPrices);
 
+  $('btn-buscar-cargadores').addEventListener('click', buscarCargadoresCercanos);
+  $('cargadores-resultados').addEventListener('click', e => {
+    const card = e.target.closest('[data-ocm-id]');
+    if(card) seleccionarOcmResultado(card.getAttribute('data-ocm-id'));
+  });
+
   $('saved-chargers').addEventListener('click', e => {
-    if(e.target.closest('#chip-add')) return openCharger(null);
+    if(e.target.closest('#chip-add')){
+      if(selectedOcmResult){
+        const r = selectedOcmResult;
+        const helpText = [r.price, r.note].filter(Boolean).join(' \u00b7 ');
+        return openCharger(null, {
+          name: r.name,
+          power: Math.max(...r.conexiones.map(c => c.kw)),
+          helpText
+        });
+      }
+      return openCharger(null);
+    }
     const chip = e.target.closest('.chip');
     if(!chip || !chip.hasAttribute('data-id')) return;
     const id = chip.getAttribute('data-id');
@@ -774,9 +874,11 @@ function bindEvents(){
   $('btn-switch-pricing2').addEventListener('click', switchPricing);
 
   // tocar los datos del punto a mano deselecciona el cargador guardado
+  // y también la tarjeta de búsqueda de OCM, si había una activa
   ['chargerPrice', 'chargerPower', 'pricePerMin', 'pricingMode'].forEach(k => {
     els[k].addEventListener('input', () => {
       if(selectedChargerId){ setSelectedCharger(null); renderChargers(); }
+      if(selectedOcmResult){ selectedOcmResult = null; renderCargadoresResultados(); }
     });
   });
 
@@ -818,4 +920,7 @@ export function iniciar(){
 }
 
 // para las pruebas
-export const _test = { render, renderMeas, saveMeas, saveCharger, openCharger, els };
+export const _test = {
+  render, renderMeas, saveMeas, saveCharger, openCharger, els,
+  renderCargadoresResultados, seleccionarOcmResultado, buscarCargadoresCercanos
+};

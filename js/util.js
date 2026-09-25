@@ -55,6 +55,15 @@ export function fmtTime(h){
   return hh + ' h ' + mm + ' min';
 }
 
+// --- geolocalización (compartida por gasolineras.js y cargadores.js) ---
+export function position(){
+  return new Promise((resolve, reject) => {
+    if(!navigator.geolocation) return reject(new Error('sin-geo'));
+    navigator.geolocation.getCurrentPosition(resolve, () => reject(new Error('sin-permiso')),
+      { timeout: 8000 });
+  });
+}
+
 // distancia entre dos coordenadas, en km
 export function haversine(la1, lo1, la2, lo2){
   const R = 6371;

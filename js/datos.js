@@ -13,6 +13,7 @@ const K = {
   cold:     'cvg_cold_v1',
   preset:   'cvg_preset_v1',
   selCh:    'cvg_selch_v1',
+  ocmRef:   'cvg_ocmref_v1',
   hist:     id => 'cvg_hist_'  + id,
   calib:    id => 'cvg_calib_' + id,
   meas:     id => 'cvg_meas_'  + id
@@ -96,6 +97,11 @@ export function selectedCharger(){
   const id = getSelectedChargerId();
   return id ? byId(loadChargers(), id) : null;
 }
+
+// ---------- REFERENCIA DE OPEN CHARGE MAP (conectores, usos, estados, operadores) ----------
+// Cambia muy poco de un mes a otro; se cachea entera (ver OCM_REF_DIAS en cargadores.js).
+export function loadOcmRef(){ return lsJSON(K.ocmRef, null); }
+export function storeOcmRef(ref){ lsPut(K.ocmRef, ref); }
 
 // ---------- HISTORIAL, CALIBRACIÓN Y MEDICIONES (por vehículo) ----------
 function withProfile(fn, fallback){
