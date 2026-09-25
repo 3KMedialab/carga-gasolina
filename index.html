@@ -249,8 +249,6 @@
       </div>
     </div>
 
-    <div id="ch-fee-hint" class="field-hint hint-cons hidden"></div>
-
     <div class="field">
       <label>Notas</label>
       <div class="field-input-wrap wrap-ta">
@@ -335,13 +333,6 @@
     </div>
   </div>
 
-  <button class="refresh-btn" id="btn-buscar-cargadores" type="button">
-    <span style="font-size:15px;line-height:1;">&#8635;</span>
-    <span id="buscar-cargadores-label">Buscar cargadores cercanos</span>
-  </button>
-  <p class="refresh-note" id="cargadores-note"></p>
-  <div id="cargadores-resultados"></div>
-
   <div id="saved-chargers"></div>
   <div id="charger-note" class="note-box hidden"></div>
 
@@ -358,8 +349,9 @@
     <div class="field">
       <div class="field-input-wrap key">
         <input class="num" id="inp-parkHours" type="number" inputmode="decimal" step="0.25" value="1.5">
-        <span class="field-unit">horas</span>
+        <button type="button" class="unit-toggle" id="btn-parkUnit">horas</button>
       </div>
+      <div class="field-hint">Toca la unidad para cambiar entre minutos y horas</div>
     </div>
     <div class="card">
       <div class="fill-bar"><div class="fill-now" id="pk-fill-now"></div><div class="fill-gain" id="pk-fill-gain"></div></div>

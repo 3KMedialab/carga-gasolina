@@ -140,33 +140,39 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   dom.desmontar();
 }
 
-// ---------- 6. buscar cargadores públicos, sin geolocalización disponible ----------
-// El simulador deja navigator.geolocation en null (como un navegador que no
-// lo soporta) y fetch siempre falla: el único camino que se puede ejercitar
-// aquí sin red real es el de error, pero es justo el que garantiza que la
-// app no se queda "colgada" (botón deshabilitado) si el usuario no da permiso.
+// ---------- 6. unidad del tiempo de aparcado (min <-> horas) ----------
 {
   const dom = montar({
     'cvg_schema': '2',
     'cvg_profiles_v1': JSON.stringify({ list:[{ id:'v1', name:'Atto 2', battery:18, maxPower:6.6,
       elecCons:22, fuelCons:5.0, chargeEff:86, chem:'lfp' }], activeId:'v1' }),
+    'cvg_session_v1': JSON.stringify({ chargerPrice:0.45, fuelPrice:1.744, chargerPower:45,
+      currentSoc:82, parkHours:0.65, sessionKwh:0, detourKm:0, elecConsumption:22,
+      fuelConsumption:5.0, sessionFee:0, pricingMode:0, pricePerMin:0 }),
     'cvg_mode_v1':'parked'
   });
-  const { iniciar, _test } = await import('./js/interfaz.js?6');
+  const { iniciar } = await import('./js/interfaz.js?6');
   iniciar();
 
-  await _test.buscarCargadoresCercanos();
+  ok('por defecto la unidad es horas', dom.get('btn-parkUnit').textContent === 'horas');
+  const kwhEnHoras = dom.get('pk-kwh').textContent;
 
-  ok('sin geolocalización, avisa con el mensaje correcto',
-     dom.get('cargadores-note').textContent.includes('geolocalizaci\u00f3n'),
-     dom.get('cargadores-note').textContent);
-  ok('...y no deja ningún resultado a medias',
-     dom.get('cargadores-resultados').innerHTML === '');
-  ok('...y el botón vuelve a estar disponible para reintentar',
-     dom.get('btn-buscar-cargadores').disabled === false);
-  ok('...con la etiqueta original, no "Buscando..." colgado',
-     dom.get('buscar-cargadores-label').textContent === 'Buscar cargadores cercanos',
-     dom.get('buscar-cargadores-label').textContent);
+  dom.click('btn-parkUnit');
+  ok('al tocar, cambia a minutos', dom.get('btn-parkUnit').textContent === 'min');
+  ok('0,65h se muestran como 39 min', String(dom.get('inp-parkHours').value) === '39',
+     String(dom.get('inp-parkHours').value));
+  ok('el resultado no cambia al cambiar solo la unidad',
+     dom.get('pk-kwh').textContent === kwhEnHoras);
+
+  dom.get('inp-parkHours').value = '39';
+  dom.fire('inp-parkHours', 'input');
+  ok('escribir 39 en minutos da el mismo resultado que 0,65 horas',
+     dom.get('pk-kwh').textContent === kwhEnHoras, dom.get('pk-kwh').textContent);
+
+  dom.click('btn-parkUnit');
+  ok('al volver a horas, 39 min se muestran como 0,65', String(dom.get('inp-parkHours').value) === '0.65',
+     String(dom.get('inp-parkHours').value));
+  ok('la unidad elegida se guarda', dom.store['cvg_parkunit_v1'] === 'h');
 
   dom.desmontar();
 }

@@ -3,8 +3,6 @@
 
 import { simulate, findLimitHours, measStats, buildMeasurement,
          PRESET_FACTORS, efficiencyPenalty, taper } from './js/calculo.js';
-import { procesarPOI, pareceRecargoPorTiempo, frescura, _test as ocmTest } from './js/cargadores.js';
-const { esConectorTipo2, esUsoValido, conexionOperativa, refCaducada } = ocmTest;
 
 let pasa = 0, falla = 0;
 const fallos = [];
@@ -137,14 +135,44 @@ ok('LFP frena más arriba que NMC', taper('lfp').knee > taper('nmc').knee);
     Math.abs(bajo('lfp').sessionKwh - bajo('nmc').sessionKwh) < 1e-9);
 }
 {
-  // Ojo: en el 85% las dos curvas se cruzan y coinciden. Se comprueba a ambos lados.
-  const alto = (c, soc) => simulate({ ...base('parked'), chem:c, currentSoc:soc, parkHours:4 });
-  ok('bajo el cruce, la NMC tarda más que la LFP',
-    alto('nmc', 70).chargeHours > alto('lfp', 70).chargeHours + 0.01);
-  ok('sobre el cruce, la LFP tarda más que la NMC',
-    alto('lfp', 92).chargeHours > alto('nmc', 92).chargeHours + 0.01);
-  ok('los kWh cargados no dependen de la química',
-    Math.abs(alto('lfp', 70).sessionKwh - alto('nmc', 70).sessionKwh) < 1e-9);
+  // El cruce entre curvas (antes fijo en ~85%) solo se da tal cual a la
+  // tasa C de referencia (cargador tan potente como la batería, 1C).
+  // Se fuerza aquí con battery = maxPower para aislar el efecto.
+  const altoC = (c, soc) => simulate({
+    ...base('parked'), battery:6.6, chem:c, currentSoc:soc, parkHours:4
+  });
+  ok('a 1C, bajo el cruce la NMC tarda más que la LFP',
+    altoC('nmc', 70).chargeHours > altoC('lfp', 70).chargeHours + 0.01);
+  ok('a 1C, sobre el cruce la LFP tarda más que la NMC',
+    altoC('lfp', 92).chargeHours > altoC('nmc', 92).chargeHours + 0.01);
+  ok('a 1C, los kWh cargados no dependen de la química',
+    Math.abs(altoC('lfp', 70).sessionKwh - altoC('nmc', 70).sessionKwh) < 1e-9);
+}
+{
+  // Caso real de un enchufable en AC: el ATTO base carga a 6,6kW/18kWh =
+  // 0,37C. A una tasa tan baja, la química ya casi no cambia el tiempo.
+  const bajoC = c => simulate({ ...base('parked'), chem:c, currentSoc:70, parkHours:4 });
+  const dif = Math.abs(bajoC('lfp').chargeHours - bajoC('nmc').chargeHours);
+  ok('a 0,37C (caso real de carga en AC), LFP y NMC casi no se diferencian',
+    dif < 0.02, `dif=${dif}h`);
+}
+{
+  // Ancla del modelo: a la tasa de referencia, taper(chem, cRate) debe
+  // coincidir con taper(chem) sin tasa C (el comportamiento de siempre).
+  const a = taper('lfp', 1), b = taper('lfp');
+  ok('a la tasa de referencia el taper coincide con el calibrado por química',
+    Math.abs(a.knee - b.knee) < 1e-9 && Math.abs(a.slow - b.slow) < 1e-9);
+}
+{
+  // Bajar la tasa C nunca debe adelantar el knee ni acentuar la frenada.
+  let prevKnee = Infinity, prevSlow = -Infinity, monotono = true;
+  for(let c = 0.05; c <= 1.2; c += 0.05){
+    const { knee, slow } = taper('lfp', c);
+    if(knee > prevKnee + 1e-9) monotono = false;
+    if(slow < prevSlow - 1e-9) monotono = false;
+    prevKnee = knee; prevSlow = slow;
+  }
+  ok('a más tasa C, el knee no sube y el frenazo no se suaviza', monotono);
 }
 
 // ================= MODOS DE CONDUCCIÓN =================
@@ -233,243 +261,24 @@ seccion('Mediciones reales');
   casi('R medio correcto', measStats([{R:3},{R:5}]).R, 4, 1e-9);
 }
 
-// ================= CARGADORES PÚBLICOS (OCM) =================
-seccion('Cargadores públicos (OCM)');
-
-// Los 43 conectores y 8 usos reales de la respuesta de /v3/referencedata
-// que se comprobó a mano en la conversación de diseño.
-const CONECTORES_REALES = [
-  {ID:7,Title:'Avcon Connector'},{ID:4,Title:'Blue Commando (2P+E)'},
-  {ID:3,Title:'BS1363 3 Pin 13 Amp'},{ID:32,Title:'CCS (Type 1)'},
-  {ID:33,Title:'CCS (Type 2)'},{ID:16,Title:'CEE 3 Pin'},{ID:17,Title:'CEE 5 Pin'},
-  {ID:28,Title:'CEE 7/4 - Schuko - Type F'},{ID:23,Title:'CEE 7/5'},
-  {ID:18,Title:'CEE+ 7 Pin'},{ID:2,Title:'CHAdeMO'},
-  {ID:1044,Title:'ChaoJi / CHAdeMO 3.x'},{ID:13,Title:'Europlug 2-Pin (CEE 7/16)'},
-  {ID:1038,Title:'GB-T AC - GB/T 20234.2 (Socket)'},
-  {ID:1039,Title:'GB-T AC - GB/T 20234.2 (Tethered Cable)'},
-  {ID:1040,Title:'GB-T DC - GB/T 20234.3'},{ID:34,Title:'IEC 60309 3-pin'},
-  {ID:35,Title:'IEC 60309 5-pin'},{ID:5,Title:'LP Inductive'},
-  {ID:27,Title:'NACS / Tesla Supercharger'},{ID:10,Title:'NEMA 14-30'},
-  {ID:11,Title:'NEMA 14-50'},{ID:22,Title:'NEMA 5-15R'},{ID:9,Title:'NEMA 5-20R'},
-  {ID:15,Title:'NEMA 6-15'},{ID:14,Title:'NEMA 6-20'},{ID:1042,Title:'NEMA TT-30R'},
-  {ID:36,Title:'SCAME Type 3A (Low Power)'},
-  {ID:26,Title:'SCAME Type 3C (Schneider-Legrand)'},{ID:6,Title:'SP Inductive'},
-  {ID:1037,Title:'T13 - SEC1011 ( Swiss domestic 3-pin ) - Type J'},
-  {ID:30,Title:'Tesla (Model S/X)'},{ID:8,Title:'Tesla (Roadster)'},
-  {ID:31,Title:'Tesla Battery Swap'},{ID:1041,Title:'Three Phase 5-Pin (AS/NZ 3123)'},
-  {ID:1,Title:'Type 1 (J1772)'},{ID:25,Title:'Type 2 (Socket Only)'},
-  {ID:1036,Title:'Type 2 (Tethered Connector) '},{ID:29,Title:'Type I (AS 3112)'},
-  {ID:1043,Title:'Type M'},{ID:0,Title:'Unknown'},{ID:24,Title:'Wireless Charging'},
-  {ID:21,Title:'XLR Plug (4 pin)'}
-];
-const USOS_REALES = [
-  {ID:0,Title:'(Unknown)'},{ID:6,Title:'Private - For Staff, Visitors or Customers'},
-  {ID:2,Title:'Private - Restricted Access'},{ID:3,Title:'Privately Owned - Notice Required'},
-  {ID:1,Title:'Public'},{ID:4,Title:'Public - Membership Required'},
-  {ID:7,Title:'Public - Notice Required'},{ID:5,Title:'Public - Pay At Location'}
-];
+// ================= RECARGA REAL DE REFERENCIA =================
+seccion('Recarga real (Atto 2 DM-i Boost, 18kWh / 6,6kW AC / LFP)');
 
 {
-  const ids = CONECTORES_REALES.filter(esConectorTipo2).map(c => c.ID).sort((a,b) => a-b);
-  ok('esConectorTipo2: exactamente 25 y 1036, entre los 43 reales',
-     ids.length === 2 && ids[0] === 25 && ids[1] === 1036, JSON.stringify(ids));
-  ok('esConectorTipo2: "CCS (Type 2)" no cuela por contener "Type 2"',
-     esConectorTipo2({ Title: 'CCS (Type 2)' }) === false);
-}
-{
-  const ids = USOS_REALES.filter(esUsoValido).map(u => u.ID).sort((a,b) => a-b);
-  ok('esUsoValido: exactamente 1,4,5,6,7, entre los 8 reales',
-     ids.join(',') === '1,4,5,6,7', ids.join(','));
-  ok('esUsoValido: descarta "Private - Restricted Access" (ID 2)',
-     esUsoValido({ Title: 'Private - Restricted Access' }) === false);
-  ok('esUsoValido: descarta "Privately Owned - Notice Required" (ID 3)',
-     esUsoValido({ Title: 'Privately Owned - Notice Required' }) === false);
-}
-
-// La referencia para las pruebas de procesarPOI de aquí en adelante: calculada
-// a partir de las dos funciones ya probadas arriba, no hardcodeada a mano.
-const REF = {
-  connectorIds: CONECTORES_REALES.filter(esConectorTipo2).map(c => c.ID),
-  usageIds: USOS_REALES.filter(esUsoValido).map(u => u.ID),
-  operationalIds: [50], // Operational; 100 (Not Operational) y 150 (Planned) fuera
-  operators: { 91: 'Operador de prueba', 3583: 'Operador de prueba MASID' }
-};
-
-{
-  ok('conexionOperativa: sin StatusTypeID propio, hereda el del POI (true)',
-     conexionOperativa({ StatusTypeID: null }, true, REF.operationalIds) === true);
-  ok('conexionOperativa: sin StatusTypeID propio, hereda el del POI (false)',
-     conexionOperativa({ StatusTypeID: null }, false, REF.operationalIds) === false);
-  ok('conexionOperativa: con StatusTypeID propio operativo, ignora el del POI',
-     conexionOperativa({ StatusTypeID: 50 }, false, REF.operationalIds) === true);
-  ok('conexionOperativa: con StatusTypeID propio no operativo, ignora el del POI',
-     conexionOperativa({ StatusTypeID: 150 }, true, REF.operationalIds) === false);
-}
-
-{
-  const hace10 = new Date(Date.now() - 10*86400000).toISOString();
-  const hace31 = new Date(Date.now() - 31*86400000).toISOString();
-  ok('refCaducada: null -> caducada', refCaducada(null) === true);
-  ok('refCaducada: sin campo fecha -> caducada', refCaducada({}) === true);
-  ok('refCaducada: hace 10 días -> vigente', refCaducada({ fecha: hace10 }) === false);
-  ok('refCaducada: hace 31 días -> caducada (límite: 30)', refCaducada({ fecha: hace31 }) === true);
-}
-
-{
-  const poi = {
-    ID: 271110, UsageTypeID: 4, StatusTypeID: 50, OperatorID: 3583,
-    UsageCost: '0,39€/kWh DC - 0,29€/kWh AC + parking fee', GeneralComments: null,
-    AddressInfo: { Title: 'Parking MASID', Distance: 0.2592328644704152,
-      AddressLine1: 'Travesía de Poniente' },
-    Connections: [
-      { ConnectionTypeID: 33, StatusTypeID: 50, PowerKW: 60, Quantity: 2 },
-      { ConnectionTypeID: 25, StatusTypeID: 50, PowerKW: 22, Quantity: 8 },
-      { ConnectionTypeID: 33, StatusTypeID: 50, PowerKW: 60, Quantity: 2 }
-    ]
-  };
-  const r = procesarPOI(poi, REF);
-  ok('procesarPOI: Parking MASID (2 CCS + 1 Tipo2) pasa el filtro', !!r);
-  ok('procesarPOI: ...y queda solo la conexión Tipo2',
-     r && r.conexiones.length === 1 && r.conexiones[0].qty === 8 && r.conexiones[0].kw === 22,
-     r && JSON.stringify(r.conexiones));
-  ok('procesarPOI: resuelve el nombre del operador', r && r.operatorName === 'Operador de prueba MASID');
-  ok('procesarPOI: dirección real de OCM tal cual (solo AddressLine1)',
-     r && r.address === 'Travesía de Poniente', r && r.address);
-}
-
-{
-  const poi = {
-    ID: 235150, UsageTypeID: 4, StatusTypeID: 50,
-    AddressInfo: { Title: "McDonald's Tres Cantos", Distance: 0.4305193606907604 },
-    Connections: [
-      { ConnectionTypeID: 33, StatusTypeID: 50, PowerKW: 60, Quantity: 2 },
-      { ConnectionTypeID: 33, StatusTypeID: 50, PowerKW: 60, Quantity: 2 }
-    ]
-  };
-  ok('procesarPOI: McDonald\'s Tres Cantos (solo CCS) -> null', procesarPOI(poi, REF) === null);
-}
-
-{
-  const poi = {
-    ID: 470469, UsageTypeID: 2, StatusTypeID: 50,
-    AddressInfo: { Title: 'Indra Alcobendas', Distance: 10.260134756794654 },
-    Connections: [{ ConnectionTypeID: 25, StatusTypeID: 50, PowerKW: 22, Quantity: 2 }]
-  };
-  ok('procesarPOI: uso "Private - Restricted Access" -> null aunque tenga Tipo2',
-     procesarPOI(poi, REF) === null);
-}
-
-{
-  const poi = {
-    ID: 235149, UsageTypeID: 1, StatusTypeID: 100,
-    AddressInfo: { Title: 'Ayuntamiento Tres Cantos', Distance: 0.9018127292515176 },
-    Connections: [{ ConnectionTypeID: 25, StatusTypeID: 50, PowerKW: 11, Quantity: 2 }]
-  };
-  ok('procesarPOI: StatusTypeID 100 de POI (Ayuntamiento Tres Cantos) -> null',
-     procesarPOI(poi, REF) === null);
-}
-
-{
-  const poi = {
-    ID: 201638, UsageTypeID: 6, StatusTypeID: 50, OperatorID: 91, UsageCost: null,
-    AddressInfo: { Title: 'Repsol Tres Cantos: REE', Distance: 1.0965851859415627 },
-    Connections: [
-      { ConnectionTypeID: 33, StatusTypeID: 50, PowerKW: 50, Quantity: 1 },
-      { ConnectionTypeID: 2,  StatusTypeID: 50, PowerKW: 50, Quantity: 1 },
-      { ConnectionTypeID: 1036, StatusTypeID: 50, PowerKW: 43, Quantity: 1 },
-      { ConnectionTypeID: 25, StatusTypeID: 50, PowerKW: 22, Quantity: 1 }
-    ]
-  };
-  const r = procesarPOI(poi, REF);
-  ok('procesarPOI: "...For Staff, Visitors or Customers" pasa, con 2 de 4 conexiones',
-     r && r.conexiones.length === 2, r && JSON.stringify(r.conexiones));
-  ok('procesarPOI: ...las dos correctas (43 y 22 kW)',
-     r && r.conexiones[0].kw === 43 && r.conexiones[1].kw === 22);
-  ok('procesarPOI: UsageCost null -> price null, nunca inventado', r && r.price === null);
-}
-
-{
-  // No visto en datos reales (ahí el Tipo2 siempre venía Operational);
-  // construido para forzar esta rama de conexionOperativa().
-  const poi = {
-    ID: 999001, UsageTypeID: 1, StatusTypeID: 50,
-    AddressInfo: { Title: 'Sintético: Tipo2 planeado', Distance: 1 },
-    Connections: [{ ConnectionTypeID: 25, StatusTypeID: 150, PowerKW: 22, Quantity: 1 }]
-  };
-  ok('procesarPOI [sintético]: la única conexión Tipo2 está "Planned" -> null',
-     procesarPOI(poi, REF) === null);
-}
-
-{
-  const poi = {
-    ID: 999002, UsageTypeID: 1, StatusTypeID: 50,
-    AddressInfo: { Title: 'Sintético: hereda del POI', Distance: 1 },
-    Connections: [{ ConnectionTypeID: 25, StatusTypeID: null, PowerKW: 22, Quantity: 1 }]
-  };
-  const r = procesarPOI(poi, REF);
-  ok('procesarPOI [sintético]: conexión sin StatusTypeID propio hereda el operativo del POI',
-     r && r.conexiones.length === 1);
-}
-
-{
-  const poi = {
-    ID: 999003, UsageTypeID: 1, StatusTypeID: 50,
-    AddressInfo: { Title: 'Sintético: sin Quantity', Distance: 1 },
-    Connections: [{ ConnectionTypeID: 25, StatusTypeID: 50, PowerKW: 22 }]
-  };
-  const r = procesarPOI(poi, REF);
-  ok('procesarPOI: Quantity ausente cuenta como 1, nunca 0', r && r.conexiones[0].qty === 1);
-}
-
-{
-  // Carrefour Alcobendas real: AddressLine1 solo trae el municipio (no es
-  // una calle útil por sí sola), y AddressLine2 el barrio -> se combinan.
-  const poi = {
-    ID: 999004, UsageTypeID: 1, StatusTypeID: 50,
-    AddressInfo: { Title: 'Sintético: dirección combinada', Distance: 1,
-      AddressLine1: 'Alcobendas', AddressLine2: 'Valdelasfuentes' },
-    Connections: [{ ConnectionTypeID: 25, StatusTypeID: 50, PowerKW: 22, Quantity: 1 }]
-  };
-  const r = procesarPOI(poi, REF);
-  ok('procesarPOI: AddressLine1 + AddressLine2 se combinan tal cual, sin reordenar',
-     r && r.address === 'Alcobendas, Valdelasfuentes', r && r.address);
-}
-
-{
-  const poi = {
-    ID: 999005, UsageTypeID: 1, StatusTypeID: 50,
-    AddressInfo: { Title: 'Sintético: sin dirección', Distance: 1 },
-    Connections: [{ ConnectionTypeID: 25, StatusTypeID: 50, PowerKW: 22, Quantity: 1 }]
-  };
-  const r = procesarPOI(poi, REF);
-  ok('procesarPOI: sin AddressLine1 ni AddressLine2 -> address null, nunca inventado',
-     r && r.address === null);
-}
-
-{
-  ok('pareceRecargoPorTiempo: "then at 0,07€/min" (Mercadona real) -> true',
-     pareceRecargoPorTiempo("app Waylet(Repsol). 90' free parking, then at 0,07€/min") === true);
-  ok('pareceRecargoPorTiempo: "Free parking... Cannot reserve." (Tres Cantos Mall) -> false',
-     pareceRecargoPorTiempo('Free parking, free charging. Cannot reserve.') === false);
-  ok('pareceRecargoPorTiempo: "parked without charging" (Ahorramas real) -> true',
-     pareceRecargoPorTiempo('0,42€/kWh (0,05€/min parked without charging)') === true);
-  ok('pareceRecargoPorTiempo: mira varios textos a la vez (price + note)',
-     pareceRecargoPorTiempo('0,25€/kWh', '3,3€/hour + parking fee') === true &&
-     pareceRecargoPorTiempo('0,25€/kWh', 'Solo para clientes') === false);
-  ok('pareceRecargoPorTiempo: null/vacío -> false, nunca lanza',
-     pareceRecargoPorTiempo(null, undefined, '') === false);
-}
-
-{
-  const hace1mes  = new Date(Date.now() - 30*86400000).toISOString();
-  const hace6meses = new Date(Date.now() - 6*30*86400000).toISOString();
-  const hace2anios = new Date(Date.now() - 2*365*86400000).toISOString();
-  ok('frescura: sin fecha -> "mal"', frescura(null).nivel === 'mal');
-  ok('frescura: hace 1 mes -> "bien"', frescura(hace1mes).nivel === 'bien');
-  ok('frescura: hace 6 meses -> "regular"', frescura(hace6meses).nivel === 'regular');
-  ok('frescura: hace 2 años -> "mal"', frescura(hace2anios).nivel === 'mal');
-  ok('frescura: fecha inválida -> "mal", nunca NaN ni excepción',
-     frescura('no-es-una-fecha').nivel === 'mal');
+  // Medida en un cargador de 45kW, coche solo (sin repartir potencia con
+  // otro vehículo): 82% → 100% en 39 min, 3,932 kWh facturados según el
+  // punto de carga. Ancla el modelo (taper por tasa C incluido) a un
+  // caso real, no solo a invariantes teóricos.
+  const real = simulate({
+    ...base('parked'), chargerPower:45, currentSoc:82, parkHours:39/60
+  });
+  ok('llega al 100% en los 39 min, como en la recarga real',
+    real.finalSoc > 99.9, `finalSoc=${real.finalSoc}`);
+  ok('los kWh previstos están a menos del 10% de los 3,932 kWh reales',
+    Math.abs(real.sessionKwh - 3.932) / 3.932 < 0.10, `previsto=${real.sessionKwh}`);
+  ok('el tiempo previsto está a menos del 10% de los 39 min reales',
+    Math.abs(real.chargeHours * 60 - 39) / 39 < 0.10,
+    `previsto=${(real.chargeHours * 60).toFixed(1)}min`);
 }
 
 // ================= RESUMEN =================
