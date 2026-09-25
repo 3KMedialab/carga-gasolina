@@ -21,7 +21,7 @@
 import { position } from './util.js';
 import { loadOcmRef, storeOcmRef, loadChargers } from './datos.js';
 
-const OCM_API_KEY = 'TU_API_KEY_AQUI'; // gratis en openchargemap.org (My Profile > My Apps)
+const OCM_API_KEY = '6e1ea5ca-2066-44ba-baec-dcd927c1607e'; // gratis en openchargemap.org (My Profile > My Apps)
 const OCM_BASE = 'https://api.openchargemap.io/v3';
 
 // La tabla de referencia (conectores, usos, estados, operadores) apenas
