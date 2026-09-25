@@ -21,7 +21,7 @@
 import { position } from './util.js';
 import { loadOcmRef, storeOcmRef, loadChargers } from './datos.js';
 
-const OCM_API_KEY = '6e1ea5ca-2066-44ba-baec-dcd927c1607e'; // gratis en openchargemap.org (My Profile > My Apps)
+const OCM_API_KEY = 'TU_API_KEY_AQUI'; // gratis en openchargemap.org (My Profile > My Apps)
 const OCM_BASE = 'https://api.openchargemap.io/v3';
 
 // La tabla de referencia (conectores, usos, estados, operadores) apenas
@@ -119,10 +119,20 @@ export function procesarPOI(poi, ref){
   if(!conexiones.length) return null;
 
   const addr = poi.AddressInfo || {};
+  // Comunitario, así que más irregular que la Dirección del Ministerio: a
+  // veces solo la calle, a veces con número, a veces la postal completa en
+  // un único campo. Se muestra tal cual, sin intentar "limpiarlo" — sería
+  // inventar estructura donde el dato no la tiene.
+  const address = [addr.AddressLine1, addr.AddressLine2]
+    .map(s => (s || '').trim())
+    .filter(Boolean)
+    .join(', ') || null;
+
   return {
     id: poi.ID,
     name: addr.Title || 'Cargador',
     distanceKm: isFinite(addr.Distance) ? addr.Distance : null,
+    address,
     conexiones,
     operatorName: ref.operators[poi.OperatorID] || '',
     price: (poi.UsageCost || '').trim() || null,

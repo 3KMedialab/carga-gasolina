@@ -741,6 +741,7 @@ function renderCargadoresResultados(){
         <span class="ocm-title"><span class="ocm-chevron">${sel ? '\u25be' : '\u25b8'}</span>${esc(r.name)}${r.yaGuardado ? '<span class="tag">GUARDADO</span>' : ''}</span>
         <span class="ocm-dist">${distLabel}</span>
       </div>
+      ${r.address ? `<div class="ocm-address">${esc(r.address)}</div>` : ''}
       <div class="ocm-summary">${resumenKw}</div>
       ${detalle}
     </button>`;
