@@ -70,7 +70,9 @@ export function montar(store){
   globalThis.localStorage = {
     getItem: k => (k in almacen ? almacen[k] : null),
     setItem: (k, v) => { almacen[k] = String(v); },
-    removeItem: k => { delete almacen[k]; }
+    removeItem: k => { delete almacen[k]; },
+    key: i => Object.keys(almacen)[i] ?? null,
+    get length(){ return Object.keys(almacen).length; }
   };
   globalThis.sessionStorage = globalThis.localStorage;
   globalThis.window = {

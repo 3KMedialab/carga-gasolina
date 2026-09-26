@@ -208,6 +208,33 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   dom.desmontar();
 }
 
+// ---------- 8. copia de seguridad: exportar/importar ----------
+{
+  const dom = montar({
+    'cvg_schema': '2',
+    'cvg_profiles_v1': JSON.stringify({ list:[{ id:'v1', name:'Atto 2', battery:18, maxPower:6.6,
+      elecCons:22, fuelCons:5.0, chargeEff:86, chem:'lfp' }], activeId:'v1' }),
+    'cvg_hist_v1': JSON.stringify([{ date:'x', chargerPrice:0.25, savings:0.9, km:39, free:false }]),
+    'cvg_mode_v1':'parked'
+  });
+  const D = await import('./js/datos.js?8');
+
+  const copia = D.exportAll();
+  ok('la copia incluye los perfiles', copia['cvg_profiles_v1'] !== undefined);
+  ok('la copia incluye el historial', copia['cvg_hist_v1'] !== undefined);
+  ok('la copia no incluye claves ajenas a cvg_', Object.keys(copia).every(k => k.indexOf('cvg_') === 0));
+
+  // se simula perder los datos (borrar el icono) y restaurarlos desde la copia
+  Object.keys(dom.store).forEach(k => delete dom.store[k]);
+  ok('borrado: ya no hay perfiles', dom.store['cvg_profiles_v1'] === undefined);
+
+  ok('importAll devuelve true con una copia válida', D.importAll(copia) === true);
+  ok('el historial se restaura', dom.store['cvg_hist_v1'] === copia['cvg_hist_v1']);
+  ok('rechaza una copia vacía o inválida', D.importAll({}) === false && D.importAll(null) === false);
+
+  dom.desmontar();
+}
+
 // ---------- resumen ----------
 console.log('='.repeat(50));
 if(falla){
