@@ -117,3 +117,24 @@ export const loadCalib    = ()  => withProfile(p => ls(K.calib(p.id)), null);
 export const storeCalib   = iso => withProfile(p => lsSet(K.calib(p.id), iso));
 export const loadMeas     = ()  => withProfile(p => lsJSON(K.meas(p.id), []), []);
 export const storeMeas    = l   => withProfile(p => lsPut(K.meas(p.id), l));
+
+// ---------- COPIA DE SEGURIDAD ----------
+// Todo lo que guarda la app vive bajo claves 'cvg_', así que un volcado
+// por prefijo lo captura entero sin tener que enumerar cada clave a mano
+// (incluidas las de historial/calibración/medidas, que son por vehículo).
+export function exportAll(){
+  const out = {};
+  for(let i = 0; i < localStorage.length; i++){
+    const k = localStorage.key(i);
+    if(k && k.indexOf('cvg_') === 0) out[k] = localStorage.getItem(k);
+  }
+  return out;
+}
+/** Restaura un volcado de exportAll(). Sustituye lo que hubiera en esas claves. */
+export function importAll(obj){
+  if(!obj || typeof obj !== 'object') return false;
+  const claves = Object.keys(obj).filter(k => k.indexOf('cvg_') === 0);
+  if(!claves.length) return false;
+  claves.forEach(k => lsSet(k, obj[k]));
+  return true;
+}

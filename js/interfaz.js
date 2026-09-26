@@ -814,6 +814,48 @@ function refreshAll(){
   render();
 }
 
+// ======================= COPIA DE SEGURIDAD =======================
+
+async function exportarCopia(){
+  const datos = D.exportAll();
+  const nombre = 'carga-vs-gasolina-copia-' + new Date().toISOString().slice(0, 10) + '.json';
+  const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+
+  // en el móvil, compartir permite guardar directo en Archivos/iCloud
+  if(navigator.share && navigator.canShare){
+    try{
+      const file = new File([blob], nombre, { type: 'application/json' });
+      if(navigator.canShare({ files: [file] })){
+        await navigator.share({ files: [file], title: 'Copia de seguridad' });
+        return;
+      }
+    }catch(e){ /* cancelado o sin soporte: sigue con la descarga normal */ }
+  }
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nombre;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importarCopia(file){
+  const nota = $('backup-note');
+  const reader = new FileReader();
+  reader.onload = () => {
+    let datos;
+    try{ datos = JSON.parse(reader.result); }
+    catch(e){ nota.textContent = 'Ese archivo no es una copia de seguridad válida.'; return; }
+    if(!confirm('Esto sustituirá los datos actuales (vehículos, historial, medidas) por los de la copia. ¿Continuar?')) return;
+    if(!D.importAll(datos)){
+      nota.textContent = 'Ese archivo no es una copia de seguridad válida.';
+      return;
+    }
+    location.reload();
+  };
+  reader.onerror = () => { nota.textContent = 'No se ha podido leer el archivo.'; };
+  reader.readAsText(file);
+}
+
 // ======================= EVENTOS =======================
 
 function bindEvents(){
@@ -912,6 +954,14 @@ function bindEvents(){
 
   $('btn-help').addEventListener('click', () => openOverlay('help-overlay', true));
   $('help-close').addEventListener('click', () => openOverlay('help-overlay', false));
+
+  $('btn-backup-export').addEventListener('click', exportarCopia);
+  $('btn-backup-import').addEventListener('click', () => $('inp-backup-file').click());
+  $('inp-backup-file').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0];
+    if(f) importarCopia(f);
+    e.target.value = '';
+  });
 
   $('btn-measure').addEventListener('click', () => {
     $('meas-err').classList.remove('show'); renderMeas(); openOverlay('meas-overlay', true);
