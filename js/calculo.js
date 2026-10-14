@@ -150,21 +150,38 @@ export function measVigentes(list, ahora = Date.now()){
   return base.slice(-MEAS_MAX);
 }
 
+// Valor crítico de la t de Student (bilateral, 90 %: el mismo nivel que el
+// 1,645 de la normal) para 1 a 7 grados de libertad, es decir, de 2 a 8
+// medidas (MEAS_MAX). Con pocas medidas la desviación estimada es muy poco
+// fiable: dos valores casi iguales dan una desviación casi nula por pura
+// casualidad. La normal (1,645) se queda corta ahí y la t lo compensa: con
+// 2 medidas vale 6,31, casi cuatro veces más.
+const T90 = [6.314, 2.920, 2.353, 2.132, 2.015, 1.943, 1.895];
+const tCrit = df => T90[Math.min(Math.max(df, 1), T90.length) - 1];
+
+// Con una sola medida la banda es del 15 %. Con dos medidas casi idénticas la
+// t de Student seguiría dando una banda de ~0 %, lo que sería más optimista que
+// con una sola medida solo por la casualidad de que coincidan. Por eso, con
+// exactamente dos medidas la banda nunca baja de la de una sola.
+export const BAND_UNA_MEDIDA = 0.15;
+
 export function measStats(list, ahora = Date.now()){
   const usadas = measVigentes(list, ahora);
   const descartadas = list.length - usadas.length;
   if(!usadas.length) return { n: 0, R: null, cv: null, band: 0.30, descartadas: 0 };
   const mean = usadas.reduce((s, m) => s + m.R, 0) / usadas.length;
-  if(usadas.length < 2) return { n: 1, R: mean, cv: null, band: 0.15, descartadas };
+  if(usadas.length < 2) return { n: 1, R: mean, cv: null, band: BAND_UNA_MEDIDA, descartadas };
   const v = usadas.reduce((s, m) => s + (m.R - mean) ** 2, 0) / (usadas.length - 1);
   const cv = mean > 0 ? Math.sqrt(v) / mean : 0;
-  return { n: usadas.length, R: mean, cv, band: 1.645 * cv / Math.sqrt(usadas.length), descartadas };
+  let band = tCrit(usadas.length - 1) * cv / Math.sqrt(usadas.length);
+  if(usadas.length === 2) band = Math.max(band, BAND_UNA_MEDIDA);
+  return { n: usadas.length, R: mean, cv, band, descartadas };
 }
 
 /** Valida una medición y devuelve {ok, R, error}. */
 export function buildMeasurement({ km1, km2, kwh, litres, fuelCons }){
   const fail = error => ({ ok: false, error });
-  if(!isFinite(km1) || !isFinite(km2)) return fail('Faltan los kil\u00f3metros.');
+  if(!isFinite(km1) || !isFinite(km2)) return fail('Faltan los kilómetros.');
   if(km2 <= km1) return fail('Los km del final deben ser mayores que los del principio.');
   if(!isFinite(kwh) || kwh <= 0) return fail('Indica los kWh cargados en total.');
   if(!isFinite(litres) || litres < 0) litres = 0;
@@ -173,11 +190,11 @@ export function buildMeasurement({ km1, km2, kwh, litres, fuelCons }){
   const kmGas = fuelCons > 0 ? (litres / fuelCons) * 100 : 0;
   const kmElec = kmTot - kmGas;
 
-  if(kmElec <= 0) return fail('Seg\u00fan la gasolina gastada, todos esos km los hizo el motor. Esta medida no sirve.');
-  if(kmGas / kmTot > 0.5) return fail('M\u00e1s de la mitad de los km fueron con gasolina: la medida ser\u00eda poco fiable.');
+  if(kmElec <= 0) return fail('Según la gasolina gastada, todos esos km los hizo el motor. Esta medida no sirve.');
+  if(kmGas / kmTot > 0.5) return fail('Más de la mitad de los km fueron con gasolina: la medida sería poco fiable.');
 
   const R = kmElec / kwh;
-  if(R < 0.5 || R > 15) return fail('El resultado no es cre\u00edble. Revisa los datos.');
+  if(R < 0.5 || R > 15) return fail('El resultado no es creíble. Revisa los datos.');
 
   return { ok: true, km: kmTot, kmElec, kwh, litres, R };
 }
