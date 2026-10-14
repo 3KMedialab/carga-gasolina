@@ -281,6 +281,37 @@ seccion('Mediciones reales');
   const ocho = measStats(Array.from({length:8}, (_,i) => ({ R: 3.9 + (i%2?0.1:-0.1) })));
   ok('con ocho medidas se estrecha aún más', ocho.band < tres.band);
   casi('R medio correcto', measStats([{R:3},{R:5}]).R, 4, 1e-9);
+
+  // Con pocas medidas la banda usa la t de Student, no la normal (1,645):
+  // con dos medidas el valor crítico es 6,31, casi cuatro veces mayor.
+  const dos = measStats([{R:6.33},{R:6.71}]);
+  casi('con dos medidas la banda usa la t de Student (6,314)',
+       dos.band, 6.314 * dos.cv / Math.sqrt(2), 1e-9);
+  ok('con dos medidas la banda es mucho mayor que con la normal',
+     dos.band > 3 * (1.645 * dos.cv / Math.sqrt(2)));
+  ok('dos medidas reales (6,33 y 6,71) dan alrededor de ±18%',
+     Math.abs(dos.band - 0.184) < 0.005, String(dos.band));
+  // Con exactamente dos medidas la banda nunca baja de la de una sola (15 %):
+  // si coinciden casi exactamente, la t de Student daría ~0 % por pura casualidad.
+  ok('dos medidas casi idénticas (6,706 y 6,714) no bajan de ±15%',
+     measStats([{R:6.706},{R:6.714}]).band === 0.15,
+     String(measStats([{R:6.706},{R:6.714}]).band));
+  ok('dos medidas idénticas tampoco bajan de ±15%',
+     measStats([{R:6.5},{R:6.5}]).band === 0.15);
+  ok('con tres medidas casi idénticas el suelo ya no se aplica',
+     measStats([{R:6.706},{R:6.710},{R:6.714}]).band < 0.01);
+  const tresReales = measStats([{R:6.33},{R:6.52},{R:6.71}]);
+  ok('una tercera medida estrecha mucho la banda', tresReales.band < dos.band / 2,
+     `${tresReales.band} vs ${dos.band}`);
+  {
+    let prev = Infinity, baja = true;
+    for(let n = 2; n <= 8; n++){
+      const b = measStats(Array.from({length:n}, (_,i) => ({ R: 3.9 + (i%2 ? 0.1 : -0.1) }))).band;
+      if(b >= prev) baja = false;
+      prev = b;
+    }
+    ok('la banda baja siempre al sumar medidas, de 2 a 8', baja);
+  }
 }
 
 // ================= CARGADORES PÚBLICOS (OCM) =================
