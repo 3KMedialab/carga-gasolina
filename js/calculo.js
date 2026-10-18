@@ -165,17 +165,26 @@ const tCrit = df => T90[Math.min(Math.max(df, 1), T90.length) - 1];
 // exactamente dos medidas la banda nunca baja de la de una sola.
 export const BAND_UNA_MEDIDA = 0.15;
 
+// R se calcula como km eléctricos totales ÷ kWh totales, no como media de los
+// R de cada medida: así una recarga de 2 kWh (donde 0,5 kWh de error en el
+// contador mueve mucho su R) no pesa lo mismo que una de 12 kWh. Si alguna
+// medida no trae km y kWh (datos antiguos), se usa la media simple de todas.
+// La dispersión (cv y banda) sigue siendo la de los R individuales.
 export function measStats(list, ahora = Date.now()){
   const usadas = measVigentes(list, ahora);
   const descartadas = list.length - usadas.length;
   if(!usadas.length) return { n: 0, R: null, cv: null, band: 0.30, descartadas: 0 };
   const mean = usadas.reduce((s, m) => s + m.R, 0) / usadas.length;
-  if(usadas.length < 2) return { n: 1, R: mean, cv: null, band: BAND_UNA_MEDIDA, descartadas };
+  const ponderable = usadas.every(m => m.kwh > 0 && m.kmElec > 0);
+  const R = ponderable
+    ? usadas.reduce((s, m) => s + m.kmElec, 0) / usadas.reduce((s, m) => s + m.kwh, 0)
+    : mean;
+  if(usadas.length < 2) return { n: 1, R, cv: null, band: BAND_UNA_MEDIDA, descartadas };
   const v = usadas.reduce((s, m) => s + (m.R - mean) ** 2, 0) / (usadas.length - 1);
   const cv = mean > 0 ? Math.sqrt(v) / mean : 0;
   let band = tCrit(usadas.length - 1) * cv / Math.sqrt(usadas.length);
   if(usadas.length === 2) band = Math.max(band, BAND_UNA_MEDIDA);
-  return { n: usadas.length, R: mean, cv, band, descartadas };
+  return { n: usadas.length, R, cv, band, descartadas };
 }
 
 /** Valida una medición y devuelve {ok, R, error}. */

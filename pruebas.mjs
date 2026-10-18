@@ -281,6 +281,18 @@ seccion('Mediciones reales');
   const ocho = measStats(Array.from({length:8}, (_,i) => ({ R: 3.9 + (i%2?0.1:-0.1) })));
   ok('con ocho medidas se estrecha aún más', ocho.band < tres.band);
   casi('R medio correcto', measStats([{R:3},{R:5}]).R, 4, 1e-9);
+  // Con km y kWh, R = km totales ÷ kWh totales: la recarga grande pesa más.
+  casi('R ponderado por kWh (2 kWh a R=3 y 12 kWh a R=5)',
+       measStats([{R:3, kmElec:6, kwh:2}, {R:5, kmElec:60, kwh:12}]).R, 66/14, 1e-9);
+  casi('una sola medida con kWh da su propio R',
+       measStats([{R:3.9, kmElec:39, kwh:10}]).R, 3.9, 1e-9);
+  casi('si a alguna medida le faltan los kWh, media simple',
+       measStats([{R:3, kmElec:6, kwh:2}, {R:5}]).R, 4, 1e-9);
+  {
+    const sin = measStats([{R:3},{R:5}]);
+    const con = measStats([{R:3, kmElec:6, kwh:2}, {R:5, kmElec:60, kwh:12}]);
+    ok('ponderar no cambia la banda', con.band === sin.band && con.cv === sin.cv);
+  }
 
   // Con pocas medidas la banda usa la t de Student, no la normal (1,645):
   // con dos medidas el valor crítico es 6,31, casi cuatro veces mayor.

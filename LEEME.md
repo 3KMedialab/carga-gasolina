@@ -25,7 +25,7 @@ Se despliega subiendo los archivos tal cual a GitHub Pages.
 ## Al hacer un cambio
 
 1. Editar el módulo que toque.
-2. `node pruebas.mjs` — 96 comprobaciones del cálculo, las mediciones
+2. `node pruebas.mjs` — 100 comprobaciones del cálculo, las mediciones
    y los cargadores públicos.
 3. `node humo.mjs` — arranca la app entera contra un DOM simulado.
 4. Subir **también** `version.json` con un valor nuevo, y el mismo valor
@@ -48,7 +48,10 @@ poder seleccionarse, sin ningún síntoma visible.
   8 últimas de los 6 últimos meses (`MEAS_MAX` y `MEAS_MESES` en
   `calculo.js`): R se mueve un ±30% entre invierno y verano, y solo un
   0,5% al año por desgaste de la batería, así que las medidas viejas
-  estorban más de lo que ayudan.
+  estorban más de lo que ayudan. R se calcula como km eléctricos totales
+  ÷ kWh totales de esas medidas, así que una recarga grande pesa más que
+  una pequeña (más ruidosa). Si alguna medida no tiene km y kWh guardados,
+  se usa la media simple de los R.
 - **El margen de error de R** (`measStats()`) usa el valor crítico de la
   t de Student (tabla `T90` en `calculo.js`), no el de la normal: con
   pocas medidas la desviación estimada es muy poco fiable. Con dos medidas
