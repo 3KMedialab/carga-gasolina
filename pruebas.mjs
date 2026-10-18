@@ -5,6 +5,8 @@ import { simulate, findLimitHours, measStats, buildMeasurement,
          PRESET_FACTORS, efficiencyPenalty, taper } from './js/calculo.js';
 import { procesarPOI, pareceRecargoPorTiempo, frescura, _test as ocmTest } from './js/cargadores.js';
 const { esConectorTipo2, esUsoValido, conexionOperativa, refCaducada } = ocmTest;
+import { parseConsulta, provinciaDeAddress, lugaresDeNominatim, centroDeCP,
+         parseEstaciones } from './js/gasolineras.js';
 
 let pasa = 0, falla = 0;
 const fallos = [];
@@ -563,6 +565,101 @@ const REF = {
   ok('frescura: hace 2 años -> "mal"', frescura(hace2anios).nivel === 'mal');
   ok('frescura: fecha inválida -> "mal", nunca NaN ni excepción',
      frescura('no-es-una-fecha').nivel === 'mal');
+}
+
+// ================= GASOLINERAS POR LUGAR =================
+seccion('Gasolineras por código postal o municipio');
+
+{
+  const err = f => { try{ f(); return null; }catch(e){ return e.message; } };
+  const cp = parseConsulta(' 28013 ');
+  ok('CP: 5 cifras -> tipo cp y provincia por sus 2 primeras',
+     cp.tipo === 'cp' && cp.cp === '28013' && cp.provincia === '28', JSON.stringify(cp));
+  ok('CP: conserva el cero inicial (07001 -> Baleares 07)', parseConsulta('07001').provincia === '07');
+  ok('CP: provincia 00 o mayor de 52 -> cp-invalido',
+     err(() => parseConsulta('00123')) === 'cp-invalido' && err(() => parseConsulta('53001')) === 'cp-invalido');
+  ok('CP: longitud distinta de 5 -> cp-invalido',
+     err(() => parseConsulta('2801')) === 'cp-invalido' && err(() => parseConsulta('280130')) === 'cp-invalido');
+  ok('vacío o una letra -> lugar-vacio',
+     err(() => parseConsulta('  ')) === 'lugar-vacio' && err(() => parseConsulta('a')) === 'lugar-vacio' &&
+     err(() => parseConsulta(null)) === 'lugar-vacio');
+  const n = parseConsulta('  Villanueva   de la Serena ');
+  ok('nombre: se limpian espacios', n.tipo === 'nombre' && n.nombre === 'Villanueva de la Serena', n.nombre);
+}
+
+{
+  // direcciones reales devueltas por Nominatim
+  ok('provincia por ISO de provincia (Cáceres)',
+     provinciaDeAddress({ 'ISO3166-2-lvl6':'ES-CC', 'ISO3166-2-lvl4':'ES-EX' }) === '10');
+  ok('comunidad uniprovincial sin nivel de provincia (Madrid, La Rioja, Ceuta)',
+     provinciaDeAddress({ 'ISO3166-2-lvl4':'ES-MD' }) === '28' &&
+     provinciaDeAddress({ 'ISO3166-2-lvl4':'ES-RI' }) === '26' &&
+     provinciaDeAddress({ 'ISO3166-2-lvl4':'ES-CE' }) === '51');
+  ok('Baleares: ES-PM es la provincia 07', provinciaDeAddress({ 'ISO3166-2-lvl6':'ES-PM' }) === '07');
+  ok('Canarias no es uniprovincial: sin lvl6 no se adivina',
+     provinciaDeAddress({ 'ISO3166-2-lvl4':'ES-CN', state:'Canarias' }) === null);
+  ok('sin ISO, se recurre al nombre', provinciaDeAddress({ province:'Sevilla' }) === '41');
+  ok('dirección vacía o nula -> null', provinciaDeAddress(null) === null && provinciaDeAddress({}) === null);
+}
+
+{
+  const nom = (name, iso6, iso4, lat, lon, extra = {}) =>
+    ({ name, lat: String(lat), lon: String(lon),
+       address: { ...(iso6 ? { 'ISO3166-2-lvl6': iso6 } : {}), 'ISO3166-2-lvl4': iso4, ...extra } });
+
+  const arroyo = [
+    nom('Arroyomolinos', 'ES-CC', 'ES-EX', 39.18, -6.16, { province:'Cáceres' }),
+    nom('Arroyomolinos', null, 'ES-MD', 40.27, -3.91, { state:'Comunidad de Madrid' }),
+    nom('Arroyomolinos de la Vera', 'ES-CC', 'ES-EX', 40.05, -5.85, { province:'Cáceres' })
+  ];
+  const l = lugaresDeNominatim(arroyo, 'arroyomolinos');
+  ok('nombre ambiguo: quedan solo las coincidencias exactas, una por provincia',
+     l.length === 2 && l[0].provincia === '10' && l[1].provincia === '28', JSON.stringify(l));
+  ok('cada lugar trae su provincia por nombre para distinguirlo', l[0].zona === 'Cáceres' && l[1].zona === 'Madrid',
+     l.map(x => x.zona).join());
+
+  const valde = [nom('Valdemorillo', null, 'ES-MD', 40.50, -4.07),
+                 nom('Valdemorillo de la Sierra', 'ES-CU', 'ES-CM', 40.04, -1.78)];
+  ok('una sola coincidencia exacta -> se elige sola',
+     lugaresDeNominatim(valde, 'Valdemorillo').length === 1);
+  ok('sin coincidencia exacta -> se ofrecen todos',
+     lugaresDeNominatim(valde, 'Valdemori').length === 2);
+
+  const logrono = [nom('Logroño', null, 'ES-RI', 42.46, -2.44), nom('Logroño', null, 'ES-RI', 42.47, -2.45)];
+  ok('mismo municipio repetido (ciudad y término) -> uno solo',
+     lugaresDeNominatim(logrono, 'logrono').length === 1);
+
+  ok('el artículo no impide la coincidencia: "Zarza (La)" = "La Zarza"',
+     lugaresDeNominatim([nom('La Zarza', 'ES-BA', 'ES-EX', 38.7, -6.2)], 'Zarza (La)').length === 1);
+  ok('...pero no recorta nombres que solo empiezan por esa letra ("Olot" no es "lot")',
+     lugaresDeNominatim([nom('Olot', 'ES-GI', 'ES-CT', 42.18, 2.49), nom('Lot', 'ES-GI', 'ES-CT', 42, 2)], 'lot')
+       .map(x => x.nombre).join() === 'Lot');
+
+  ok('se descartan los que no se pueden situar (sin provincia o sin coordenadas)',
+     lugaresDeNominatim([nom('X', null, 'ES-CN', 28, -15), { name:'Y', lat:'', lon:'',
+       address:{ 'ISO3166-2-lvl6':'ES-M' } }], 'x').length === 0);
+  ok('lista nula -> vacía, nunca lanza', lugaresDeNominatim(null, 'x').length === 0);
+}
+
+{
+  const data = { Fecha: '18/10/2026', ListaEESSPrecio: [
+    { 'C.P.':'28864', 'Latitud':'40,5', 'Longitud (WGS84)':'-3,4', 'Precio Gasolina 95 E5':'1,839',
+      'Rótulo':'REPSOL', 'Dirección':'M-114', 'Municipio':'Ajalvir' },
+    { 'C.P.':'28864', 'Latitud':'40,7', 'Longitud (WGS84)':'-3,6', 'Precio Gasolina 95 E5':'',
+      'Precio Gasolina 98 E5':'1,999', 'Rótulo':'BP', 'Dirección':'C/ Mayor', 'Municipio':'Ajalvir' },
+    { 'C.P.':'28001', 'Latitud':'', 'Longitud (WGS84)':'-3,6', 'Precio Gasolina 95 E5':'1,7' },
+    { 'C.P.':'28001', 'Latitud':'40,4', 'Longitud (WGS84)':'-3,7', 'Precio Gasoleo A':'1,6' }
+  ]};
+  const all = parseEstaciones(data);
+  ok('parseEstaciones: descarta sin coordenadas o sin precio de gasolina', all.length === 2, String(all.length));
+  ok('parseEstaciones: si no hay 95, usa 98', all[1].price === 1.999);
+  ok('parseEstaciones: guarda CP y municipio', all[0].cp === '28864' && all[0].localidad === 'Ajalvir');
+  ok('parseEstaciones: datos nulos -> lista vacía', parseEstaciones(null).length === 0);
+
+  const c = centroDeCP(all, '28864');
+  casi('centroDeCP: media de las latitudes', c.lat, 40.6, 1e-9);
+  casi('centroDeCP: media de las longitudes', c.lon, -3.5, 1e-9);
+  ok('centroDeCP: CP sin gasolineras -> null, no se inventa un punto', centroDeCP(all, '28013') === null);
 }
 
 // ================= RESUMEN =================

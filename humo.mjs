@@ -235,6 +235,114 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   dom.desmontar();
 }
 
+// ---------- 9. gasolineras por código postal o municipio ----------
+// fetch simulado según la URL: Nominatim para situar el lugar y el Ministerio
+// para la provincia. Se guardan las URLs para comprobar qué provincia se pidió.
+{
+  const dom = montar({
+    'cvg_schema': '2',
+    'cvg_profiles_v1': JSON.stringify({ list:[{ id:'v1', name:'Atto 2', battery:18, maxPower:6.6,
+      elecCons:22, fuelCons:5.0, chargeEff:86, chem:'lfp' }], activeId:'v1' }),
+    'cvg_mode_v1':'parked'
+  });
+  const pedidas = [];
+  const resp = d => Promise.resolve({ json: () => Promise.resolve(d) });
+  const ministerio = { Fecha: '18/10/2026 20:00', ListaEESSPrecio: [
+    { 'C.P.':'28012', 'Latitud':'40,410', 'Longitud (WGS84)':'-3,700', 'Precio Gasolina 95 E5':'1,800',
+      'Rótulo':'CEPSA', 'Dirección':'C/ Uno', 'Municipio':'Madrid' },
+    { 'C.P.':'28014', 'Latitud':'40,420', 'Longitud (WGS84)':'-3,690', 'Precio Gasolina 95 E5':'1,700',
+      'Rótulo':'BP', 'Dirección':'C/ Dos', 'Municipio':'Madrid' }
+  ]};
+  const nomArroyo = [
+    { name:'Arroyomolinos', lat:'39.18', lon:'-6.16', address:{ 'ISO3166-2-lvl6':'ES-CC', province:'Cáceres' } },
+    { name:'Arroyomolinos', lat:'40.41', lon:'-3.70', address:{ 'ISO3166-2-lvl4':'ES-MD', state:'Comunidad de Madrid' } }
+  ];
+  globalThis.fetch = url => {
+    url = String(url); pedidas.push(url);
+    if(url.includes('postalcode=28013')) return resp([{ name:'28013', lat:'40.418', lon:'-3.707' }]);
+    if(url.includes('nominatim') && url.includes('Arroyomolinos')) return resp(nomArroyo);
+    if(url.includes('FiltroProvincia/')) return resp(ministerio);
+    return Promise.reject(new Error('sin-red'));
+  };
+  const espera = () => new Promise(r => setTimeout(r, 20));
+
+  const { iniciar, _test } = await import('./js/interfaz.js?9');
+  iniciar();
+  ok('sin lugar guardado, el campo arranca vacío', dom.get('lugar-q').value === '');
+
+  // a) código postal sin gasolineras propias: se sitúa por Nominatim y salen las cercanas
+  dom.get('lugar-q').value = '28013';
+  await _test.buscarPorLugar();
+  ok('CP: se pide la provincia de sus 2 primeras cifras',
+     pedidas.some(u => u.endsWith('FiltroProvincia/28')), pedidas.join(' | '));
+  ok('CP: salen las gasolineras', dom.get('station-list').innerHTML.includes('CEPSA') &&
+     dom.get('station-list').style.display === 'block');
+  ok('CP: el precio pasa a ser la media', dom.get('inp-fuelPrice').value === '1.750',
+     dom.get('inp-fuelPrice').value);
+  ok('CP: la pista dice dónde', dom.get('fuel-hint').textContent.includes('cerca de 28013'),
+     dom.get('fuel-hint').textContent);
+  ok('CP: la nota aclara desde dónde se mide', dom.get('refresh-note').textContent.includes('centro de 28013'),
+     dom.get('refresh-note').textContent);
+  ok('CP: se recuerda lo buscado', dom.store['cvg_lugar_v1'] === '28013');
+  ok('CP: los botones vuelven a estar disponibles',
+     !dom.get('btn-lugar').disabled && !dom.get('btn-refresh').disabled &&
+     dom.get('btn-lugar').textContent === 'Buscar');
+
+  // b) nombre ambiguo: pide elegir y, al elegir, busca en esa provincia
+  pedidas.length = 0;
+  dom.get('lugar-q').value = 'Arroyomolinos';
+  await _test.buscarPorLugar();
+  const opc = dom.get('lugar-opciones');
+  ok('ambiguo: se ofrecen los dos', opc.style.display === 'block' &&
+     opc.innerHTML.includes('Cáceres') && opc.innerHTML.includes('Madrid'), opc.innerHTML);
+  ok('ambiguo: aún no se ha pedido ninguna provincia', !pedidas.some(u => u.includes('FiltroProvincia')));
+  opc.fire('click', { target: { closest: () => ({ getAttribute: () => '1' }) } });
+  await espera();
+  ok('al elegir, se pide su provincia (Madrid, 28)',
+     pedidas.some(u => u.endsWith('FiltroProvincia/28')), pedidas.join(' | '));
+  ok('...las opciones desaparecen', opc.style.display === 'none' && opc.innerHTML === '');
+  ok('...y la pista nombra el municipio', dom.get('fuel-hint').textContent.includes('Arroyomolinos'));
+  ok('...con el municipio de cada gasolinera en la lista', dom.get('station-list').innerHTML.includes('Madrid'));
+
+  // c) entrada inválida: mensaje claro y nada colgado
+  dom.get('lugar-q').value = '2801';
+  await _test.buscarPorLugar();
+  ok('CP mal escrito: lo explica', dom.get('refresh-note').textContent.includes('5 cifras'),
+     dom.get('refresh-note').textContent);
+  ok('...y el botón queda listo para reintentar',
+     !dom.get('btn-lugar').disabled && dom.get('btn-lugar').textContent === 'Buscar');
+  ok('...sin guardar lo que no vale', dom.store['cvg_lugar_v1'] === 'Arroyomolinos');
+
+  // d) sin red: el mensaje del Ministerio, sin colgarse
+  globalThis.fetch = () => Promise.reject(new Error('sin-red'));
+  dom.get('lugar-q').value = '28013';
+  await _test.buscarPorLugar();
+  ok('sin red: avisa de que el servicio no responde',
+     dom.get('refresh-note').textContent.includes('no ha respondido'), dom.get('refresh-note').textContent);
+  ok('...y no se queda en "Buscando..."', dom.get('btn-lugar').textContent === 'Buscar');
+
+  // e) sin red buscando un nombre: culpa al servicio de mapas, no al Ministerio
+  dom.get('lugar-q').value = 'Valdemorillo';
+  await _test.buscarPorLugar();
+  ok('sin red con un nombre: avisa del servicio de mapas',
+     dom.get('refresh-note').textContent.includes('mapas'), dom.get('refresh-note').textContent);
+  dom.desmontar();
+}
+
+// ---------- 10. el último lugar buscado se recuerda al volver ----------
+{
+  const dom = montar({
+    'cvg_schema': '2',
+    'cvg_profiles_v1': JSON.stringify({ list:[{ id:'v1', name:'Atto 2', battery:18, maxPower:6.6,
+      elecCons:22, fuelCons:5.0, chargeEff:86, chem:'lfp' }], activeId:'v1' }),
+    'cvg_mode_v1':'parked', 'cvg_lugar_v1':'Valdemorillo'
+  });
+  const { iniciar } = await import('./js/interfaz.js?10');
+  iniciar();
+  ok('al arrancar, el campo trae el último lugar', dom.get('lugar-q').value === 'Valdemorillo');
+  dom.desmontar();
+}
+
 // ---------- resumen ----------
 console.log('='.repeat(50));
 if(falla){

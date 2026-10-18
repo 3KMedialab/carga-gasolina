@@ -83,6 +83,12 @@
     padding:11px 14px; color:var(--muted); font-size:13px; font-weight:500; margin-bottom:8px; }
   .refresh-btn[disabled]{ opacity:.6; }
   .refresh-note{ font-size:11.5px; color:var(--dim); line-height:1.5; margin:0 0 18px; }
+  .lugar-form{ display:flex; gap:8px; margin-bottom:8px; }
+  .lugar-form .field-input-wrap{ flex:1; min-width:0; }
+  .lugar-form input[type=search]{ -webkit-appearance:none; appearance:none; }
+  .lugar-btn{ flex-shrink:0; background:transparent; border:1px solid var(--line-strong); border-radius:8px;
+    padding:0 16px; color:var(--muted); font-size:13px; font-weight:500; }
+  .lugar-btn[disabled]{ opacity:.6; }
 
   .saved-row{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:14px; }
   .chip{ display:flex; align-items:center; gap:6px; background:var(--surface);

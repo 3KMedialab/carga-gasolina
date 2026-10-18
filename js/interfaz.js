@@ -12,7 +12,7 @@ import {
 } from './calculo.js';
 
 import * as D from './datos.js';
-import { buscarCercanas, MENSAJES } from './gasolineras.js';
+import { buscarCercanas, resolverLugar, buscarEnLugar, MENSAJES } from './gasolineras.js';
 import {
   buscarCercanos as buscarCargadoresOCM, MENSAJES as MENSAJES_OCM,
   pareceRecargoPorTiempo, frescura as frescuraOCM
@@ -35,6 +35,8 @@ let editingChargerId = null;
 let editingVehicleId = null;
 let lastCalc = null;
 let lastStations = [];
+let lastLugar = null;          // lugar de la última lista de gasolineras (null = tu ubicación)
+let lugaresPendientes = [];    // candidatos cuando el municipio buscado es ambiguo
 let lastOcmResults = [];
 let selectedOcmResult = null;
 let mostrarTodosOcm = false;
@@ -638,41 +640,99 @@ function saveMeas(){
 
 // ======================= GASOLINERAS =======================
 
+// Las dos búsquedas (ubicación y lugar) comparten nota y lista; mientras una
+// está en marcha se bloquean ambas para que no se pisen los resultados.
+function gasolinerasOcupado(on, cual){
+  $('btn-refresh').disabled = on;
+  $('btn-lugar').disabled = on;
+  $('refresh-btn-label').textContent = on && cual === 'gps' ? 'Buscando...' : 'Buscar gasolineras cercanas';
+  $('btn-lugar').textContent = on && cual === 'lugar' ? 'Buscando...' : 'Buscar';
+}
+
+function ocultarOpcionesLugar(){
+  lugaresPendientes = [];
+  const el = $('lugar-opciones');
+  el.style.display = 'none';
+  el.innerHTML = '';
+}
+
+function falloGasolineras(e){
+  gasolinerasOcupado(false);
+  ocultarOpcionesLugar();
+  $('refresh-note').innerHTML = `<span style="color:${color.warn}">${MENSAJES[e && e.message] || MENSAJES.default}</span> ` +
+    `Puedes escribir el precio a mano, o ` +
+    `<a href="https://geoportalgasolineras.es/geoportal-instalaciones/Inicio" target="_blank" ` +
+    `rel="noopener" style="color:${color.good}">verlo en el Geoportal</a>.`;
+}
+
+/** Pinta el resultado de buscarCercanas() o buscarEnLugar() (este trae .lugar). */
+function renderStations({ top, cheapest, avg, count, fecha, lugar }){
+  const hint = $('fuel-hint'), listEl = $('station-list');
+  lastStations = top;
+  lastLugar = lugar || null;
+
+  els.fuelPrice.value = avg.toFixed(3);
+  hint.textContent = 'Media de ' + count + ' gasolineras ' + (lugar ? 'cerca de ' + lugar.nombre : 'cercanas');
+  hint.classList.add('live');
+  $('refresh-note').textContent = 'Datos oficiales del Ministerio' + (fecha ? ' — ' + fecha : '') + '.' +
+    (lugar ? ' Distancias en línea recta desde el centro de ' + lugar.nombre + '.' : '');
+
+  listEl.style.display = 'block';
+  listEl.innerHTML = top.map((s, idx) => {
+    const tag = s === cheapest ? '<span class="tag">MÁS BARATA</span>' : '';
+    const loc = lugar && s.localidad ? ' · ' + esc(s.localidad) : '';
+    return `<div class="station" data-idx="${idx}"><div><div class="n">${esc(s.name)}${tag}</div>` +
+      `<div class="d">${esc(s.addr)}${loc} · ${fmt(s.dist, 1)} km</div></div>` +
+      `<div class="p num">${fmt(s.price, 3)}</div></div>`;
+  }).join('') + '<div class="field-hint" style="margin-top:4px;">Toca una para usar su precio.</div>';
+
+  render();
+}
+
 async function fetchRealPrices(){
-  const btn = $('btn-refresh'), label = $('refresh-btn-label');
-  const hint = $('fuel-hint'), note = $('refresh-note'), listEl = $('station-list');
-
-  const reset = () => { btn.disabled = false; label.textContent = 'Buscar gasolineras cercanas'; };
-  const fail = msg => {
-    reset();
-    note.innerHTML = `<span style="color:${color.warn}">${msg}</span> Puedes escribir el precio a mano, o ` +
-      `<a href="https://geoportalgasolineras.es/geoportal-instalaciones/Inicio" target="_blank" ` +
-      `rel="noopener" style="color:${color.good}">verlo en el Geoportal</a>.`;
-  };
-
-  btn.disabled = true;
-  label.textContent = 'Buscando...';
-
+  gasolinerasOcupado(true, 'gps');
   try{
-    const { top, cheapest, avg, count, fecha } = await buscarCercanas();
-    els.fuelPrice.value = avg.toFixed(3);
-    hint.textContent = 'Media de ' + count + ' gasolineras cercanas';
-    hint.classList.add('live');
-    note.textContent = 'Datos oficiales del Ministerio' + (fecha ? ' \u2014 ' + fecha : '') + '.';
-
-    lastStations = top;
-    listEl.style.display = 'block';
-    listEl.innerHTML = top.map((s, idx) => {
-      const tag = s === cheapest ? '<span class="tag">MÁS BARATA</span>' : '';
-      return `<div class="station" data-idx="${idx}"><div><div class="n">${esc(s.name)}${tag}</div>` +
-        `<div class="d">${esc(s.addr)} \u00b7 ${fmt(s.dist, 1)} km</div></div>` +
-        `<div class="p num">${fmt(s.price, 3)}</div></div>`;
-    }).join('') + '<div class="field-hint" style="margin-top:4px;">Toca una para usar su precio.</div>';
-
-    render();
-    reset();
+    const res = await buscarCercanas();
+    ocultarOpcionesLugar();
+    renderStations(res);
+    gasolinerasOcupado(false);
   }catch(e){
-    fail(MENSAJES[e && e.message] || MENSAJES.default);
+    falloGasolineras(e);
+  }
+}
+
+async function usarLugar(lugar){
+  gasolinerasOcupado(true, 'lugar');
+  try{
+    const res = await buscarEnLugar(lugar);
+    ocultarOpcionesLugar();
+    renderStations(res);
+    gasolinerasOcupado(false);
+  }catch(e){
+    falloGasolineras(e);
+  }
+}
+
+async function buscarPorLugar(){
+  const input = $('lugar-q'), texto = input.value;
+  if(input.blur) input.blur();   // cierra el teclado del móvil
+  gasolinerasOcupado(true, 'lugar');
+  ocultarOpcionesLugar();
+  try{
+    const lugares = await resolverLugar(texto);
+    D.setLugar(texto);
+    if(lugares.length === 1) return await usarLugar(lugares[0]);
+
+    lugaresPendientes = lugares;
+    const el = $('lugar-opciones');
+    el.style.display = 'block';
+    el.innerHTML = lugares.map((l, i) =>
+      `<div class="station" data-lugar="${i}"><div><div class="n">${esc(l.nombre)}</div>` +
+      `<div class="d">${esc(l.zona)}</div></div></div>`).join('');
+    $('refresh-note').textContent = 'Hay varios lugares con ese nombre. ¿Cuál es?';
+    gasolinerasOcupado(false);
+  }catch(e){
+    falloGasolineras(e);
   }
 }
 
@@ -914,6 +974,15 @@ function bindEvents(){
   tg.addEventListener('click', () => { pn.classList.toggle('open'); tg.classList.toggle('open'); });
 
   $('btn-refresh').addEventListener('click', fetchRealPrices);
+  $('form-lugar').addEventListener('submit', e => {
+    if(e && e.preventDefault) e.preventDefault();
+    buscarPorLugar();
+  });
+  $('lugar-opciones').addEventListener('click', e => {
+    const row = e.target.closest('[data-lugar]'); if(!row) return;
+    const l = lugaresPendientes[parseInt(row.getAttribute('data-lugar'), 10)];
+    if(l) usarLugar(l);
+  });
 
   $('btn-buscar-cargadores').addEventListener('click', buscarCargadoresCercanos);
   $('cargadores-resultados').addEventListener('click', e => {
@@ -999,7 +1068,8 @@ function bindEvents(){
     if(!st) return;
     els.fuelPrice.value = st.price.toFixed(3);
     const hint = $('fuel-hint');
-    hint.textContent = st.name + ' \u00b7 ' + fmt(st.dist, 1) + ' km';
+    hint.textContent = st.name + ' \u00b7 ' + fmt(st.dist, 1) + ' km' +
+      (lastLugar ? ' del centro de ' + lastLugar.nombre : '');
     hint.classList.add('live');
     document.querySelectorAll('.station').forEach(el => { el.style.borderColor = ''; });
     row.style.borderColor = color.good;
@@ -1024,6 +1094,7 @@ export function iniciar(){
   onSchemeChange(() => { if(D.activeProfile()) render(); });
 
   bindEvents();
+  $('lugar-q').value = D.getLugar();
   syncParkUnitUI();
   D.loadSessionInto(els, SESSION_KEYS);
   setMode(mode);
@@ -1035,5 +1106,6 @@ export function iniciar(){
 // para las pruebas
 export const _test = {
   render, renderMeas, saveMeas, saveCharger, openCharger, els,
-  renderCargadoresResultados, seleccionarOcmResultado, buscarCargadoresCercanos
+  renderCargadoresResultados, seleccionarOcmResultado, buscarCargadoresCercanos,
+  buscarPorLugar, usarLugar
 };

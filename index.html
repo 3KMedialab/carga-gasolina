@@ -105,7 +105,7 @@
       <p><strong>Cargar gratis.</strong> Cuando no pagas nada, la app no decide: solo te dice a cu&aacute;nta gasolina equivale. Gu&aacute;rdala igualmente en el historial, porque suele ser de donde sale la mayor parte del ahorro de tener un enchufable. Excepci&oacute;n: si el punto es gratuito solo un rato y luego cobra por minuto, s&iacute; hace falta el c&aacute;lculo completo, y ah&iacute; es donde m&aacute;s dinero se pierde por descuido.</p>
       <p><strong>C&oacute;mo se usa.</strong> Pon el precio y la potencia del punto donde est&aacute;s, el precio de la gasolina y el estado de tu bater&iacute;a. La app te dice si compensa enchufar y cu&aacute;nto ahorras o pierdes.</p>
       <p><strong>Cargadores guardados.</strong> Guarda los puntos donde cargas para no reescribir sus datos. Toca uno para usarlo; toca el que ya est&aacute; activo para editarlo o eliminarlo. El reloj &#9201;&#65039; indica que ese punto cobra un recargo si ocupas la plaza demasiado tiempo.</p>
-      <p><strong>Buscar gasolineras.</strong> Usa tu ubicaci&oacute;n y los precios oficiales del Ministerio, actualizados a diario. Solo funciona en Espa&ntilde;a. Toca una gasolinera de la lista para usar su precio exacto.</p>
+      <p><strong>Buscar gasolineras.</strong> Usa tu ubicaci&oacute;n y los precios oficiales del Ministerio, actualizados a diario. Solo funciona en Espa&ntilde;a. Toca una gasolinera de la lista para usar su precio exacto. Si no quieres dar tu ubicaci&oacute;n, o vas a repostar en otro sitio, escribe un c&oacute;digo postal o el nombre de un municipio: ver&aacute;s las m&aacute;s cercanas a su centro, aunque all&iacute; no haya ninguna. Solo se buscan las de su provincia, as&iacute; que cerca del l&iacute;mite con otra pueden faltar algunas.</p>
 
       <p><strong>Eficiencia de carga.</strong> No todos los kWh que pagas llegan a la bater&iacute;a: una parte se pierde por el camino. Con un 85%, de cada 10 kWh que te cobran entran unos 8,5. La app lo tiene en cuenta al comparar.</p>
       <p><strong>Los dos modos.</strong> En <em>Aparcado</em> el tiempo no cuenta como coste, porque el coche iba a estar ah&iacute; de todas formas; solo limita cu&aacute;ntos kWh caben. En <em>Parada Dedicada</em> s&iacute; se descuenta el desv&iacute;o, porque son km que no habr&iacute;as hecho.</p>
@@ -349,8 +349,16 @@
     <span style="font-size:15px;line-height:1;">&#8635;</span>
     <span id="refresh-btn-label">Buscar gasolineras cercanas</span>
   </button>
+  <form class="lugar-form" id="form-lugar" autocomplete="off">
+    <div class="field-input-wrap">
+      <input id="lugar-q" type="search" enterkeyhint="search" maxlength="60"
+        placeholder="o busca por c&oacute;digo postal o municipio" aria-label="C&oacute;digo postal o municipio">
+    </div>
+    <button class="lugar-btn" id="btn-lugar" type="submit">Buscar</button>
+  </form>
   <p class="refresh-note" id="refresh-note"></p>
 
+  <div class="station-list" id="lugar-opciones"></div>
   <div class="station-list" id="station-list"></div>
 
   <div id="block-parked">

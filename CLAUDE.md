@@ -17,8 +17,8 @@ node humo.mjs      # arranca interfaz.js entera contra un DOM simulado (dom-fals
 
 ### Qué cubre cada uno
 
-- `pruebas.mjs` está dividido en secciones con `seccion('...')`: invariantes del cálculo, límites físicos, química/curva de carga, recarga real de referencia (Atto 2 DM-i), modos de conducción y frío, recargo por tiempo, tarifa por minuto, mediciones reales y cargadores públicos (OCM). No toca la red ni el DOM.
-- `humo.mjs` son 8 escenarios numerados (app vacía, app con datos, carga gratuita, migración de cargadores antiguos, mediciones, búsqueda de cargadores sin geolocalización, unidad del tiempo de aparcado, exportar/importar copia). Comprueba que la app arranca y reacciona, no los números del cálculo.
+- `pruebas.mjs` está dividido en secciones con `seccion('...')`: invariantes del cálculo, límites físicos, química/curva de carga, recarga real de referencia (Atto 2 DM-i), modos de conducción y frío, recargo por tiempo, tarifa por minuto, mediciones reales, cargadores públicos (OCM) y gasolineras por código postal o municipio (`gasolineras.js`). No toca la red ni el DOM.
+- `humo.mjs` son 10 escenarios numerados (app vacía, app con datos, carga gratuita, migración de cargadores antiguos, mediciones, búsqueda de cargadores sin geolocalización, unidad del tiempo de aparcado, exportar/importar copia, gasolineras por CP/municipio con `fetch` simulado, último lugar recordado). Comprueba que la app arranca y reacciona, no los números del cálculo.
 
 ### Salida y código de retorno
 
@@ -51,7 +51,7 @@ Capas de `js/` (dependencias hacia abajo):
 - `interfaz.js` (~1000 líneas) — une DOM y módulos. **Nada de lógica de negocio aquí**: lo nuevo que haya que calcular va en `calculo.js` y se prueba en `pruebas.mjs`. Exporta `_test` para las pruebas.
 - `calculo.js` — funciones puras, sin DOM ni almacenamiento.
 - `datos.js` — único punto de acceso a localStorage (claves `cvg_*`, algunas por vehículo: `cvg_hist_<id>`, `cvg_calib_<id>`, `cvg_meas_<id>`), migraciones y copia de seguridad (`exportAll`/`importAll` vuelcan por prefijo `cvg_`, así que claves nuevas quedan cubiertas solas si usan ese prefijo).
-- `gasolineras.js` (API del Ministerio, solo España) y `cargadores.js` (Open Charge Map) — aislados de la UI: devuelven datos o lanzan error con código.
+- `gasolineras.js` (API del Ministerio, solo España) y `cargadores.js` (Open Charge Map) — aislados de la UI: devuelven datos o lanzan error con código. La búsqueda por CP o municipio sitúa el lugar con Nominatim (provincia por código ISO 3166-2; la de un CP, por sus 2 primeras cifras) y reutiliza `pickNearby()` desde ese punto; un CP sin gasolineras propias no es error. Nominatim solo se llama al pulsar Buscar: su política prohíbe autocompletar.
 - `util.js` — formato, acceso seguro a localStorage (`ls*`), caché de `$()` para el DOM (`resetDom()` la limpia).
 
 ### Reglas del cálculo (`calculo.js`)

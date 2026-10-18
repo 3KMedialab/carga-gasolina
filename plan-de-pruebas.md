@@ -341,6 +341,21 @@ Guarda un cargador estando en modo "Tiempo". La etiqueta debe mostrar el precio 
 - Toca una: debe poner **su precio exacto**, no la media.
 - **Prueba a denegar el permiso** y con modo avión: mensaje claro, sin colgarse.
 
+**9.2b — Buscar gasolineras por código postal o municipio** *(solo España)*
+- Escribe el **código postal** de tu casa y pulsa Buscar (o Intro en el teclado).
+  Deben salir gasolineras que reconoces y la pista debe decir "cerca de" ese CP.
+- Prueba un CP **del centro de una ciudad** (p. ej. 28013): aunque allí no haya
+  ninguna gasolinera, deben salir las más cercanas a ese barrio, no un error.
+- Escribe el **nombre de tu municipio**, con y sin tildes: debe encontrarlo igual.
+- Prueba un nombre que se repite en varias provincias (p. ej. *Arroyomolinos*):
+  debe preguntarte cuál, con la provincia de cada uno, y buscar en la que elijas.
+- Escribe un CP mal (4 cifras, o que empiece por 99): mensaje claro, sin colgarse.
+- Cierra y vuelve a abrir la app: el campo debe traer lo último que buscaste.
+- Toca una gasolinera de la lista: debe poner **su precio exacto** y decir a
+  cuántos km está **del centro** del lugar buscado.
+- Si vives **cerca del límite con otra provincia**, anota si faltan gasolineras
+  del otro lado: es una limitación conocida (solo se busca en una provincia).
+
 **9.3 — Varios vehículos**
 - Añade un segundo coche (el de otra persona, o uno que te plantees comprar).
 - Alterna entre ambos con los mismos precios: los resultados deben cambiar.

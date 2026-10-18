@@ -15,6 +15,7 @@ const K = {
   parkUnit: 'cvg_parkunit_v1',
   selCh:    'cvg_selch_v1',
   ocmRef:   'cvg_ocmref_v1',
+  lugar:    'cvg_lugar_v1',
   hist:     id => 'cvg_hist_'  + id,
   calib:    id => 'cvg_calib_' + id,
   meas:     id => 'cvg_meas_'  + id
@@ -88,6 +89,11 @@ export const getPreset  = () => ls(K.preset) || 'mixto';
 export const setPreset  = p => lsSet(K.preset, p || '');
 export const getParkUnit = () => ls(K.parkUnit) || 'h';
 export const setParkUnit = u => lsSet(K.parkUnit, u === 'min' ? 'min' : 'h');
+
+// ---------- ÚLTIMO LUGAR BUSCADO (gasolineras por CP o municipio) ----------
+// Se guarda el texto tal cual lo escribió el usuario, no el resultado.
+export const getLugar = () => ls(K.lugar) || '';
+export const setLugar = t => lsSet(K.lugar, String(t || '').trim());
 
 // ---------- CARGADORES ----------
 export function loadChargers(){ return lsJSON(K.chargers, []); }
