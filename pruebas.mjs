@@ -271,6 +271,15 @@ seccion('Climatización: R medido por grupo, sin factores estimados');
   const kmNada = simulate({ ...base('parked'), elecCons: eff / rParaClima(lista, 'nada', AHORA).R }).km;
   ok('con el R medido con calefacción salen menos km que sin climatización', kmCal < kmNada,
      `${kmCal.toFixed(1)} vs ${kmNada.toFixed(1)}`);
+
+  // km por climatización (los botones): los mismos que daría simulate()
+  const sim = simulate({ ...base('parked'), elecCons: eff / cal.R });
+  const kpc = calculo.kmPorClima(sim.energyIn, lista, eff, AHORA);
+  casi('kmPorClima coincide con simulate() para la climatización medida', kpc.calefaccion, sim.km, 1e-9);
+  ok('kmPorClima: sin medidas propias -> null, nunca estimado',
+     calculo.kmPorClima(sim.energyIn, soloVerano, eff, AHORA).calefaccion === null);
+  ok('kmPorClima: sin energía (batería llena) -> null',
+     calculo.kmPorClima(0, lista, eff, AHORA).nada === null);
 }
 
 // ================= RECARGO POR TIEMPO =================

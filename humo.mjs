@@ -48,7 +48,12 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   ok('la calibración LFP funciona', txt('calib-main').includes('Calibrada'), txt('calib-main'));
   ok('el historial suma', txt('hist-count') === '1');
   ok('el reloj aparece en el chip con recargo',
-     dom.get('saved-chargers').innerHTML.includes('\u23f1\ufe0f'));
+     dom.get('saved-chargers').innerHTML.includes('chip-clock'));
+  ok('el aviso de recargo sale en la secci\u00f3n del cargador, con la hora l\u00edmite',
+     !dom.get('charger-recargo').classList.contains('hidden') &&
+     dom.get('charger-recargo').textContent.includes('más de 1 h 30 min'), dom.get('charger-recargo').textContent);
+  ok('el cargador elegido se puede editar con un bot\u00f3n visible',
+     dom.get('saved-chargers').innerHTML.includes('data-editar="c1"'));
 
   // guardar una recarga
   dom.click('btn-save-parked');
@@ -149,9 +154,9 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   ok('el consumo pasa a ser el medido',
      Math.abs(parseFloat(dom.get('inp-elecConsumption').value) - 22) > 1,
      dom.get('inp-elecConsumption').value);
-  ok('el margen de error baja', dom.get('meas-summary').innerHTML.includes('Margen'));
+  ok('el margen de error baja', dom.get('meas-summary').innerHTML.includes('margen de error'));
   ok('el resumen separa por climatización',
-     dom.get('meas-summary').innerHTML.includes('Con calefacción:</strong> sin medidas'),
+     dom.get('meas-summary').innerHTML.includes('<div class="k">Con calefacción</div><div class="d">Se usa el consumo declarado'),
      dom.get('meas-summary').innerHTML);
   dom.desmontar();
 }
@@ -181,7 +186,7 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   ok('...y el botón vuelve a estar disponible para reintentar',
      dom.get('btn-buscar-cargadores').disabled === false);
   ok('...con la etiqueta original, no "Buscando..." colgado',
-     dom.get('buscar-cargadores-label').textContent === 'Buscar cargadores cercanos',
+     dom.get('buscar-cargadores-label').textContent === 'Buscar cerca',
      dom.get('buscar-cargadores-label').textContent);
 
   dom.desmontar();
@@ -428,6 +433,108 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   ok('el esquema sube a 3', dom.store['cvg_schema'] === '3');
   ok('la medida antigua sigue contando mientras no haya otra mejor',
      dom.get('clima-hint').textContent.includes('no tienen climatización'), dom.get('clima-hint').textContent);
+  dom.desmontar();
+}
+
+// ---------- 13. interfaz: pestañas, cargadores, gasolineras plegadas, tarifa ----------
+{
+  const chs = Array.from({ length: 5 }, (_, i) => ({ id:'c' + i, name:'Punto ' + i, power:7.4, mode:0,
+    price:0.2 + i / 100, perMin:0, freeHours:0, overMin:0, note:'' }));
+  const dom = montar({
+    'cvg_schema':'3',
+    'cvg_profiles_v1': JSON.stringify({ list:[
+      { id:'v1', name:'Atto 2', battery:18, maxPower:6.6, elecCons:22, fuelCons:5, chargeEff:86, chem:'lfp' },
+      { id:'v2', name:'Kuga', battery:14, maxPower:3.7, elecCons:20, fuelCons:6, chargeEff:85, chem:'nmc' }
+    ], activeId:'v1' }),
+    'cvg_chargers_v1': JSON.stringify(chs), 'cvg_mode_v1':'parked',
+    'cvg_hist_v1': JSON.stringify([{ date:new Date().toISOString(), chargerPrice:0.25, savings:0.9, km:39, free:false }])
+  });
+  const { iniciar, _test } = await import('./js/interfaz.js?13');
+  iniciar();
+
+  // pestañas
+  ok('arranca en Calcular', !dom.get('tab-calcular').hidden && dom.get('tab-coche').hidden && dom.get('tab-ajustes').hidden);
+  _test.irA('tab-coche');
+  ok('Mi coche se muestra y Calcular se oculta', !dom.get('tab-coche').hidden && dom.get('tab-calcular').hidden);
+  ok('la pestaña activa se marca', dom.get('tabbtn-coche').classList.contains('active') &&
+     !dom.get('tabbtn-calcular').classList.contains('active'));
+  _test.irA('inventada');
+  ok('una pestaña desconocida no cambia nada', !dom.get('tab-coche').hidden);
+  _test.irA('tab-calcular');
+
+  // vehículos y Mi coche
+  ok('el botón de arriba lleva el nombre del vehículo', dom.get('veh-pill-nombre').textContent === 'Atto 2');
+  ok('con dos vehículos aparece la lista para cambiar', !dom.get('veh-row').classList.contains('hidden') &&
+     dom.get('veh-row').innerHTML.includes('Kuga'));
+  ok('la ficha del vehículo muestra sus datos', dom.get('veh-summary').innerHTML.includes('Batería LFP'));
+  ok('el resumen de medidas también sale en Mi coche', dom.get('r-resumen').innerHTML.includes('Todavía no has medido'));
+  ok('el historial lista las recargas', dom.get('hist-list').innerHTML.includes('39 km'));
+
+  // cargadores: «Ver los N» y la lista completa
+  ok('con 5 cargadores aparece «Ver los 5»', dom.get('saved-chargers').innerHTML.includes('Ver los 5'));
+  ok('«+ Guardar» va antes que los cargadores',
+     dom.get('saved-chargers').innerHTML.indexOf('chip-add') < dom.get('saved-chargers').innerHTML.indexOf('data-id="c0"'));
+  _test.usarCargador('c3');
+  ok('usar un cargador pone su precio', dom.get('inp-chargerPrice').value === 0.23, String(dom.get('inp-chargerPrice').value));
+  ok('...y lo marca', dom.get('saved-chargers').innerHTML.includes('class="chip active" data-id="c3"'));
+  ok('...y ofrece editarlo', dom.get('saved-chargers').innerHTML.includes('Editar Punto 3'));
+  ok('sin recargo no hay aviso', dom.get('charger-recargo').classList.contains('hidden'));
+
+  // tarifa por energía o por tiempo
+  ok('por defecto cobra por energía', dom.get('pricing-energia').classList.contains('active') &&
+     dom.get('field-price-min').classList.contains('hidden'));
+  dom.click('pricing-tiempo');
+  ok('al elegir tiempo, aparece el precio por minuto', !dom.get('field-price-min').classList.contains('hidden') &&
+     dom.get('pricing-tiempo').classList.contains('active'));
+  ok('...y deja de usar el cargador guardado', !dom.get('saved-chargers').innerHTML.includes('chip active'));
+  dom.click('pricing-tiempo');
+  ok('volver a tocar la opción elegida no la cambia', dom.get('pricing-tiempo').classList.contains('active'));
+  dom.click('pricing-energia');
+
+  // batería, climatización y modo
+  dom.get('inp-currentSoc').value = '47';
+  dom.fire('inp-currentSoc', 'input');
+  ok('el porcentaje de batería se ve junto a la barra', dom.get('soc-valor').textContent === '47 %',
+     dom.get('soc-valor').textContent);
+  ok('sin medidas, los botones de climatización lo dicen', dom.get('km-calefaccion').textContent === 'sin medidas');
+  dom.click('mode-trip');
+  ok('el modo explica qué cuenta', dom.get('mode-help').textContent.includes('desvío'));
+  dom.click('mode-parked');
+
+  // veredicto: el color sale de una clase, no de estilos sueltos
+  ok('el veredicto lleva una sola clase de estado',
+     ['v-good', 'v-bad', 'v-warn'].filter(c => dom.get('verdict').classList.contains(c)).length === 1);
+  dom.desmontar();
+}
+
+// ---------- 14. gasolineras: lista plegada ----------
+{
+  const dom = montar({
+    'cvg_schema':'3',
+    'cvg_profiles_v1': JSON.stringify({ list:[{ id:'v1', name:'A', battery:18, maxPower:6.6,
+      elecCons:22, fuelCons:5, chargeEff:86, chem:'lfp' }], activeId:'v1' }),
+    'cvg_mode_v1':'parked'
+  });
+  const resp = d => Promise.resolve({ json: () => Promise.resolve(d) });
+  globalThis.fetch = url => {
+    url = String(url);
+    if(url.includes('postalcode=28013')) return resp([{ name:'28013', lat:'40.418', lon:'-3.707' }]);
+    if(url.includes('FiltroProvincia/')) return resp({ Fecha:'02/11/2026', ListaEESSPrecio: [
+      { 'C.P.':'28012', 'Latitud':'40,410', 'Longitud (WGS84)':'-3,700', 'Precio Gasolina 95 E5':'1,800', 'Rótulo':'CEPSA', 'Dirección':'C/ Uno', 'Municipio':'Madrid' },
+      { 'C.P.':'28014', 'Latitud':'40,420', 'Longitud (WGS84)':'-3,690', 'Precio Gasolina 95 E5':'1,700', 'Rótulo':'BP', 'Dirección':'C/ Dos', 'Municipio':'Madrid' }
+    ]});
+    return Promise.reject(new Error('sin-red'));
+  };
+  const { iniciar, _test } = await import('./js/interfaz.js?14');
+  iniciar();
+  dom.get('lugar-q').value = '28013';
+  await _test.buscarPorLugar();
+  const html = dom.get('station-list').innerHTML;
+  ok('plegada: la más barata (BP) se ve y la otra queda oculta',
+     /class="item station" data-idx="\d"><div><div class="n">BP/.test(html) &&
+     /class="item station extra" data-idx="\d"><div><div class="n">CEPSA/.test(html), html);
+  ok('ofrece ver todas', html.includes('Ver las 2 gasolineras'));
+  ok('arranca plegada', !dom.get('station-list').classList.contains('open'));
   dom.desmontar();
 }
 

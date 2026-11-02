@@ -25,10 +25,10 @@ Se despliega subiendo los archivos tal cual a GitHub Pages.
 ## Al hacer un cambio
 
 1. Editar el módulo que toque.
-2. `node pruebas.mjs` — 148 comprobaciones del cálculo, las mediciones,
+2. `node pruebas.mjs` — 151 comprobaciones del cálculo, las mediciones,
    la climatización, los cargadores públicos y las gasolineras.
 3. `node humo.mjs` — arranca la app entera contra un DOM simulado
-   (84 comprobaciones en 12 escenarios).
+   (112 comprobaciones en 14 escenarios).
 4. Subir **también** `version.json` con un valor nuevo, y el mismo valor
    en la constante `VERSION` de `js/app.js`. Sin eso, los móviles que
    ya tienen la app instalada seguirán viendo la versión antigua.

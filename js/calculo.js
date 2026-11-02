@@ -207,6 +207,20 @@ export function rParaClima(list, clima, ahora = Date.now()){
   return { ...measStats([], ahora), fuente: 'ninguna' };
 }
 
+/**
+ * Km que daría la energía de esta recarga con cada climatización, solo con R
+ * medido: null para las que no tienen medidas propias (no se estima nada).
+ * Equivale a simulate().km con elecCons = chargeEff / R.
+ */
+export function kmPorClima(energyIn, list, chargeEff, ahora = Date.now()){
+  const out = {};
+  CLIMAS.forEach(c => {
+    const s = rParaClima(list, c, ahora);
+    out[c] = s.fuente === 'clima' && chargeEff > 0 && energyIn > 0 ? energyIn * s.R * 100 / chargeEff : null;
+  });
+  return out;
+}
+
 /** Ids de las medidas que cuentan ahora mismo en algún grupo (para atenuar el resto). */
 export function measEnUso(list, ahora = Date.now()){
   const ids = new Set();

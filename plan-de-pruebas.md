@@ -22,7 +22,7 @@ donde van a aparecer los fallos que nadie ha visto todavía.
 3. Elige **"Añadir a pantalla de inicio"**.
 4. Ábrela desde el icono nuevo.
 
-**Antes de borrar nada, descarga la copia de seguridad** (Ajustes y explicaciones →
+**Antes de borrar nada, descarga la copia de seguridad** (pestaña **Ajustes** →
 Copia de seguridad → Descargar copia de seguridad). En iPhone, quitar el icono de la
 pantalla de inicio puede borrar todos los datos de la app (vehículos, cargadores,
 historial y medidas), y la copia es la única forma de recuperarlos. Conviene
@@ -34,6 +34,18 @@ descargarla de vez en cuando, aunque no vayas a borrar nada.
 - O simplemente ábrela en una pestaña privada.
 
 Todo lo que guardes se queda en tu móvil. No se envía a ningún sitio.
+
+**Cómo está organizada.** Abajo hay tres pestañas:
+- **Calcular:** arriba, el resultado (se queda fijo al bajar y se encoge). Debajo, en el
+  orden en que decides: **Dónde cargas** (cargadores guardados, búsqueda, precio,
+  potencia, tarifa fija), **Gasolina**, **Tu coche ahora** (batería), **¿Vas a usar la
+  climatización?** y **La recarga**.
+- **Mi coche:** datos del vehículo y cambio de vehículo, lo que rinde de verdad
+  (tus medidas), el cuidado de la batería y el historial.
+- **Ajustes:** los consumos que usa el cálculo, la copia de seguridad y la ayuda.
+
+Las fichas (vehículo, cargador, medidas) suben desde abajo; sus botones de guardar y
+cancelar quedan siempre a la vista al pie.
 
 ---
 
@@ -63,7 +75,7 @@ y por eso existe también la sección 9.8 (medir tu coche con datos reales).
 ## 3. Comprueba las cuentas a mano (una sola vez)
 
 Verifica que las cuentas cuadran **con tu coche**. Coge calculadora, ponte en modo
-**Aparcado**, y **empieza con la batería por debajo del 70%** — así evitas el tramo
+**Ya iba a aparcar**, y **empieza con la batería por debajo del 70%** — así evitas el tramo
 final de carga, que tiene su propia lógica y lo comprobaremos aparte en la sección 6.
 
 **Paso 1 — ¿A qué potencia carga de verdad?**
@@ -94,7 +106,7 @@ La menor entre: (horas × potencia del paso 1)  y  el resultado del paso 3
 ```
 → Compara con **"Cargarás"**.
 
-> El campo "Cuánto tiempo estarás aquí" puede estar en **horas** o en **minutos**
+> El campo "Tiempo aparcado" puede estar en **horas** o en **minutos**
 > (la unidad aparece a la derecha del campo y se cambia tocándola). Si lo tienes en
 > minutos, divide entre 60 antes de usarlo en este paso. Ojo: 0,5 horas son 30
 > minutos, no 50.
@@ -155,8 +167,8 @@ de subir: la batería se ha llenado. Es correcto.
 Sube el "% de batería ahora" del 10% al 90%: los kWh deben ir **bajando**.
 
 **4.6 — Los dos modos deben coincidir**
-1. Anota los kWh que salen en modo **Aparcado**.
-2. Cambia a **Parada dedicada**, pon esos mismos kWh y **0 km de desvío**.
+1. Anota los kWh que salen en modo **Ya iba a aparcar**.
+2. Cambia a **Paro a propósito**, pon esos mismos kWh y **0 km de desvío**.
 3. Coste, km y ahorro deben ser **prácticamente iguales**.
 
 ---
@@ -171,7 +183,7 @@ La calefacción y el aire acondicionado gastan batería, y cuánto depende de tu
 Por eso la app **no aplica ningún porcentaje**: cada medida (sección 9.8) lleva la
 climatización que usaste, y al calcular solo se usan las medidas hechas con la misma.
 
-Abre **Ajustes y explicaciones**. Arriba verás **"¿Vas a usar la climatización?"**
+En **Calcular** verás la sección **"¿Vas a usar la climatización?"**
 con tres botones: Calefacción / Nada / Aire.
 
 **5.1 — Sin medidas, lo dice**
@@ -210,7 +222,8 @@ Cierra la app y vuelve a abrirla: debe seguir marcada la climatización que eleg
 *(Sección nueva.)*
 
 **6.1 — El consejo de carga depende de la química**
-Edita tu vehículo y cambia el tipo de batería. Mira la tarjeta de calibración:
+Edita tu vehículo (Mi coche → Editar datos) y cambia el tipo de batería. Mira
+"Cuidado de la batería", en Mi coche:
 
 | Tipo | Qué debe aparecer |
 |---|---|
@@ -228,7 +241,7 @@ Edita tu vehículo y cambia el tipo de batería. Mira la tarjeta de calibración
 > 6.2 y 6.4 dan resultados distintos según el coche.
 
 **6.2 — El tramo final tarda más (por kWh)**
-Pon el modo **Parada dedicada** y la potencia del cargador igual a la máxima de tu
+Pon el modo **Paro a propósito** y la potencia del cargador igual a la máxima de tu
 coche. Anota los minutos **por kWh** ("Cargarás: X kWh en Y min", minutos ÷ kWh) en
 dos casos:
 - **A)** Batería al 30% y pides 2 kWh.
@@ -285,7 +298,7 @@ llena antes de que te vayas, y el tiempo indicado debe ser **menor** que 12 hora
 Pon el % a 100 → "Batería llena" y 0 kWh. **No debe decir que compensa.**
 
 **7.3 — Batería llena con tarifa de conexión** *(caso delicado)*
-Con la batería al 100%, pon 1 € de tarifa fija en Ajustes.
+Con la batería al 100%, pon 1 € de tarifa fija (en Dónde cargas).
 - Debe seguir diciendo "Batería llena" y avisar de que pagarías 1 € sin cargar nada.
 - **Si dice que compensa, es un fallo grave.**
 
@@ -299,7 +312,7 @@ Pon 2 kW de potencia de cargador.
   eficiencia a la baja.
 - Los km ganados deben ser **menores** que con la misma energía a potencia alta.
 
-**7.6 — Pedir más de lo que cabe** *(Parada dedicada)*
+**7.6 — Pedir más de lo que cabe** *(Paro a propósito)*
 Batería al 80% y pide una cantidad grande de kWh: debe reducirlo a lo que cabe y
 explicártelo.
 
@@ -314,7 +327,7 @@ Prueba 0, negativos y cifras enormes.
 
 *(Sección nueva. Importante: es donde un enchufable pierde más dinero.)*
 
-Arriba hay un selector: **"El cargador cobra por: energía / tiempo"**.
+En Dónde cargas hay un selector: **"Cobra por: Energía / Tiempo"**.
 
 **8.1 — Cambiar el modo cambia el campo**
 Al elegir "Tiempo", el campo de €/kWh debe desaparecer y aparecer uno de €/min.
@@ -343,12 +356,18 @@ Guarda un cargador estando en modo "Tiempo". La etiqueta debe mostrar el precio 
 - Guarda el mismo nombre con **otro precio**: debe avisarte del cambio y **no
   duplicar** la etiqueta.
 - Prueba el mismo nombre en mayúsculas: tampoco debe duplicarse.
-- Borra uno con la ×.
+- Toca **"Editar …"** bajo la fila (o **Editar** en "Ver los N") y bórralo desde la ficha.
+- Con más de 3 cargadores, la fila se desliza de lado y al final aparece **"Ver los N"**,
+  que abre la lista completa. "+ Guardar" va siempre el primero.
+- Si el cargador cobra recargo por tiempo, bajo la fila debe salir un aviso ámbar con
+  sus condiciones, y la hora límite en la nota de "La recarga".
 
 **9.2 — Buscar gasolineras** *(solo España)*
-- Pulsa el botón y da permiso de ubicación.
+- Pulsa **"Cerca de mí"** (en la sección Gasolina) y da permiso de ubicación.
 - ¿Salen gasolineras que reconoces? ¿Están **ordenadas de más cerca a más lejos**?
-- ¿La marcada como "Más barata" es realmente la más barata de la lista?
+- La lista sale **plegada**: solo se ve la más barata y un botón "Ver las N
+  gasolineras". Al abrirla, ¿la marcada como "Más barata" es realmente la más barata?
+- Si eliges otra y vuelves a plegar, debe quedar a la vista **la que elegiste**.
 - Toca una: debe poner **su precio exacto**, no la media.
 - **Prueba a denegar el permiso** y con modo avión: mensaje claro, sin colgarse.
 
@@ -370,7 +389,8 @@ Guarda un cargador estando en modo "Tiempo". La etiqueta debe mostrar el precio 
 **9.3 — Varios vehículos**
 - Añade un segundo coche (el de otra persona, o uno que te plantees comprar).
 - Alterna entre ambos con los mismos precios: los resultados deben cambiar.
-- Toca el que ya está seleccionado: debe abrirse para editarlo.
+- En Mi coche, toca el otro en la lista para cambiar; toca el que ya está marcado
+  para editarlo. El nombre del vehículo activo sale arriba a la derecha en Calcular.
 - Intenta borrar cuando solo queda uno: no debe dejarte.
 
 **9.4 — Historial y calibración**
@@ -391,7 +411,7 @@ historial, calibración, medidas, modo de tarifa, la unidad de tiempo, la
 climatización elegida y el modo en que estabas.
 
 **9.7 — Copia de seguridad**
-En Ajustes y explicaciones, sección "Copia de seguridad".
+En la pestaña **Ajustes**, sección "Copia de seguridad".
 - Pulsa **"Descargar copia de seguridad"**. En el móvil se abre el menú de compartir
   (guárdala en Archivos o en la nube); si no, se descarga un archivo
   `carga-vs-gasolina-copia-AAAA-MM-DD.json`.
@@ -403,7 +423,7 @@ En Ajustes y explicaciones, sección "Copia de seguridad".
   decir "Ese archivo no es una copia de seguridad válida" y **no tocar nada**.
 
 **9.8 — Medir mi coche con datos reales**
-En Ajustes y explicaciones → "Medir mi coche con datos reales". Sigue los cinco
+En **Mi coche** → "Añadir o ver medidas". Sigue los cinco
 pasos que explica la pantalla (cargar hasta tu nivel de referencia, anotar el
 cuentakilómetros, conducir, volver a cargar al mismo nivel, indicar la
 climatización) e introduce los km iniciales, los km finales, los kWh cargados, la
@@ -424,7 +444,7 @@ casi todo el tiempo).
 - **Tras guardar** debe aparecer, para **cada climatización**, su km por kWh
   facturado, el consumo equivalente en kWh/100km, el margen de error y cuántas
   medidas tiene, o "sin medidas todavía". En la lista, cada medida dice su
-  climatización (y ", frío" si lo marcaste). Si la climatización elegida en Ajustes
+  climatización (y ", frío" si lo marcaste). Si la climatización elegida en Calcular
   es la de la medida, el consumo eléctrico pasa a ser el medido y los km del
   veredicto cambian. **Si es otra, no deben cambiar.**
 - **Borrar.** La × de cada medida pide confirmación y, al borrarla, todo se recalcula.
@@ -439,7 +459,7 @@ casi todo el tiempo).
   Las medidas antiguas sin climatización, solo las de los últimos 6 meses.
 
 **9.9 — Buscar cargadores públicos** *(Open Charge Map)*
-- Pulsa "Buscar cargadores cercanos" y da permiso de ubicación. Debe aparecer
+- Pulsa **"Buscar cerca"** (en Dónde cargas) y da permiso de ubicación. Debe aparecer
   "Distancias en línea recta, no por carretera · hasta X km" y una lista **ordenada de
   más cerca a más lejos** (las 5 primeras, y el resto tras "Ver N más").
 - Solo deben salir puntos con conector **Tipo 2** (el de carga lenta en AC),
@@ -451,16 +471,16 @@ casi todo el tiempo).
   máxima de ese punto.
 - Si las notas hablan de cobro por minuto o por tiempo, salen resaltadas. La app
   **nunca** convierte ese texto en un precio ni en un recargo: eso lo escribes tú.
-- Con una tarjeta abierta, "+ Guardar este" abre la ficha con el nombre y la potencia
+- Con una tarjeta abierta, "+ Guardar" abre la ficha con el nombre y la potencia
   ya puestos y el texto de Open Charge Map como ayuda. El precio y el recargo **no**
   salen de ese texto: los escribes tú.
 - Un punto que ya tienes guardado debe llevar la etiqueta GUARDADO.
 - **Prueba a denegar el permiso** y con modo avión: mensaje claro ("No has dado
   permiso de ubicación." / "Open Charge Map no ha respondido."), y el botón debe
-  volver a "Buscar cargadores cercanos", sin quedarse en "Buscando…".
+  volver a "Buscar cerca", sin quedarse en "Buscando…".
 
 **9.10 — Tiempo en minutos u horas**
-En modo Aparcado, el campo "Cuánto tiempo estarás aquí" lleva a la derecha un botón
+En modo Ya iba a aparcar, el campo "Tiempo aparcado" lleva a la derecha un botón
 con la unidad ("horas" o "min").
 - Tócalo: el valor se convierte conservando la duración (1,5 horas ↔ 90 min) y **el
   resultado no debe cambiar**.

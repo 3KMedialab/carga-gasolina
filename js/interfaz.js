@@ -7,7 +7,7 @@ import {
 } from './util.js';
 
 import {
-  CLIMAS, simulate, findLimitHours, rParaClima, measEnUso, sinClasificar, buildMeasurement,
+  CLIMAS, simulate, findLimitHours, rParaClima, measEnUso, sinClasificar, buildMeasurement, kmPorClima,
   MEAS_MAX, MEAS_MESES, MEAS_MESES_SIN_CLASIFICAR
 } from './calculo.js';
 
@@ -34,6 +34,8 @@ let editingChargerId = null;
 let editingVehicleId = null;
 let lastCalc = null;
 let lastStations = [];
+let lastCheapest = null;       // la más barata de la última lista
+let estacionElegida = null;    // índice de la que tocó el usuario (null = ninguna)
 let lastLugar = null;          // lugar de la última lista de gasolineras (null = tu ubicación)
 let lugaresPendientes = [];    // candidatos cuando el municipio buscado es ambiguo
 let lastOcmResults = [];
@@ -43,8 +45,15 @@ const OCM_VISIBLES = 5; // tarjetas antes de "Ver más"
 
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
-const NOMBRE_CLIMA = { calefaccion: 'calefacción', aire: 'aire acondicionado', nada: 'sin climatización' };
 const CON_CLIMA    = { calefaccion: 'con calefacción', aire: 'con aire', nada: 'sin climatización' };
+
+const RELOJ = '<svg class="chip-clock" aria-hidden="true"><use href="#i-clock"/></svg>';
+
+/** Marca un botón de un grupo (control segmentado, chips) como elegido o no. */
+function pulsado(el, on){
+  el.classList.toggle('active', !!on);
+  if(el.setAttribute) el.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
 
 // ======================= CÁLCULO PRINCIPAL =======================
 
@@ -81,27 +90,23 @@ function render(){
 
   const worth = !r.nothingToCharge && r.net > 0;
   const tight = !r.nothingToCharge && !isFree && r.net >= 0 && Math.abs(r.net) < 0.10;
-  const accent = (r.nothingToCharge || tight) ? color.warn : (worth ? color.good : color.bad);
+  // el color del veredicto entero sale de esta clase (ver .verdict.v-* en estilos.css)
+  const estado = (r.nothingToCharge || tight) ? 'warn' : (worth ? 'good' : 'bad');
+  ['good', 'bad', 'warn'].forEach(s => $('verdict').classList.toggle('v-' + s, s === estado));
 
-  const badge = $('badge');
-  badge.textContent = r.nothingToCharge ? 'Batería llena'
+  $('badge').textContent = r.nothingToCharge ? 'Batería llena'
     : isFree ? 'Gratis'
     : tight ? 'Casi igual'
     : worth ? 'Compensa cargar' : 'Mejor repostar';
-  badge.style.color = accent;
 
-  const amountEl = $('amount');
-  amountEl.innerHTML = (r.net >= 0 ? '+' : '\u2212') + fmt(Math.abs(r.net)) +
+  $('amount').innerHTML = (r.net >= 0 ? '+' : '−') + fmt(Math.abs(r.net)) +
     '<span class="unit"> ' + EURO + '</span>';
-  amountEl.style.color = r.nothingToCharge ? color.warn : (r.net >= 0 ? color.good : color.bad);
 
   $('amount-label').textContent = (r.nothingToCharge
     ? 'no cabe energía en la batería'
     : isFree ? 'que te habrías gastado en gasolina'
     : r.net >= 0 ? 'de ahorro en esta recarga' : 'de sobrecoste en esta recarga')
     + (clima !== 'nada' ? ' · ' + CON_CLIMA[clima] : '');
-
-  $('verdict').style.borderLeftColor = accent;
 
   const detail = $('detail');
   if(r.nothingToCharge){
@@ -128,23 +133,22 @@ function render(){
   const g = $(pre + '-fill-gain');
   g.style.left = pctNow + '%'; g.style.width = pctGain + '%';
   $(pre + '-legend').innerHTML = 'Batería ' + fmt(pctNow, 0) +
-    '% \u2192 <strong style="color:' + color.good + '">' + fmt(r.finalSoc, 0) + '%</strong>';
+    '% → <strong>' + fmt(r.finalSoc, 0) + '%</strong>';
   $(pre + '-kwh').textContent = fmt(r.sessionKwh, 1) + ' kWh en ' + fmtTime(r.chargeHours);
-  $(pre + '-km').textContent = '\u2248 ' + fmt(r.km, 0) + ' km';
+  $(pre + '-km').textContent = '≈ ' + fmt(r.km, 0) + ' km';
   $(pre + '-cost').textContent = fmt(r.sessionCost) + ' ' + EURO;
   $(pre + '-equiv').textContent = fmt(r.equivFuel) + ' ' + EURO;
 
   const overRow = $(pre + '-row-over');
   if(r.overCost > 0){
     overRow.style.display = '';
-    const oe = $(pre + '-over');
-    oe.textContent = '+' + fmt(r.overCost) + ' ' + EURO + ' (' + fmtTime(r.overHours) + ' de más)';
-    oe.style.color = color.bad;
+    $(pre + '-over').textContent = '+' + fmt(r.overCost) + ' ' + EURO + ' (' + fmtTime(r.overHours) + ' de más)';
   } else { overRow.style.display = 'none'; }
+
+  const limit = ch && ch.overMin > 0 ? findLimitHours({ ...cfg, mode: 'parked' }) : null;
 
   if(mode === 'parked'){
     const note = $('pk-note');
-    const limit = ch && ch.overMin > 0 ? findLimitHours(cfg) : null;
     if(r.nothingToCharge){
       note.innerHTML = `<span style="color:${color.warn}">No tiene sentido enchufar</span>: tu batería ya está llena.`;
     } else if(isFree){
@@ -167,9 +171,7 @@ function render(){
     const rowD = $('tr-row-detour');
     if(cfg.detourKm > 0){
       rowD.style.display = '';
-      const dEl = $('tr-detour');
-      dEl.textContent = '\u2212' + fmt(r.detourCost) + ' ' + EURO;
-      dEl.style.color = color.bad;
+      $('tr-detour').textContent = '−' + fmt(r.detourCost) + ' ' + EURO;
     } else rowD.style.display = 'none';
 
     const note = $('tr-note');
@@ -184,15 +186,30 @@ function render(){
         'Sin el rodeo habrías ahorrado ' + fmt(r.gross) + ' ' + EURO + '.';
     } else if(worth){
       note.innerHTML = 'Son ' + fmtTime(r.chargeHours) + ' de espera para ahorrar ' + fmt(r.net) +
-        ' ' + EURO + ' \u2014 unos ' + fmt(perHour) + ' ' + EURO + ' por hora.';
+        ' ' + EURO + ' — unos ' + fmt(perHour) + ' ' + EURO + ' por hora.';
     } else {
       note.innerHTML = `<span style="color:${color.bad}">No merece la pena esta parada</span> a este precio.`;
     }
   }
 
+  // --- el cargador elegido: recargo por tiempo (con la hora límite) y notas ---
+  const avisoRecargo = $('charger-recargo');
+  if(ch && ch.overMin > 0){
+    // la hora límite va en la nota de «La recarga», junto al tiempo: aquí solo las condiciones
+    avisoRecargo.innerHTML = 'Cobra <strong class="num">' + fmt(ch.overMin, 2) + ' ' + EURO + '/min</strong> si ocupas ' +
+      'la plaza más de <strong>' + fmtTime(ch.freeHours) + '</strong>.' + (limit !== null && mode === 'trip'
+        ? ' Aparcando aquí, desconecta antes de <strong>' + fmtTime(limit) + '</strong>.'
+        : '');
+  } else avisoRecargo.innerHTML = '';
+  show(avisoRecargo, !!(ch && ch.overMin > 0));
+
+  const noteEl = $('charger-note');
+  noteEl.textContent = ch && ch.note ? ch.note : '';
+  show(noteEl, !!(ch && ch.note));
+
   const ph = $('power-hint');
   if(r.powerCapped){
-    ph.textContent = prof.name + ' tope a ' + fmt(prof.maxPower, 1) + ' kW: se usa ese límite';
+    ph.textContent = prof.name + ' carga a ' + fmt(prof.maxPower, 1) + ' kW como máximo: se usa ese límite';
     ph.classList.add('warn');
   } else if(r.effReduced){
     ph.textContent = 'A ' + fmt(r.power, 1) + ' kW se pierde más energía: eficiencia ajustada a ' +
@@ -205,14 +222,21 @@ function render(){
 
   $('field-price-kwh').classList.toggle('hidden', cfg.byMinute);
   $('field-price-min').classList.toggle('hidden', !cfg.byMinute);
+  pulsado($('pricing-energia'), !cfg.byMinute);
+  pulsado($('pricing-tiempo'), cfg.byMinute);
+
+  $('soc-valor').textContent = fmt(pctNow, 0) + ' %';
+
+  // km de esta recarga con cada climatización, solo donde hay medidas propias
+  const kpc = kmPorClima(r.energyIn, D.loadMeas(), prof.chargeEff);
+  CLIMAS.forEach(c => {
+    $('km-' + c).textContent = r.nothingToCharge ? '' : kpc[c] !== null ? '≈ ' + fmt(kpc[c], 0) + ' km' : 'sin medidas';
+  });
 
   $('cons-hint').textContent = 'Declarados de ' + prof.name + ': ' + fmt(prof.elecCons, 1) +
     ' kWh/100km y ' + fmt(prof.fuelCons, 1) + ' L/100km. El eléctrico se sustituye por el medido ' +
-    'con la climatización elegida, si lo hay.';
-
-  const noteEl = $('charger-note');
-  noteEl.textContent = ch && ch.note ? ch.note : '';
-  show(noteEl, !!(ch && ch.note));
+    'con la climatización elegida, si lo hay. Si cambias estos valores a mano, se usan hasta que ' +
+    'cambies de climatización o de vehículo.';
 
   lastCalc = {
     chargerPrice: cfg.byMinute ? r.effectivePerKwh : cfg.chargerPrice,
@@ -242,8 +266,8 @@ function elegirClima(c){
 }
 
 function syncClimaUI(){
-  document.querySelectorAll('#clima-row .preset-btn').forEach(b => {
-    b.classList.toggle('active', b.getAttribute('data-clima') === clima);
+  document.querySelectorAll('#clima-row [data-clima]').forEach(b => {
+    pulsado(b, b.getAttribute('data-clima') === clima);
   });
   const s = rParaClima(D.loadMeas(), clima);
   const hint = $('clima-hint');
@@ -266,20 +290,28 @@ function syncClimaUI(){
 
 function renderVehicles(){
   const d = D.loadProfiles(), act = D.activeProfile();
-  let html = d.list.map(p =>
-    `<button class="veh${act && p.id === act.id ? ' active' : ''}" data-veh="${p.id}">${esc(p.name)}</button>`
-  ).join('');
-  if(d.list.length > 1) html += '<button class="veh veh-add" id="veh-add">+ Vehículo</button>';
-  $('veh-row').innerHTML = html;
+
+  $('veh-pill-nombre').textContent = act ? act.name : '—';
+
+  // lista para cambiar de vehículo: solo tiene sentido con más de uno
+  $('veh-row').innerHTML = d.list.map(p => {
+    const on = act && p.id === act.id;
+    return `<button type="button" class="item" data-veh="${p.id}" aria-pressed="${on}">` +
+      `<span class="n">${esc(p.name)}</span><span class="radio${on ? ' on' : ''}" aria-hidden="true"></span></button>`;
+  }).join('');
   show($('veh-row'), d.list.length > 1);
 
   const sum = $('veh-summary');
   if(act){
-    const chem = act.chem === 'lfp' ? 'LFP' : act.chem === 'nmc' ? 'NMC' : 'química sin indicar';
-    sum.innerHTML = `<p><strong>${esc(act.name)}</strong><br>` +
-      `Batería ${fmt(act.battery,1)} kWh (${chem}) \u00b7 carga máx. ${fmt(act.maxPower,1)} kW \u00b7 ` +
-      `eficiencia ${fmt(act.chargeEff,0)}%<br>` +
-      `Consumo mixto ${fmt(act.elecCons,1)} kWh/100km \u00b7 ${fmt(act.fuelCons,1)} L/100km</p>`;
+    const chem = act.chem === 'lfp' ? 'Batería LFP' : act.chem === 'nmc' ? 'Batería NMC' : 'Química sin indicar';
+    sum.innerHTML = `<div class="veh-head"><span class="nombre">${esc(act.name)}</span><span class="quim">${chem}</span></div>` +
+      '<div class="spec">' +
+      `<div><div class="k">Batería útil</div><div class="v num">${fmt(act.battery, 1)} kWh</div></div>` +
+      `<div><div class="k">Carga máx. en AC</div><div class="v num">${fmt(act.maxPower, 1)} kW</div></div>` +
+      `<div><div class="k">Consumo eléctrico declarado</div><div class="v num">${fmt(act.elecCons, 1)} kWh/100km</div></div>` +
+      `<div><div class="k">Consumo en híbrido</div><div class="v num">${fmt(act.fuelCons, 1)} L/100km</div></div>` +
+      `<div><div class="k">Eficiencia de carga</div><div class="v num">${fmt(act.chargeEff, 0)}%</div></div>` +
+      '</div>';
   } else sum.innerHTML = '';
 }
 
@@ -371,18 +403,54 @@ function setSelectedCharger(id){
   D.setSelectedChargerId(id);
 }
 
+const CHIPS_VISIBLES = 3;   // con más, aparece «Ver los N»
+
+/** Precio de un cargador guardado tal como se ve en su chip y en la lista. */
+function precioCargador(c){
+  if(c.mode === 1) return fmt(c.perMin || 0, 2) + ' ' + EURO + '/min';
+  return c.price > 0 ? fmt(c.price, 2) + ' ' + EURO + '/kWh' : 'gratis';
+}
+
+let ultimoHtmlChips = '';
 function renderChargers(){
   const list = D.loadChargers();
-  let html = '<div class="saved-row">' + list.map(c => {
+  const sel = list.find(c => c.id === selectedChargerId);
+  const chips = list.map(c => {
     const on = c.id === selectedChargerId;
-    const shown = c.mode === 1 ? fmt(c.perMin || 0, 2) + '/min' : fmt(c.price, 2);
-    const warn = c.overMin > 0
-      ? '<span class="chip-clock" title="Tiene recargo por tiempo">\u23f1\ufe0f</span> ' : '';
-    return `<span class="chip${on ? ' active' : ''}" data-id="${c.id}">${warn}${esc(c.name)}` +
-      ` <span class="price">${shown}</span></span>`;
-  }).join('') + '<button class="chip chip-add" id="chip-add">+ Guardar este</button></div>';
-  if(!list.length) html += '<div class="saved-hint">Guarda aquí los puntos donde cargas.</div>';
-  $('saved-chargers').innerHTML = html;
+    const reloj = c.overMin > 0 ? RELOJ : '';
+    return `<button type="button" class="chip${on ? ' active' : ''}" data-id="${c.id}" aria-pressed="${on}"` +
+      (c.overMin > 0 ? ' title="Cobra recargo si ocupas la plaza demasiado tiempo"' : '') + '>' +
+      `<span class="n">${reloj}${esc(c.name)}</span><span class="p num">${precioCargador(c)}</span></button>`;
+  }).join('');
+  const todos = list.length > CHIPS_VISIBLES
+    ? `<button type="button" class="chip chip-add" id="chip-todos">Ver los ${list.length}</button>` : '';
+  const html = '<div class="chips"><button type="button" class="chip chip-add" id="chip-add">+ Guardar</button>' +
+    chips + todos + '</div>' +
+    (sel ? `<button type="button" class="chips-edit" data-editar="${sel.id}">Editar ${esc(sel.name)}</button>` : '') +
+    (list.length ? '' : '<p class="saved-hint">Guarda aquí los puntos donde cargas para no reescribir sus datos.</p>');
+  // solo se repinta si cambia: así la fila no vuelve al principio cada vez que escribes un número
+  if(html !== ultimoHtmlChips){ $('saved-chargers').innerHTML = html; ultimoHtmlChips = html; }
+}
+
+function renderTodosCargadores(){
+  $('chs-list').innerHTML = D.loadChargers().map(c => {
+    const extra = [fmt(c.power, 1) + ' kW', precioCargador(c)];
+    if(c.overMin > 0) extra.push('recargo desde ' + fmtTime(c.freeHours));
+    return `<div class="item${c.id === selectedChargerId ? ' active' : ''}">` +
+      `<button type="button" class="item-main" data-usar="${c.id}"><div class="n">${esc(c.name)}</div>` +
+      `<div class="d num">${extra.join(' · ')}</div></button>` +
+      `<button type="button" class="item-edit" data-editar="${c.id}">Editar</button></div>`;
+  }).join('');
+}
+
+/** Usa un cargador guardado: rellena sus datos y lo marca. */
+function usarCargador(id){
+  const c = byId(D.loadChargers(), id);
+  if(!c) return;
+  setSelectedCharger(id);
+  applyCharger(c);
+  if(selectedOcmResult){ selectedOcmResult = null; renderCargadoresResultados(); }
+  render();
 }
 
 // prefill (opcional): { name, power, helpText } — viene de un resultado de
@@ -475,6 +543,7 @@ function saveCharger(){
   applyCharger(entry);
   openOverlay('ch-overlay', false);
   renderChargers();
+  renderTodosCargadores();
   render();
   return true;
 }
@@ -488,6 +557,7 @@ function deleteCharger(){
   if(selectedChargerId === editingChargerId) setSelectedCharger(null);
   openOverlay('ch-overlay', false);
   renderChargers();
+  renderTodosCargadores();
   render();
 }
 
@@ -519,7 +589,18 @@ function renderHistory(){
     nota = 'Todo el ahorro viene de cargar gratis.';
   } else if(p){ nota = 'Historial de ' + p.name + '.'; }
   $('hist-note').textContent = nota;
+
+  // las 5 últimas, de más reciente a más antigua
+  $('hist-list').innerHTML = list.slice(-HIST_VISIBLES).reverse().map(e => {
+    const d = new Date(e.date);
+    const fecha = isFinite(d) ? d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '';
+    const signo = e.savings >= 0 ? '+' : '−';
+    return `<div class="item"><div><div class="n num">${fecha}${e.free ? ' · gratis' : ''}</div>` +
+      `<div class="d num">${fmt(e.km || 0, 0)} km${e.free ? '' : ' · ' + fmt(e.chargerPrice || 0, 2) + ' ' + EURO + '/kWh'}</div></div>` +
+      `<div class="p num ${e.savings >= 0 ? 'pos' : 'neg'}">${signo}${fmt(Math.abs(e.savings))} ${EURO}</div></div>`;
+  }).join('');
 }
+const HIST_VISIBLES = 5;
 
 function renderCalibration(){
   const p = D.activeProfile();
@@ -590,6 +671,40 @@ function saveRecharge(btn){
 
 // ======================= MEDICIONES =======================
 
+/**
+ * Lo que rinde el coche con cada climatización, solo con datos medidos.
+ * Lo usan la ficha de medición y la pestaña Mi coche.
+ */
+function resumenClimasHTML(list, prof){
+  if(!list.length){
+    return '<p class="r-nota" style="padding-top:12px">Todavía no has medido nada. Mientras tanto la app usa ' +
+      'el consumo declarado, con un margen de error de alrededor del 30%.</p>';
+  }
+  const ETIQ = { calefaccion: 'Con calefacción', aire: 'Con aire', nada: 'Sin climatización' };
+  let descartadas = 0;
+  const filas = CLIMAS.map(c => {
+    const s = rParaClima(list, c);
+    if(s.fuente !== 'clima'){
+      return `<div class="clima-g vacio"><div><div class="k">${ETIQ[c]}</div>` +
+        '<div class="d">Se usa el consumo declarado, ±30%</div></div><div class="v">Sin medidas</div></div>';
+    }
+    descartadas += s.descartadas;
+    const base = prof ? prof.chargeEff / s.R : 0;
+    return `<div class="clima-g"><div><div class="k">${ETIQ[c]}</div>` +
+      `<div class="d num">${s.n} ${s.n === 1 ? 'medida' : 'medidas'} · margen de error ±${fmt(s.band * 100, 0)}% · ` +
+      `${fmt(base, 1)} kWh/100km</div></div>` +
+      `<div class="v num">${fmt(s.R, 2)} <small>km/kWh</small></div></div>`;
+  });
+  const viejas = list.filter(sinClasificar).length;
+  const notas = [];
+  if(viejas) notas.push(`${viejas} ${viejas === 1 ? 'medida no tiene' : 'medidas no tienen'} la climatización ` +
+    `indicada. Solo cuentan para una climatización sin medidas propias, y solo las de los ` +
+    `${MEAS_MESES_SIN_CLASIFICAR} últimos meses. Clasifícalas en la lista de medidas si lo recuerdas.`);
+  if(descartadas) notas.push(`Hay medidas guardadas que no cuentan: de cada climatización solo se usan las ` +
+    `${MEAS_MAX} últimas de los ${MEAS_MESES} últimos meses.`);
+  return filas.join('') + notas.map(n => `<p class="r-nota">${n}</p>`).join('');
+}
+
 function renderMeas(){
   const list = D.loadMeas(), prof = D.activeProfile();
   const chem = prof ? (prof.chem || 'unknown') : 'unknown';
@@ -600,36 +715,9 @@ function renderMeas(){
       ? 'Con tu batería NMC no conviene llegar al 100%. Usa tu límite habitual, normalmente el <strong>80%</strong>, y repite siempre el mismo.'
       : 'Usa siempre el mismo nivel. Si tu batería es LFP, el 100%; si es NMC, tu límite habitual (suele ser el 80%).';
 
-  // Un resumen por climatización: cada grupo es independiente y es el que
-  // usa el cálculo cuando eliges esa climatización.
-  const sum = $('meas-summary');
-  if(!list.length){
-    sum.innerHTML = '<p>Todavía no has medido nada. Mientras tanto la app usa el consumo declarado, ' +
-      'con un margen de error de alrededor del 30%.</p>';
-  } else {
-    const ETIQ = { calefaccion: 'Con calefacción', aire: 'Con aire', nada: 'Sin climatización' };
-    let descartadas = 0;
-    const lineas = CLIMAS.map(c => {
-      const s = rParaClima(list, c);
-      if(s.fuente !== 'clima') return `<strong>${ETIQ[c]}:</strong> sin medidas todavía.`;
-      descartadas += s.descartadas;
-      const base = prof ? prof.chargeEff / s.R : 0;
-      return `<strong>${ETIQ[c]}:</strong> ${fmt(s.R, 2)} km por kWh facturado ` +
-        `(${fmt(base, 1)} kWh/100km). Margen de error ±${fmt(s.band * 100, 0)}%, ` +
-        `${s.n} ${s.n === 1 ? 'medida' : 'medidas'}.`;
-    });
-    const viejas = list.filter(sinClasificar).length;
-    sum.innerHTML = '<p>' + lineas.join('<br>') + '</p>' +
-      (viejas
-        ? `<p>${viejas} ${viejas === 1 ? 'medida no tiene' : 'medidas no tienen'} la climatización indicada. ` +
-          `Solo cuentan para una climatización sin medidas propias, y solo las de los ` +
-          `${MEAS_MESES_SIN_CLASIFICAR} últimos meses. Clasifícalas abajo si lo recuerdas.</p>`
-        : '') +
-      (descartadas
-        ? `<p>Hay medidas guardadas que no cuentan: de cada climatización solo se usan las ` +
-          `${MEAS_MAX} últimas de los ${MEAS_MESES} últimos meses.</p>`
-        : '');
-  }
+  const resumen = resumenClimasHTML(list, prof);
+  $('meas-summary').innerHTML = resumen;
+  $('r-resumen').innerHTML = resumen;
 
   const enUso = measEnUso(list);
   const CORTO = { calefaccion: 'calefacción', aire: 'aire', nada: 'sin clima' };
@@ -697,7 +785,7 @@ function saveMeas(){
 function gasolinerasOcupado(on, cual){
   $('btn-refresh').disabled = on;
   $('btn-lugar').disabled = on;
-  $('refresh-btn-label').textContent = on && cual === 'gps' ? 'Buscando...' : 'Buscar gasolineras cercanas';
+  $('refresh-btn-label').textContent = on && cual === 'gps' ? 'Buscando...' : 'Cerca de mí';
   $('btn-lugar').textContent = on && cual === 'lugar' ? 'Buscando...' : 'Buscar';
 }
 
@@ -717,28 +805,48 @@ function falloGasolineras(e){
     `rel="noopener" style="color:${color.good}">verlo en el Geoportal</a>.`;
 }
 
-/** Pinta el resultado de buscarCercanas() o buscarEnLugar() (este trae .lugar). */
 function renderStations({ top, cheapest, avg, count, fecha, lugar }){
-  const hint = $('fuel-hint'), listEl = $('station-list');
+  const hint = $('fuel-hint');
   lastStations = top;
+  lastCheapest = cheapest;
   lastLugar = lugar || null;
+  estacionElegida = null;
 
   els.fuelPrice.value = avg.toFixed(3);
   hint.textContent = 'Media de ' + count + ' gasolineras ' + (lugar ? 'cerca de ' + lugar.nombre : 'cercanas');
   hint.classList.add('live');
-  $('refresh-note').textContent = 'Datos oficiales del Ministerio' + (fecha ? ' — ' + fecha : '') + '.' +
-    (lugar ? ' Distancias en línea recta desde el centro de ' + lugar.nombre + '.' : '');
+  $('refresh-note').textContent = 'Precios oficiales del Ministerio' + (fecha ? ', ' + fecha : '') + '.' +
+    (lugar ? ' Distancias en línea recta desde el centro de ' + lugar.nombre + '.' : '') +
+    ' Toca una para usar su precio.';
 
-  listEl.style.display = 'block';
-  listEl.innerHTML = top.map((s, idx) => {
-    const tag = s === cheapest ? '<span class="tag">MÁS BARATA</span>' : '';
-    const loc = lugar && s.localidad ? ' · ' + esc(s.localidad) : '';
-    return `<div class="station" data-idx="${idx}"><div><div class="n">${esc(s.name)}${tag}</div>` +
-      `<div class="d">${esc(s.addr)}${loc} · ${fmt(s.dist, 1)} km</div></div>` +
-      `<div class="p num">${fmt(s.price, 3)}</div></div>`;
-  }).join('') + '<div class="field-hint" style="margin-top:4px;">Toca una para usar su precio.</div>';
-
+  $('station-list').classList.remove('open');
+  pintarEstaciones();
   render();
+}
+
+/**
+ * Lista de gasolineras, plegada por defecto: se ve solo la elegida (o la más
+ * barata, si no has elegido ninguna) y un botón para ver todas. Todas están en
+ * el HTML; las demás se ocultan con la clase .extra.
+ */
+function pintarEstaciones(){
+  const listEl = $('station-list');
+  if(!lastStations.length){ listEl.style.display = 'none'; listEl.innerHTML = ''; return; }
+  const visible = estacionElegida !== null ? estacionElegida : Math.max(0, lastStations.indexOf(lastCheapest));
+  const abierta = listEl.classList.contains('open');
+  listEl.style.display = 'block';
+  listEl.innerHTML = lastStations.map((s, idx) => {
+    const tag = s === lastCheapest ? '<span class="tag">MÁS BARATA</span>' : '';
+    const loc = lastLugar && s.localidad ? ' · ' + esc(s.localidad) : '';
+    const cls = 'item station' + (idx === visible ? '' : ' extra') + (idx === estacionElegida ? ' active' : '');
+    return `<button type="button" class="${cls}" data-idx="${idx}"><div><div class="n">${esc(s.name)}${tag}</div>` +
+      `<div class="d">${esc(s.addr)}${loc} · ${fmt(s.dist, 1)} km</div></div>` +
+      `<div class="p num">${fmt(s.price, 3)}</div></button>`;
+  }).join('') + (lastStations.length > 1
+    ? `<button type="button" class="item link" data-est-toggle aria-expanded="${abierta}">` +
+      (abierta ? 'Ver solo ' + (estacionElegida !== null ? 'la elegida' : 'la más barata')
+               : 'Ver las ' + lastStations.length + ' gasolineras') + '</button>'
+    : '');
 }
 
 async function fetchRealPrices(){
@@ -779,8 +887,8 @@ async function buscarPorLugar(){
     const el = $('lugar-opciones');
     el.style.display = 'block';
     el.innerHTML = lugares.map((l, i) =>
-      `<div class="station" data-lugar="${i}"><div><div class="n">${esc(l.nombre)}</div>` +
-      `<div class="d">${esc(l.zona)}</div></div></div>`).join('');
+      `<button type="button" class="item" data-lugar="${i}"><div><div class="n">${esc(l.nombre)}</div>` +
+      `<div class="d">${esc(l.zona)}</div></div></button>`).join('');
     $('refresh-note').textContent = 'Hay varios lugares con ese nombre. ¿Cuál es?';
     gasolinerasOcupado(false);
   }catch(e){
@@ -794,7 +902,7 @@ async function buscarCargadoresCercanos(){
   const btn = $('btn-buscar-cargadores'), label = $('buscar-cargadores-label');
   const note = $('cargadores-note'), listEl = $('cargadores-resultados');
 
-  const reset = () => { btn.disabled = false; label.textContent = 'Buscar cargadores cercanos'; };
+  const reset = () => { btn.disabled = false; label.textContent = 'Buscar cerca'; };
   const fail = msg => {
     reset();
     note.innerHTML = `<span style="color:${color.warn}">${msg}</span>`;
@@ -884,14 +992,35 @@ function seleccionarOcmResultado(id){
 
 // ======================= MODO =======================
 
+const AYUDA_MODO = {
+  parked: 'El tiempo no cuenta como coste: el coche iba a estar aquí igualmente.',
+  trip: 'Se descuenta el desvío: son kilómetros que no habrías hecho.'
+};
+
 function setMode(m){
   mode = m;
   D.setMode(m);
-  $('mode-parked').classList.toggle('active', m === 'parked');
-  $('mode-trip').classList.toggle('active', m === 'trip');
+  pulsado($('mode-parked'), m === 'parked');
+  pulsado($('mode-trip'), m === 'trip');
+  $('mode-help').textContent = AYUDA_MODO[m] || '';
   $('block-parked').classList.toggle('hidden', m !== 'parked');
   $('block-trip').classList.toggle('hidden', m !== 'trip');
   render();
+}
+
+// ======================= PESTAÑAS =======================
+
+const TABS = ['tab-calcular', 'tab-coche', 'tab-ajustes'];
+
+function irA(id){
+  if(TABS.indexOf(id) === -1) return;
+  TABS.forEach(t => {
+    $(t).hidden = t !== id;
+    const b = $('tabbtn-' + t.slice(4));
+    b.classList.toggle('active', t === id);
+    if(b.setAttribute) b.setAttribute('aria-selected', t === id ? 'true' : 'false');
+  });
+  if(window.scrollTo) window.scrollTo(0, 0);
 }
 
 /** Valor de inp-parkHours convertido a horas, sea cual sea la unidad mostrada. */
@@ -923,6 +1052,7 @@ function refreshAll(){
   aplicarClima();
   renderCalibration();
   renderHistory();
+  renderMeas();
   render();
 }
 
@@ -973,8 +1103,14 @@ function importarCopia(file){
 function bindEvents(){
   SESSION_KEYS.forEach(k => els[k].addEventListener('input', render));
 
+  // --- pestañas ---
+  $('tabbar').addEventListener('click', e => {
+    const b = e.target.closest('[data-tab]'); if(b) irA(b.getAttribute('data-tab'));
+  });
+  $('veh-pill').addEventListener('click', () => irA('tab-coche'));
+
+  // --- vehículos ---
   $('veh-row').addEventListener('click', e => {
-    if(e.target.closest('#veh-add')) return openVehicle(null);
     const b = e.target.closest('[data-veh]');
     if(!b) return;
     const id = b.getAttribute('data-veh');
@@ -989,17 +1125,19 @@ function bindEvents(){
   });
   $('btn-add-vehicle').addEventListener('click', () => openVehicle(null));
 
+  // --- la recarga ---
   $('mode-parked').addEventListener('click', () => setMode('parked'));
   $('mode-trip').addEventListener('click', () => setMode('trip'));
   $('btn-parkUnit').addEventListener('click', toggleParkUnit);
   $('btn-save-parked').addEventListener('click', function(){ saveRecharge(this); });
   $('btn-save-trip').addEventListener('click', function(){ saveRecharge(this); });
 
+  // --- mi coche ---
   $('btn-mark-full').addEventListener('click', function(){
     if(!D.activeProfile()) return;
     D.storeCalib(new Date().toISOString());
     renderCalibration();
-    flash(this, '\u2713 Registrado');
+    flash(this, '✓ Registrado');
   });
   $('btn-clear-history').addEventListener('click', () => {
     const p = D.activeProfile(); if(!p) return;
@@ -1012,9 +1150,7 @@ function bindEvents(){
     elegirClima(b.getAttribute('data-clima'));
   });
 
-  const tg = $('settings-toggle'), pn = $('settings-panel');
-  tg.addEventListener('click', () => { pn.classList.toggle('open'); tg.classList.toggle('open'); });
-
+  // --- gasolina ---
   $('btn-refresh').addEventListener('click', fetchRealPrices);
   $('form-lugar').addEventListener('submit', e => {
     if(e && e.preventDefault) e.preventDefault();
@@ -1025,7 +1161,26 @@ function bindEvents(){
     const l = lugaresPendientes[parseInt(row.getAttribute('data-lugar'), 10)];
     if(l) usarLugar(l);
   });
+  $('station-list').addEventListener('click', e => {
+    if(e.target.closest('[data-est-toggle]')){
+      $('station-list').classList.toggle('open');
+      return pintarEstaciones();
+    }
+    const row = e.target.closest('[data-idx]'); if(!row) return;
+    const idx = parseInt(row.getAttribute('data-idx'), 10);
+    const st = lastStations[idx];
+    if(!st) return;
+    estacionElegida = idx;
+    els.fuelPrice.value = st.price.toFixed(3);
+    const hint = $('fuel-hint');
+    hint.textContent = st.name + ' · ' + fmt(st.dist, 1) + ' km' +
+      (lastLugar ? ' del centro de ' + lastLugar.nombre : '');
+    hint.classList.add('live');
+    pintarEstaciones();
+    render();
+  });
 
+  // --- dónde cargas ---
   $('btn-buscar-cargadores').addEventListener('click', buscarCargadoresCercanos);
   $('cargadores-resultados').addEventListener('click', e => {
     const toggle = e.target.closest('[data-ocm-toggle]');
@@ -1038,10 +1193,16 @@ function bindEvents(){
   });
 
   $('saved-chargers').addEventListener('click', e => {
+    const ed = e.target.closest('[data-editar]');
+    if(ed) return openCharger(ed.getAttribute('data-editar'));
+    if(e.target.closest('#chip-todos')){
+      renderTodosCargadores();
+      return openOverlay('chs-overlay', true);
+    }
     if(e.target.closest('#chip-add')){
       if(selectedOcmResult){
         const r = selectedOcmResult;
-        const helpText = [r.price, r.note].filter(Boolean).join(' \u00b7 ');
+        const helpText = [r.price, r.note].filter(Boolean).join(' · ');
         return openCharger(null, {
           name: r.name,
           power: Math.max(...r.conexiones.map(c => c.kw)),
@@ -1050,22 +1211,45 @@ function bindEvents(){
       }
       return openCharger(null);
     }
-    const chip = e.target.closest('.chip');
-    if(!chip || !chip.hasAttribute('data-id')) return;
+    const chip = e.target.closest('[data-id]');
+    if(!chip) return;
     const id = chip.getAttribute('data-id');
+    // tocar el que ya está elegido lo abre para editarlo (además del botón «Editar»)
     if(id === selectedChargerId) return openCharger(id);
-    const c = byId(D.loadChargers(), id);
-    if(c){ setSelectedCharger(id); applyCharger(c); }
-    renderChargers(); render();
+    usarCargador(id);
   });
+  $('chs-list').addEventListener('click', e => {
+    const ed = e.target.closest('[data-editar]');
+    if(ed) return openCharger(ed.getAttribute('data-editar'));
+    const u = e.target.closest('[data-usar]');
+    if(u){ usarCargador(u.getAttribute('data-usar')); openOverlay('chs-overlay', false); }
+  });
+  $('chs-close').addEventListener('click', () => openOverlay('chs-overlay', false));
   $('ch-save').addEventListener('click', saveCharger);
   $('ch-cancel').addEventListener('click', () => openOverlay('ch-overlay', false));
   $('ch-delete').addEventListener('click', deleteCharger);
   $('ch-mode').addEventListener('change', syncChargerMode);
 
-  $('btn-help').addEventListener('click', () => openOverlay('help-overlay', true));
-  $('help-close').addEventListener('click', () => openOverlay('help-overlay', false));
+  const setPricing = m => {
+    if(num(els.pricingMode) === m) return;
+    els.pricingMode.value = m;
+    if(selectedChargerId) setSelectedCharger(null);
+    if(selectedOcmResult){ selectedOcmResult = null; renderCargadoresResultados(); }
+    render();
+  };
+  $('pricing-energia').addEventListener('click', () => setPricing(0));
+  $('pricing-tiempo').addEventListener('click', () => setPricing(1));
 
+  // tocar los datos del punto a mano deselecciona el cargador guardado
+  // y también la tarjeta de búsqueda de OCM, si había una activa
+  ['chargerPrice', 'chargerPower', 'pricePerMin', 'pricingMode'].forEach(k => {
+    els[k].addEventListener('input', () => {
+      if(selectedChargerId){ setSelectedCharger(null); renderChargers(); }
+      if(selectedOcmResult){ selectedOcmResult = null; renderCargadoresResultados(); }
+    });
+  });
+
+  // --- ajustes ---
   $('btn-backup-export').addEventListener('click', exportarCopia);
   $('btn-backup-import').addEventListener('click', () => $('inp-backup-file').click());
   $('inp-backup-file').addEventListener('change', e => {
@@ -1074,6 +1258,7 @@ function bindEvents(){
     e.target.value = '';
   });
 
+  // --- medidas ---
   $('btn-measure').addEventListener('click', () => {
     $('meas-err').classList.remove('show'); renderMeas(); openOverlay('meas-overlay', true);
   });
@@ -1089,35 +1274,9 @@ function bindEvents(){
     renderMeas(); aplicarClima(); render();
   });
 
-  const switchPricing = () => {
-    els.pricingMode.value = num(els.pricingMode) === 1 ? 0 : 1;
-    if(selectedChargerId){ setSelectedCharger(null); renderChargers(); }
-    render();
-  };
-  $('btn-switch-pricing').addEventListener('click', switchPricing);
-  $('btn-switch-pricing2').addEventListener('click', switchPricing);
-
-  // tocar los datos del punto a mano deselecciona el cargador guardado
-  // y también la tarjeta de búsqueda de OCM, si había una activa
-  ['chargerPrice', 'chargerPower', 'pricePerMin', 'pricingMode'].forEach(k => {
-    els[k].addEventListener('input', () => {
-      if(selectedChargerId){ setSelectedCharger(null); renderChargers(); }
-      if(selectedOcmResult){ selectedOcmResult = null; renderCargadoresResultados(); }
-    });
-  });
-
-  $('station-list').addEventListener('click', e => {
-    const row = e.target.closest('.station'); if(!row) return;
-    const st = lastStations[parseInt(row.getAttribute('data-idx'), 10)];
-    if(!st) return;
-    els.fuelPrice.value = st.price.toFixed(3);
-    const hint = $('fuel-hint');
-    hint.textContent = st.name + ' \u00b7 ' + fmt(st.dist, 1) + ' km' +
-      (lastLugar ? ' del centro de ' + lastLugar.nombre : '');
-    hint.classList.add('live');
-    document.querySelectorAll('.station').forEach(el => { el.style.borderColor = ''; });
-    row.style.borderColor = color.good;
-    render();
+  // tocar fuera de una ficha la cierra (salvo la del vehículo: la primera vez es obligatoria)
+  ['meas-overlay', 'ch-overlay', 'chs-overlay'].forEach(id => {
+    $(id).addEventListener('click', e => { if(e.target === $(id)) openOverlay(id, false); });
   });
 }
 
@@ -1137,10 +1296,19 @@ export function iniciar(){
   onSchemeChange(() => { if(D.activeProfile()) render(); });
 
   bindEvents();
+  irA('tab-calcular');
   $('lugar-q').value = D.getLugar();
   syncParkUnitUI();
   D.loadSessionInto(els, SESSION_KEYS);
   setMode(mode);
+
+  // el veredicto se compacta al bajar; con margen entre umbrales para que no parpadee
+  if(window.addEventListener){
+    window.addEventListener('scroll', () => {
+      const y = window.scrollY || 0, v = $('verdict');
+      if(y > 140) v.classList.add('compact'); else if(y < 60) v.classList.remove('compact');
+    }, { passive: true });
+  }
 
   if(!D.loadProfiles().list.length) openVehicle(null);
   else refreshAll();
@@ -1150,5 +1318,5 @@ export function iniciar(){
 export const _test = {
   render, renderMeas, saveMeas, saveCharger, openCharger, els,
   renderCargadoresResultados, seleccionarOcmResultado, buscarCargadoresCercanos,
-  buscarPorLugar, usarLugar, elegirClima, clasificarMedida
+  buscarPorLugar, usarLugar, elegirClima, clasificarMedida, irA, usarCargador
 };
