@@ -1,8 +1,10 @@
 // pruebas.mjs — suite de pruebas. Ejecutar con:  node pruebas.mjs
 // No se despliega: es solo para desarrollo.
 
-import { simulate, findLimitHours, measStats, buildMeasurement,
-         PRESET_FACTORS, efficiencyPenalty, taper } from './js/calculo.js';
+import { simulate, findLimitHours, measStats, buildMeasurement, rParaClima, measEnUso,
+         sinClasificar, CLIMAS, MEAS_MAX, MEAS_MESES, MEAS_MESES_SIN_CLASIFICAR,
+         efficiencyPenalty, taper } from './js/calculo.js';
+import * as calculo from './js/calculo.js';
 import { procesarPOI, pareceRecargoPorTiempo, frescura, _test as ocmTest } from './js/cargadores.js';
 const { esConectorTipo2, esUsoValido, conexionOperativa, refCaducada } = ocmTest;
 import { parseConsulta, provinciaDeAddress, lugaresDeNominatim, centroDeCP,
@@ -199,32 +201,76 @@ seccion('Recarga real (Atto 2 DM-i Boost, 18kWh / 6,6kW AC / LFP)');
     `previsto=${(real.chargeHours * 60).toFixed(1)}min`);
 }
 
-// ================= MODOS DE CONDUCCIÓN =================
-seccion('Modos de conducción y frío');
+// ================= CLIMATIZACIÓN =================
+seccion('Climatización: R medido por grupo, sin factores estimados');
 
 {
-  const be = (fc, ec) => {
-    const c = { ...base('parked'), fuelCons:fc, elecCons:ec };
-    const eff = (c.chargeEff/100)*efficiencyPenalty(6.6);
-    return (c.fuelPrice*fc/100)/(ec/100)*eff;
-  };
-  const F = PRESET_FACTORS;
-  const ciudad    = be(5*F.ciudad.fuel,    22*F.ciudad.elec);
-  const mixto     = be(5*F.mixto.fuel,     22*F.mixto.elec);
-  const carretera = be(5*F.carretera.fuel, 22*F.carretera.elec);
-  ok('cargar compensa más en ciudad que en carretera', ciudad > mixto && mixto > carretera,
-     `${ciudad.toFixed(3)} / ${mixto.toFixed(3)} / ${carretera.toFixed(3)}`);
+  ok('ya no hay factores estimados de ciudad, carretera ni frío',
+     calculo.PRESET_FACTORS === undefined && calculo.COLD_EFF === undefined);
+  ok('las tres climatizaciones', CLIMAS.join(',') === 'calefaccion,aire,nada');
 
-  let peor = true;
-  for(const k of ['ciudad','mixto','carretera']){
-    const f = F[k];
-    const t = be(5*f.fuel, 22*f.elec);
-    const c = be(5*f.fuel*f.coldFuel, 22*f.elec*f.coldElec);
-    if(c >= t) peor = false;
-  }
-  ok('el frío siempre empeora, en los tres modos', peor);
-  ok('el frío castiga más en ciudad que en carretera',
-     F.ciudad.coldElec > F.carretera.coldElec);
+  const DIA = 86400000, AHORA = Date.parse('2026-11-02T12:00:00Z');
+  const hace = d => new Date(AHORA - d * DIA).toISOString();
+  const med = (R, clima, dias = 1, extra = {}) => ({ id: clima + R + dias, R, clima, frio: false, date: hace(dias), ...extra });
+
+  const lista = [med(3.2, 'calefaccion'), med(3.4, 'calefaccion'), med(4.6, 'nada'), med(4.8, 'nada'), med(4.4, 'aire')];
+  const cal = rParaClima(lista, 'calefaccion', AHORA);
+  ok('con calefacción solo usa las medidas con calefacción', cal.fuente === 'clima' && cal.n === 2);
+  casi('...y su R es la media de esas dos', cal.R, 3.3, 1e-9);
+  casi('sin climatización, solo las suyas', rParaClima(lista, 'nada', AHORA).R, 4.7, 1e-9);
+  ok('una sola medida con aire: se usa, con la banda de una medida (15%)',
+     rParaClima(lista, 'aire', AHORA).n === 1 && rParaClima(lista, 'aire', AHORA).band === 0.15);
+
+  // nunca se toman prestadas medidas de otra climatización
+  const soloVerano = [med(4.6, 'nada'), med(4.4, 'aire')];
+  const sinCal = rParaClima(soloVerano, 'calefaccion', AHORA);
+  ok('sin medidas con calefacción no se usan las de verano: consumo declarado, ±30%',
+     sinCal.fuente === 'ninguna' && sinCal.n === 0 && sinCal.R === null && sinCal.band === 0.30);
+
+  // las medidas sin clasificar solo cuentan si no hay nada mejor
+  const viejas = [{ id:'v1', R:4.0, clima:null, date: hace(10) }, { id:'v2', R:4.2, date: hace(20) }];
+  ok('sinClasificar: clima null, ausente o desconocido',
+     sinClasificar({ clima:null }) && sinClasificar({}) && sinClasificar({ clima:'mixto' }) && !sinClasificar({ clima:'aire' }));
+  const r1 = rParaClima(viejas, 'calefaccion', AHORA);
+  ok('sin medidas del grupo, usa las sin clasificar y lo dice',
+     r1.fuente === 'sin-clasificar' && r1.n === 2, JSON.stringify(r1));
+  const r2 = rParaClima([...viejas, med(3.0, 'calefaccion')], 'calefaccion', AHORA);
+  ok('en cuanto hay una del grupo, las sin clasificar dejan de contar',
+     r2.fuente === 'clima' && r2.n === 1 && r2.R === 3.0);
+
+  // ventanas: 12 meses por grupo, 6 para las sin clasificar
+  ok('ventana de 12 meses por grupo, 6 sin clasificar', MEAS_MESES === 12 && MEAS_MESES_SIN_CLASIFICAR === 6);
+  const deHaceUnAnio = [med(3.0, 'calefaccion', 300), med(3.1, 'calefaccion', 400)];
+  ok('una medida con calefacción de hace 10 meses sigue contando; la de hace 13, no',
+     rParaClima(deHaceUnAnio, 'calefaccion', AHORA).n === 1 &&
+     rParaClima(deHaceUnAnio, 'calefaccion', AHORA).R === 3.0);
+  const viejaSin = [{ id:'a', R:4.0, clima:null, date: hace(200) }, { id:'b', R:4.4, clima:null, date: hace(30) }];
+  ok('una sin clasificar de hace 7 meses ya no cuenta',
+     rParaClima(viejaSin, 'nada', AHORA).n === 1 && rParaClima(viejaSin, 'nada', AHORA).R === 4.4);
+
+  // hasta 8 por grupo, cada grupo por su cuenta
+  const muchas = [
+    ...Array.from({ length: 10 }, (_, i) => med(3 + i * 0.01, 'calefaccion', 20 - i)),
+    ...Array.from({ length: 10 }, (_, i) => med(4.5 + i * 0.01, 'nada', 20 - i))
+  ];
+  ok('como mucho 8 por grupo', MEAS_MAX === 8 &&
+     rParaClima(muchas, 'calefaccion', AHORA).n === 8 && rParaClima(muchas, 'nada', AHORA).n === 8);
+  ok('las medidas de un grupo no desplazan a las del otro',
+     rParaClima(muchas, 'calefaccion', AHORA).descartadas === 2 && rParaClima(muchas, 'nada', AHORA).descartadas === 2);
+  ok('measEnUso: 8 + 8, las 2 más antiguas de cada grupo quedan fuera',
+     measEnUso(muchas, AHORA).size === 16 && !measEnUso(muchas, AHORA).has(muchas[0].id));
+
+  // el frío se guarda pero todavía no separa grupos
+  const conFrio = [med(3.0, 'nada', 1, { frio: true }), med(4.0, 'nada', 2, { frio: false })];
+  ok('el frío no separa grupos (todavía): mismo grupo con y sin frío',
+     rParaClima(conFrio, 'nada', AHORA).n === 2);
+
+  // de la medida al cálculo: más consumo con calefacción => menos km y menos ahorro
+  const eff = base('parked').chargeEff;
+  const kmCal  = simulate({ ...base('parked'), elecCons: eff / cal.R }).km;
+  const kmNada = simulate({ ...base('parked'), elecCons: eff / rParaClima(lista, 'nada', AHORA).R }).km;
+  ok('con el R medido con calefacción salen menos km que sin climatización', kmCal < kmNada,
+     `${kmCal.toFixed(1)} vs ${kmNada.toFixed(1)}`);
 }
 
 // ================= RECARGO POR TIEMPO =================
@@ -262,16 +308,27 @@ seccion('Tarifa por minuto');
 seccion('Mediciones reales');
 
 {
-  const m = buildMeasurement({ km1:0, km2:250, kwh:64, litres:0, fuelCons:5 });
+  const CL = { clima:'nada', frio:false };
+  const m = buildMeasurement({ km1:0, km2:250, kwh:64, litres:0, fuelCons:5, ...CL });
   ok('medición válida se acepta', m.ok);
   casi('R = km / kWh', m.R, 250/64, 1e-9);
+  ok('devuelve la climatización y el frío', m.clima === 'nada' && m.frio === false);
 
-  ok('rechaza km al revés',      !buildMeasurement({ km1:250, km2:0, kwh:64, litres:0, fuelCons:5 }).ok);
-  ok('rechaza sin kWh',          !buildMeasurement({ km1:0, km2:250, kwh:0, litres:0, fuelCons:5 }).ok);
-  ok('rechaza demasiada gasolina',!buildMeasurement({ km1:0, km2:250, kwh:64, litres:9, fuelCons:5 }).ok);
-  ok('rechaza R imposible',      !buildMeasurement({ km1:0, km2:250, kwh:5, litres:0, fuelCons:5 }).ok);
+  ok('rechaza km al revés',      !buildMeasurement({ km1:250, km2:0, kwh:64, litres:0, fuelCons:5, ...CL }).ok);
+  ok('rechaza sin kWh',          !buildMeasurement({ km1:0, km2:250, kwh:0, litres:0, fuelCons:5, ...CL }).ok);
+  ok('rechaza demasiada gasolina',!buildMeasurement({ km1:0, km2:250, kwh:64, litres:9, fuelCons:5, ...CL }).ok);
+  ok('rechaza R imposible',      !buildMeasurement({ km1:0, km2:250, kwh:5, litres:0, fuelCons:5, ...CL }).ok);
 
-  const conGas = buildMeasurement({ km1:0, km2:250, kwh:50, litres:3, fuelCons:5 });
+  const sinClima = buildMeasurement({ km1:0, km2:250, kwh:64, litres:0, fuelCons:5, frio:false });
+  ok('rechaza sin climatización, con su mensaje', !sinClima.ok && sinClima.error.includes('calefacción'));
+  ok('rechaza una climatización desconocida',
+     !buildMeasurement({ km1:0, km2:250, kwh:64, litres:0, fuelCons:5, clima:'mixto', frio:false }).ok);
+  const sinFrio = buildMeasurement({ km1:0, km2:250, kwh:64, litres:0, fuelCons:5, clima:'aire' });
+  ok('rechaza sin indicar si hizo frío', !sinFrio.ok && sinFrio.error.includes('frío'));
+  ok('acepta frío = true', buildMeasurement({ km1:0, km2:250, kwh:64, litres:0, fuelCons:5,
+     clima:'calefaccion', frio:true }).frio === true);
+
+  const conGas = buildMeasurement({ km1:0, km2:250, kwh:50, litres:3, fuelCons:5, ...CL });
   ok('descuenta los km hechos con gasolina', conGas.ok && conGas.kmElec === 250 - 60);
 }
 

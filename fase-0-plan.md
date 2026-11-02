@@ -28,6 +28,8 @@ mucho más ancho de lo que parece, y la app lo calcula así a propósito.
 - Hacer **3 mediciones como mínimo, mejor 4 o 5**, cargando en el **Mercadona**
   (o cualquier punto que facture kWh)
 - Ventanas de **un solo ciclo**: cargas, conduces, vuelves a cargar
+- **La misma climatización durante la ventana**, si puedes: la app te pregunta
+  cuál usaste y solo compara medidas hechas con la misma
 - **No cargar en la oficina** dentro de la ventana, o la medida no vale
 
 ## La ventana ideal para ti
@@ -49,6 +51,8 @@ MEDICIÓN 1        fecha: ____________
   km al volver a enchufar  ______________
   kWh facturados           ______________
   litros de gasolina       ______________
+  climatización            calefacción / aire / nada
+  ¿hizo frío (< 10 °C)?    sí / no
   ¿cargué en otro sitio?   sí / no    (si es sí, la medida no vale)
 
 MEDICIÓN 2        fecha: ____________
@@ -56,6 +60,8 @@ MEDICIÓN 2        fecha: ____________
   km al volver a enchufar  ______________
   kWh facturados           ______________
   litros de gasolina       ______________
+  climatización            calefacción / aire / nada
+  ¿hizo frío (< 10 °C)?    sí / no
   ¿cargué en otro sitio?   sí / no
 
 MEDICIÓN 3        fecha: ____________
@@ -63,6 +69,8 @@ MEDICIÓN 3        fecha: ____________
   km al volver a enchufar  ______________
   kWh facturados           ______________
   litros de gasolina       ______________
+  climatización            calefacción / aire / nada
+  ¿hizo frío (< 10 °C)?    sí / no
   ¿cargué en otro sitio?   sí / no
 
 MEDICIÓN 4        fecha: ____________
@@ -70,6 +78,8 @@ MEDICIÓN 4        fecha: ____________
   km al volver a enchufar  ______________
   kWh facturados           ______________
   litros de gasolina       ______________
+  climatización            calefacción / aire / nada
+  ¿hizo frío (< 10 °C)?    sí / no
   ¿cargué en otro sitio?   sí / no
 
 MEDICIÓN 5        fecha: ____________
@@ -77,6 +87,8 @@ MEDICIÓN 5        fecha: ____________
   km al volver a enchufar  ______________
   kWh facturados           ______________
   litros de gasolina       ______________
+  climatización            calefacción / aire / nada
+  ¿hizo frío (< 10 °C)?    sí / no
   ¿cargué en otro sitio?   sí / no
 ```
 
@@ -107,7 +119,15 @@ margen mucho más ancho. Estos son los valores que debería mostrar:
 - **El objetivo (por debajo del ±10%) se alcanza con 3 medidas si se parecen mucho**
   y con 5 o 6 si varían de forma normal.
 - **Si con 5 medidas el margen sigue por encima del ±15%:** tus medidas varían
-  mucho entre sí. Anota si hubo algo raro (viaje largo, mucho frío, atascos).
+  mucho entre sí. Anota si hubo algo raro (viaje largo, atascos, más ciudad o
+  más carretera de lo normal).
+- **El margen es por climatización.** La app solo compara medidas hechas con la
+  misma (calefacción, aire o nada), así que la tabla de arriba se aplica a cada
+  grupo por separado. Con 3 medidas con calefacción y 2 sin climatización, cada
+  grupo tiene su propio margen.
+- **Anota siempre si hizo frío**, aunque no pusieras la calefacción. La app lo
+  guarda pero todavía no lo usa: con las medidas de varios testers se verá si el
+  frío cambia el consumo por sí solo.
 - **Si tu R sale muy distinto de 3,9 km/kWh:** no es un error, es tu dato real.
   Interesa saberlo.
 

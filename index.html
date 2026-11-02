@@ -101,6 +101,7 @@
     <h2>Ayuda</h2>
     <div class="glossary">
       <p><strong>Medir tu coche.</strong> Los c&aacute;lculos parten de dos datos que nadie publica, as&iacute; que de entrada tienen un margen de error de un 30%. En Ajustes puedes medir tu coche de verdad: carga hasta tu nivel habitual, anota el cuentakil&oacute;metros, conduce unos d&iacute;as y vuelve a cargar hasta el mismo nivel. Con 5 u 8 medidas el margen baja a un 5%. No hace falta agotar la bater&iacute;a: basta con volver siempre al mismo punto de carga, igual que se rellena una cantimplora hasta la misma marca.</p>
+      <p><strong>La climatizaci&oacute;n.</strong> La calefacci&oacute;n y el aire gastan bater&iacute;a, y cu&aacute;nto depende de tu coche (bomba de calor o resistencia), de la temperatura y de lo largos que sean tus trayectos. Por eso la app no aplica ning&uacute;n porcentaje inventado: cada medida lleva la climatizaci&oacute;n que usaste, y al calcular solo se usan las medidas hechas con la que vas a usar. Si todav&iacute;a no tienes ninguna con esa climatizaci&oacute;n, la app lo dice y usa el consumo declarado, con su margen del 30%. Tambi&eacute;n se anota si hizo fr&iacute;o: el fr&iacute;o afecta a la bater&iacute;a aunque no pongas la calefacci&oacute;n, pero de momento solo se guarda, hasta ver con datos reales cu&aacute;nto pesa.</p>
       <p><strong>Cargar en casa.</strong> Se configura como un cargador m&aacute;s, con su potencia y su precio. Si tienes tarifa por horas, guarda dos (&laquo;Casa valle&raquo; y &laquo;Casa punta&raquo;) y alterna entre ellos. Ojo con el enchufe normal: a 2,3 kW se pierde mucha m&aacute;s energ&iacute;a que en una wallbox, y de los mismos kWh facturados sacas alrededor de un 18% menos de kil&oacute;metros. En hora punta y con enchufe dom&eacute;stico, cargar puede llegar a no compensar frente a la gasolina.</p>
       <p><strong>Cargar gratis.</strong> Cuando no pagas nada, la app no decide: solo te dice a cu&aacute;nta gasolina equivale. Gu&aacute;rdala igualmente en el historial, porque suele ser de donde sale la mayor parte del ahorro de tener un enchufable. Excepci&oacute;n: si el punto es gratuito solo un rato y luego cobra por minuto, s&iacute; hace falta el c&aacute;lculo completo, y ah&iacute; es donde m&aacute;s dinero se pierde por descuido.</p>
       <p><strong>C&oacute;mo se usa.</strong> Pon el precio y la potencia del punto donde est&aacute;s, el precio de la gasolina y el estado de tu bater&iacute;a. La app te dice si compensa enchufar y cu&aacute;nto ahorras o pierdes.</p>
@@ -110,11 +111,10 @@
       <p><strong>Eficiencia de carga.</strong> No todos los kWh que pagas llegan a la bater&iacute;a: una parte se pierde por el camino. Con un 85%, de cada 10 kWh que te cobran entran unos 8,5. La app lo tiene en cuenta al comparar.</p>
       <p><strong>Los dos modos.</strong> En <em>Aparcado</em> el tiempo no cuenta como coste, porque el coche iba a estar ah&iacute; de todas formas; solo limita cu&aacute;ntos kWh caben. En <em>Parada Dedicada</em> s&iacute; se descuenta el desv&iacute;o, porque son km que no habr&iacute;as hecho.</p>
       <p><strong>Coste del desv&iacute;o.</strong> Se valora a precio de gasolina, que es el supuesto m&aacute;s conservador: si el rodeo lo haces en el&eacute;ctrico, te costar&aacute; algo menos de lo que dice.</p>
-      <p><strong>El fr&iacute;o.</strong> Con el coche fr&iacute;o la calefacci&oacute;n consume unos 2 kW casi constantes, y eso pesa mucho m&aacute;s por kil&oacute;metro yendo despacio que r&aacute;pido: por eso la penalizaci&oacute;n es mayor en ciudad (+45% de consumo el&eacute;ctrico) que en carretera (+18%). La gasolina tambi&eacute;n sube con el fr&iacute;o, pero menos, as&iacute; que el interruptor ajusta las dos cosas a la vez. Act&iacute;valo solo si el coche ha estado a la intemperie: uno que sale de un garaje templado apenas lo nota.</p>
-      <p><strong>El l&iacute;mite del modo fr&iacute;o.</strong> Muchos h&iacute;bridos enchufables arrancan el motor de gasolina para calefactar el habit&aacute;culo cuando hace fr&iacute;o. Si el tuyo lo hace, en invierno no est&aacute;s haciendo kil&oacute;metros el&eacute;ctricos puros y ning&uacute;n factor de esta app lo corrige: los resultados seguir&aacute;n siendo optimistas. Comprueba si tu coche permite calefactar sin arrancar el motor, o si tiene precalentamiento con el coche enchufado &mdash; en ese caso el calor sale de la red y no de la bater&iacute;a, que es mucho mejor negocio.</p>
+      <p><strong>Lo que la climatizaci&oacute;n no cubre.</strong> El consumo de gasolina se mantiene en el que declaraste, aunque con fr&iacute;o tambi&eacute;n suba: medirlo bien necesita otro procedimiento. Y muchos h&iacute;bridos enchufables arrancan el motor de gasolina para calentar el habit&aacute;culo; si el tuyo lo hace, la app trata esos litros como si hubieran movido el coche, as&iacute; que tus medidas con calefacci&oacute;n saldr&aacute;n algo m&aacute;s bajas de lo real. Si tu coche tiene precalentamiento con el coche enchufado, el calor sale de la red y no de la bater&iacute;a, que es mucho mejor negocio.</p>
       <p><strong>Por qu&eacute; el final tarda m&aacute;s.</strong> Al acercarse al 100% el coche baja la corriente para proteger las celdas, as&iacute; que el &uacute;ltimo tramo tarda bastante m&aacute;s que el resto. Pasa en cualquier bater&iacute;a de litio, pero no igual: una LFP aguanta el ritmo hasta cerca del 90% y luego cae de golpe; una NMC empieza a frenar antes, sobre el 80%, de forma m&aacute;s gradual. La app aplica una u otra seg&uacute;n lo que hayas indicado. Son aproximaciones razonables, no la curva medida de tu modelo concreto: si al cargar de verdad ves tiempos muy distintos, av&iacute;sanos.</p>
       <p><strong>LFP y NMC.</strong> Son las dos qu&iacute;micas de bater&iacute;a habituales, y piden cuidados opuestos. En una <em>LFP</em> el voltaje apenas var&iacute;a entre el 20% y el 80%, as&iacute; que el coche calcula el porcentaje sumando la energ&iacute;a que entra y sale, y ese c&aacute;lculo se desv&iacute;a con el tiempo: llegar al 100% una vez por semana le da una referencia clara y lo corrige. En una <em>NMC</em>, en cambio, pasar mucho tiempo cerca del 100% acelera el desgaste, as&iacute; que lo recomendable es moverse entre el 20% y el 80% y llenar solo antes de un viaje largo.</p>
-      <p><strong>Comparar dos coches.</strong> Crea un perfil por veh&iacute;culo y alterna entre ellos con el mismo precio de cargador y de gasolina: la diferencia que veas es la real. Cada veh&iacute;culo lleva su propio historial y su propia calibraci&oacute;n.</p>
+      <p><strong>Comparar dos coches.</strong> Crea un perfil por veh&iacute;culo y alterna entre ellos con el mismo precio de cargador y de gasolina: la diferencia que veas es la real. Cada veh&iacute;culo lleva su propio historial, sus medidas y su propia calibraci&oacute;n.</p>
       <p><strong>Por qu&eacute; los ahorros son peque&ntilde;os.</strong> Un h&iacute;brido enchufable tiene poca bater&iacute;a, as&iacute; que el ahorro por recarga suele quedarse en pocos euros. La ventaja est&aacute; en repetirlo muchas veces, no en cada carga suelta.</p>
     </div>
     <button class="btn-secondary" id="help-close" style="margin-top:6px;">Cerrar</button>
@@ -132,6 +132,7 @@
       <div class="step"><span class="step-n">2</span><div><strong>Anota el cuentakil&oacute;metros</strong> al desenchufar.</div></div>
       <div class="step"><span class="step-n">3</span><div><strong>Conduce con normalidad.</strong> No hace falta conducir de ninguna forma especial ni por ning&uacute;n sitio concreto.</div></div>
       <div class="step"><span class="step-n">4</span><div><strong>Vuelve a cargar hasta el mismo nivel</strong>, mejor antes de que se agote la bater&iacute;a. Anota los kil&oacute;metros y los kWh de esa recarga.</div></div>
+      <div class="step"><span class="step-n">5</span><div><strong>Indica la climatizaci&oacute;n</strong> que usaste y si hizo fr&iacute;o. La calefacci&oacute;n y el aire cambian mucho el consumo, y la app solo compara medidas hechas con la misma.</div></div>
     </div>
 
     <div class="note-box" style="margin-bottom:18px;">Cuenta <strong>todos</strong> los kWh que entraron en ese periodo: p&uacute;blicos, gratuitos del trabajo y los de casa. Si cargaste en alg&uacute;n sitio donde no puedas leer los kWh, esa medida no vale.<br><br>Haz ventanas <strong>cortas</strong>, de un solo ciclo de carga y al menos 30 km. Si dejas pasar varios d&iacute;as, el motor de gasolina habr&aacute; funcionado mucho y la medida pierde valor.</div>
@@ -170,6 +171,32 @@
           <span class="field-unit">litros</span>
         </div>
         <div class="field-hint">Del ordenador de a bordo. Pon 0 si el motor no lleg&oacute; a arrancar</div>
+      </div>
+    </div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>Climatizaci&oacute;n</label>
+        <div class="field-input-wrap wrap-select">
+          <select id="meas-clima" class="sel">
+            <option value="">Elige...</option>
+            <option value="calefaccion">Calefacci&oacute;n</option>
+            <option value="aire">Aire acondicionado</option>
+            <option value="nada">Nada</option>
+          </select>
+        </div>
+        <div class="field-hint">La que usaste casi todo el tiempo</div>
+      </div>
+      <div class="field">
+        <label>&iquest;Hizo fr&iacute;o?</label>
+        <div class="field-input-wrap wrap-select">
+          <select id="meas-frio" class="sel">
+            <option value="">Elige...</option>
+            <option value="si">S&iacute;, menos de 10 &deg;C</option>
+            <option value="no">No</option>
+          </select>
+        </div>
+        <div class="field-hint">Casi todo el tiempo</div>
       </div>
     </div>
 
@@ -440,16 +467,13 @@
     <span class="chev">&#9662;</span>
   </button>
   <div class="panel" id="settings-panel">
-    <div class="panel-sub first">C&oacute;mo vas a conducir</div>
-    <div class="preset-row" id="preset-row">
-      <button class="preset-btn" data-preset="ciudad">Ciudad</button>
-      <button class="preset-btn active" data-preset="mixto">Mixto</button>
-      <button class="preset-btn" data-preset="carretera">Carretera</button>
+    <div class="panel-sub first">&iquest;Vas a usar la climatizaci&oacute;n?</div>
+    <div class="preset-row" id="clima-row">
+      <button class="preset-btn" data-clima="calefaccion">Calefacci&oacute;n</button>
+      <button class="preset-btn active" data-clima="nada">Nada</button>
+      <button class="preset-btn" data-clima="aire">Aire</button>
     </div>
-    <button class="preset-btn cold-btn" id="btn-cold">
-      <span id="cold-mark">&#9675;</span> &nbsp;Fr&iacute;o &mdash; el coche ha estado a la intemperie
-    </button>
-    <div class="field-hint hint-tight" id="cold-hint">Act&iacute;valo si hace fr&iacute;o y el coche no ha dormido en garaje</div>
+    <div class="field-hint hint-tight" id="clima-hint"></div>
     <div class="field-row">
       <div class="field">
         <label>El&eacute;ctrico</label>
@@ -466,7 +490,7 @@
         </div>
       </div>
     </div>
-    <div class="field-hint hint-cons" id="cons-hint">Los botones escalan los dos consumos sobre los datos de tu veh&iacute;culo</div>
+    <div class="field-hint hint-cons" id="cons-hint"></div>
 
     <div class="panel-sub">Esta sesi&oacute;n</div>
     <div class="field">

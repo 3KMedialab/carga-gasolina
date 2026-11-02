@@ -25,9 +25,10 @@ Se despliega subiendo los archivos tal cual a GitHub Pages.
 ## Al hacer un cambio
 
 1. Editar el módulo que toque.
-2. `node pruebas.mjs` — 100 comprobaciones del cálculo, las mediciones
-   y los cargadores públicos.
-3. `node humo.mjs` — arranca la app entera contra un DOM simulado.
+2. `node pruebas.mjs` — 148 comprobaciones del cálculo, las mediciones,
+   la climatización, los cargadores públicos y las gasolineras.
+3. `node humo.mjs` — arranca la app entera contra un DOM simulado
+   (84 comprobaciones en 12 escenarios).
 4. Subir **también** `version.json` con un valor nuevo, y el mismo valor
    en la constante `VERSION` de `js/app.js`. Sin eso, los móviles que
    ya tienen la app instalada seguirán viendo la versión antigua.
@@ -44,14 +45,23 @@ poder seleccionarse, sin ningún síntoma visible.
 - **El cálculo entero** está en `simulate()` (`calculo.js`). Es la única
   fuente de verdad: la usan el veredicto y el cálculo de la hora límite.
 - **R** (km eléctricos por kWh facturado) sustituye a las estimaciones
-  de eficiencia y consumo cuando hay mediciones reales. Solo cuentan las
-  8 últimas de los 6 últimos meses (`MEAS_MAX` y `MEAS_MESES` en
-  `calculo.js`): R se mueve un ±30% entre invierno y verano, y solo un
-  0,5% al año por desgaste de la batería, así que las medidas viejas
-  estorban más de lo que ayudan. R se calcula como km eléctricos totales
-  ÷ kWh totales de esas medidas, así que una recarga grande pesa más que
-  una pequeña (más ruidosa). Si alguna medida no tiene km y kWh guardados,
-  se usa la media simple de los R.
+  de eficiencia y consumo cuando hay mediciones reales. R se calcula como
+  km eléctricos totales ÷ kWh totales de las medidas, así que una recarga
+  grande pesa más que una pequeña (más ruidosa). Si alguna medida no tiene
+  km y kWh guardados, se usa la media simple de los R.
+- **R va por climatización.** Cada medida guarda la climatización que se
+  usó (calefacción, aire o nada) y si hizo frío. Al calcular, `rParaClima()`
+  usa solo las medidas con la climatización elegida: las 8 últimas de los 12
+  últimos meses (`MEAS_MAX`, `MEAS_MESES`). El desgaste mueve R un 0,5% al
+  año, así que una medida con calefacción del invierno pasado sigue valiendo.
+  Sin medidas de esa climatización se usan las antiguas sin clasificar (solo
+  las de los 6 últimos meses), y si tampoco hay, el consumo declarado con su
+  margen del 30%. Nunca se mezclan medidas de climatizaciones distintas.
+  El frío se guarda pero todavía no separa grupos: hace falta ver con datos
+  si cambia R cuando no se pone la calefacción.
+- **No hay factores estimados** de ciudad, carretera ni frío: se quitaron
+  porque no tenían fuente y se aplicaban encima de R medido, contando dos
+  veces lo que la medida ya incluía.
 - **El margen de error de R** (`measStats()`) usa el valor crítico de la
   t de Student (tabla `T90` en `calculo.js`), no el de la normal: con
   pocas medidas la desviación estimada es muy poco fiable. Con dos medidas

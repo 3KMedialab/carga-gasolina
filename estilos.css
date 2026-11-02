@@ -194,7 +194,11 @@
   .wrap-ta{ align-items:flex-start; }
   .note-box{ font-size:12px; color:var(--sub); background:var(--panel); border-radius:8px;
     padding:10px 12px; margin:-6px 0 14px; line-height:1.45; white-space:pre-wrap; }
-  .cold-btn{ width:100%; text-align:left; padding:10px 12px; margin-bottom:8px; }
+  .meas-clasif{ display:flex; gap:6px; margin-top:6px; }
+  .meas-clasif button{ flex:1; padding:6px 0; border-radius:6px; border:1px solid var(--line-strong);
+    background:transparent; color:var(--muted); font-size:11.5px; font-weight:500; }
+  .meas-item.sin-clima{ flex-direction:column; align-items:stretch; }
+  .meas-fila{ display:flex; justify-content:space-between; align-items:center; gap:8px; width:100%; }
   .hint-tight{ margin:0 0 16px; }
   .hint-cons{ margin:-8px 0 14px; }
   button{ font-family:inherit; cursor:pointer; -webkit-appearance:none; appearance:none; }

@@ -7,8 +7,8 @@ import {
 } from './util.js';
 
 import {
-  PRESET_FACTORS, simulate, findLimitHours, measStats, buildMeasurement,
-  measVigentes, MEAS_MAX, MEAS_MESES
+  CLIMAS, simulate, findLimitHours, rParaClima, measEnUso, sinClasificar, buildMeasurement,
+  MEAS_MAX, MEAS_MESES, MEAS_MESES_SIN_CLASIFICAR
 } from './calculo.js';
 
 import * as D from './datos.js';
@@ -28,8 +28,7 @@ const SESSION_KEYS = [
 const els = {};
 let mode = 'parked';
 let parkUnit = 'h'; // 'h' o 'min' — solo cambia cómo se muestra/escribe inp-parkHours
-let coldOn = false;
-let activePreset = 'mixto';
+let clima = 'nada';           // climatización del trayecto: 'calefaccion' | 'aire' | 'nada'
 let selectedChargerId = null;
 let editingChargerId = null;
 let editingVehicleId = null;
@@ -44,11 +43,14 @@ const OCM_VISIBLES = 5; // tarjetas antes de "Ver más"
 
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
+const NOMBRE_CLIMA = { calefaccion: 'calefacción', aire: 'aire acondicionado', nada: 'sin climatización' };
+const CON_CLIMA    = { calefaccion: 'con calefacción', aire: 'con aire', nada: 'sin climatización' };
+
 // ======================= CÁLCULO PRINCIPAL =======================
 
-/** Consumo eléctrico base: el medido si hay datos reales, el declarado si no. */
+/** Consumo eléctrico base: el medido con esta climatización si lo hay, el declarado si no. */
 function baseElecCons(prof){
-  const s = measStats(D.loadMeas());
+  const s = rParaClima(D.loadMeas(), clima);
   return s.R > 0 ? prof.chargeEff / s.R : prof.elecCons;
 }
 
@@ -97,7 +99,7 @@ function render(){
     ? 'no cabe energía en la batería'
     : isFree ? 'que te habrías gastado en gasolina'
     : r.net >= 0 ? 'de ahorro en esta recarga' : 'de sobrecoste en esta recarga')
-    + (coldOn ? ' \u00b7 calculado con frío' : '');
+    + (clima !== 'nada' ? ' · ' + CON_CLIMA[clima] : '');
 
   $('verdict').style.borderLeftColor = accent;
 
@@ -204,8 +206,9 @@ function render(){
   $('field-price-kwh').classList.toggle('hidden', cfg.byMinute);
   $('field-price-min').classList.toggle('hidden', !cfg.byMinute);
 
-  $('cons-hint').textContent = 'Mixto de ' + prof.name + ': ' + fmt(prof.elecCons, 1) +
-    ' kWh/100km y ' + fmt(prof.fuelCons, 1) + ' L/100km. Los botones escalan sobre esos valores.';
+  $('cons-hint').textContent = 'Declarados de ' + prof.name + ': ' + fmt(prof.elecCons, 1) +
+    ' kWh/100km y ' + fmt(prof.fuelCons, 1) + ' L/100km. El eléctrico se sustituye por el medido ' +
+    'con la climatización elegida, si lo hay.';
 
   const noteEl = $('charger-note');
   noteEl.textContent = ch && ch.note ? ch.note : '';
@@ -219,27 +222,44 @@ function render(){
   D.saveSessionFrom(els, SESSION_KEYS, num);
 }
 
-// ======================= CONDICIONES =======================
+// ======================= CLIMATIZACIÓN =======================
 
-function applyConditions(){
+/** Pone en los campos los consumos que corresponden a la climatización elegida. */
+function aplicarClima(){
   const p = D.activeProfile();
   if(!p) return;
-  const f = PRESET_FACTORS[activePreset] || PRESET_FACTORS.mixto;
-  let e = baseElecCons(p) * f.elec, g = p.fuelCons * f.fuel;
-  if(coldOn){ e *= f.coldElec; g *= f.coldFuel; }
-  els.elecConsumption.value = Math.round(e * 10) / 10;
-  els.fuelConsumption.value = Math.round(g * 10) / 10;
-  D.setCold(coldOn);
-  D.setPreset(activePreset);
-  syncConditionUI();
+  els.elecConsumption.value = Math.round(baseElecCons(p) * 10) / 10;
+  els.fuelConsumption.value = Math.round(p.fuelCons * 10) / 10;
+  D.setClima(clima);
+  syncClimaUI();
 }
 
-function syncConditionUI(){
-  document.querySelectorAll('#preset-row .preset-btn').forEach(b => {
-    b.classList.toggle('active', b.getAttribute('data-preset') === activePreset);
+function elegirClima(c){
+  if(CLIMAS.indexOf(c) === -1) return;
+  clima = c;
+  aplicarClima();
+  render();
+}
+
+function syncClimaUI(){
+  document.querySelectorAll('#clima-row .preset-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('data-clima') === clima);
   });
-  $('btn-cold').classList.toggle('active', coldOn);
-  $('cold-mark').innerHTML = coldOn ? '&#9679;' : '&#9675;';
+  const s = rParaClima(D.loadMeas(), clima);
+  const hint = $('clima-hint');
+  if(s.fuente === 'clima'){
+    hint.textContent = (s.n === 1 ? 'Con tu medida ' : 'Con tus ' + s.n + ' medidas ') + CON_CLIMA[clima] +
+      ': ' + fmt(s.R, 2) + ' km/kWh, ±' + fmt(s.band * 100, 0) + '%.';
+    hint.classList.remove('warn');
+  } else if(s.fuente === 'sin-clasificar'){
+    hint.textContent = 'No tienes medidas ' + CON_CLIMA[clima] + '. Se usan las que no tienen climatización ' +
+      'indicada (' + fmt(s.R, 2) + ' km/kWh, ±' + fmt(s.band * 100, 0) + '%). Clasifícalas o haz una nueva.';
+    hint.classList.add('warn');
+  } else {
+    hint.textContent = 'No tienes medidas ' + CON_CLIMA[clima] + ': se usa el consumo declarado, ' +
+      'con un margen de error del 30%. Haz una medida para que el cálculo sea fiable.';
+    hint.classList.add('warn');
+  }
 }
 
 // ======================= VEHÍCULOS =======================
@@ -338,7 +358,7 @@ function deleteVehicle(){
 
 function switchVehicle(id){
   D.setActiveProfile(id);
-  applyConditions();
+  aplicarClima();
   refreshAll();
 }
 
@@ -571,7 +591,7 @@ function saveRecharge(btn){
 // ======================= MEDICIONES =======================
 
 function renderMeas(){
-  const list = D.loadMeas(), s = measStats(list), prof = D.activeProfile();
+  const list = D.loadMeas(), prof = D.activeProfile();
   const chem = prof ? (prof.chem || 'unknown') : 'unknown';
 
   $('meas-level').innerHTML = chem === 'lfp'
@@ -580,33 +600,62 @@ function renderMeas(){
       ? 'Con tu batería NMC no conviene llegar al 100%. Usa tu límite habitual, normalmente el <strong>80%</strong>, y repite siempre el mismo.'
       : 'Usa siempre el mismo nivel. Si tu batería es LFP, el 100%; si es NMC, tu límite habitual (suele ser el 80%).';
 
+  // Un resumen por climatización: cada grupo es independiente y es el que
+  // usa el cálculo cuando eliges esa climatización.
   const sum = $('meas-summary');
-  if(!s.n){
-    sum.innerHTML = '<p>Todavía no has medido nada. Mientras tanto la app usa estimaciones, ' +
+  if(!list.length){
+    sum.innerHTML = '<p>Todavía no has medido nada. Mientras tanto la app usa el consumo declarado, ' +
       'con un margen de error de alrededor del 30%.</p>';
   } else {
-    const base = prof ? prof.chargeEff / s.R : 0;
-    sum.innerHTML = `<p><strong>${s.n}${s.n === 1 ? ' medida en uso' : ' medidas en uso'}</strong><br>` +
-      `Rindes <strong>${fmt(s.R, 2)} km por cada kWh</strong> que te facturan.<br>` +
-      `Equivale a un consumo de ${fmt(base, 1)} kWh/100km.<br>` +
-      `Margen de error actual: \u00b1${fmt(s.band * 100, 0)}%` +
-      (s.n < 3 ? ' \u2014 con 2 o 3 medidas más bajará bastante.' : '') + '</p>' +
-      (s.descartadas
-        ? `<p>Se guardan ${s.descartadas} ${s.descartadas === 1 ? 'medida más antigua' : 'medidas más antiguas'}, ` +
-          `pero no cuentan: solo se usan las ${MEAS_MAX} últimas de los ${MEAS_MESES} últimos meses. ` +
-          `R cambia mucho más con la estación del año que con el desgaste de la batería, ` +
-          `así que una medida de invierno no debe pesar en verano.</p>`
+    const ETIQ = { calefaccion: 'Con calefacción', aire: 'Con aire', nada: 'Sin climatización' };
+    let descartadas = 0;
+    const lineas = CLIMAS.map(c => {
+      const s = rParaClima(list, c);
+      if(s.fuente !== 'clima') return `<strong>${ETIQ[c]}:</strong> sin medidas todavía.`;
+      descartadas += s.descartadas;
+      const base = prof ? prof.chargeEff / s.R : 0;
+      return `<strong>${ETIQ[c]}:</strong> ${fmt(s.R, 2)} km por kWh facturado ` +
+        `(${fmt(base, 1)} kWh/100km). Margen de error ±${fmt(s.band * 100, 0)}%, ` +
+        `${s.n} ${s.n === 1 ? 'medida' : 'medidas'}.`;
+    });
+    const viejas = list.filter(sinClasificar).length;
+    sum.innerHTML = '<p>' + lineas.join('<br>') + '</p>' +
+      (viejas
+        ? `<p>${viejas} ${viejas === 1 ? 'medida no tiene' : 'medidas no tienen'} la climatización indicada. ` +
+          `Solo cuentan para una climatización sin medidas propias, y solo las de los ` +
+          `${MEAS_MESES_SIN_CLASIFICAR} últimos meses. Clasifícalas abajo si lo recuerdas.</p>`
+        : '') +
+      (descartadas
+        ? `<p>Hay medidas guardadas que no cuentan: de cada climatización solo se usan las ` +
+          `${MEAS_MAX} últimas de los ${MEAS_MESES} últimos meses.</p>`
         : '');
   }
 
-  const enUso = new Set(measVigentes(list).map(m => m.id));
+  const enUso = measEnUso(list);
+  const CORTO = { calefaccion: 'calefacción', aire: 'aire', nada: 'sin clima' };
   $('meas-list').innerHTML = list.slice().reverse().map(m => {
     const d = new Date(m.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
     const vieja = enUso.has(m.id) ? '' : ' meas-vieja';
-    return `<div class="meas-item${vieja}"><span>${d} \u00b7 ${fmt(m.km, 0)} km / ${fmt(m.kwh, 1)} kWh</span>` +
+    const etiqueta = sinClasificar(m) ? '' : ' · ' + CORTO[m.clima] + (m.frio ? ', frío' : '');
+    const fila = `<div class="meas-fila"><span>${d} · ${fmt(m.km, 0)} km / ${fmt(m.kwh, 1)} kWh${etiqueta}</span>` +
       `<span><strong>${fmt(m.R, 2)}</strong> km/kWh` +
       `<button class="meas-del" data-mid="${m.id}" aria-label="Borrar">&times;</button></span></div>`;
+    if(!sinClasificar(m)) return `<div class="meas-item${vieja}">${fila}</div>`;
+    return `<div class="meas-item sin-clima${vieja}">${fila}<div class="meas-clasif">` +
+      CLIMAS.map(c => `<button type="button" data-clasif="${m.id}" data-clima="${c}">${CORTO[c]}</button>`).join('') +
+      `</div></div>`;
   }).join('');
+}
+
+/** Marca la climatización de una medida antigua. El frío se queda sin indicar: no se adivina. */
+function clasificarMedida(id, c){
+  if(CLIMAS.indexOf(c) === -1) return;
+  const l = D.loadMeas();
+  const m = l.find(x => x.id === id);
+  if(!m) return;
+  m.clima = c;
+  D.storeMeas(l);
+  renderMeas(); aplicarClima(); render();
 }
 
 function saveMeas(){
@@ -619,22 +668,25 @@ function saveMeas(){
     km2: parseFloat($('meas-km2').value),
     kwh: parseFloat($('meas-kwh').value),
     litres: parseFloat($('meas-lit').value),
-    fuelCons: prof.fuelCons
+    fuelCons: prof.fuelCons,
+    clima: $('meas-clima').value,
+    frio: $('meas-frio').value === 'si' ? true : $('meas-frio').value === 'no' ? false : null
   });
 
   if(!res.ok){ err.textContent = res.error; err.classList.add('show'); return; }
 
   const l = D.loadMeas();
-  l.push({ id: 'm' + Date.now(), date: new Date().toISOString(),
+  // el índice evita ids repetidos si se guardan dos medidas en el mismo milisegundo
+  l.push({ id: 'm' + Date.now() + '-' + l.length, date: new Date().toISOString(),
            km: res.km, kmElec: res.kmElec, kwh: res.kwh, litres: res.litres,
-           cond: activePreset || 'mixto', R: res.R });
+           clima: res.clima, frio: res.frio, R: res.R });
   D.storeMeas(l);
 
-  ['meas-km1', 'meas-km2', 'meas-kwh'].forEach(id => { $(id).value = ''; });
+  ['meas-km1', 'meas-km2', 'meas-kwh', 'meas-clima', 'meas-frio'].forEach(id => { $(id).value = ''; });
   $('meas-lit').value = '0';
   err.classList.remove('show');
   renderMeas();
-  applyConditions();
+  aplicarClima();
   render();
 }
 
@@ -868,7 +920,7 @@ function toggleParkUnit(){
 
 function refreshAll(){
   renderVehicles();
-  applyConditions();
+  aplicarClima();
   renderCalibration();
   renderHistory();
   render();
@@ -955,19 +1007,9 @@ function bindEvents(){
     D.storeHistory([]); renderHistory();
   });
 
-  $('preset-row').addEventListener('click', e => {
-    const b = e.target.closest('.preset-btn'); if(!b) return;
-    activePreset = b.getAttribute('data-preset');
-    applyConditions(); render();
-  });
-  $('btn-cold').addEventListener('click', () => {
-    coldOn = !coldOn; applyConditions(); render();
-  });
-  ['elecConsumption', 'fuelConsumption'].forEach(k => {
-    els[k].addEventListener('input', () => {
-      activePreset = null; coldOn = false;
-      D.setCold(false); syncConditionUI();
-    });
+  $('clima-row').addEventListener('click', e => {
+    const b = e.target.closest('[data-clima]'); if(!b) return;
+    elegirClima(b.getAttribute('data-clima'));
   });
 
   const tg = $('settings-toggle'), pn = $('settings-panel');
@@ -1038,11 +1080,13 @@ function bindEvents(){
   $('meas-close').addEventListener('click', () => openOverlay('meas-overlay', false));
   $('meas-save').addEventListener('click', saveMeas);
   $('meas-list').addEventListener('click', e => {
+    const cl = e.target.closest('[data-clasif]');
+    if(cl) return clasificarMedida(cl.getAttribute('data-clasif'), cl.getAttribute('data-clima'));
     const b = e.target.closest('[data-mid]'); if(!b) return;
     if(!confirm('¿Borrar esta medida?')) return;
     const id = b.getAttribute('data-mid');
     D.storeMeas(D.loadMeas().filter(m => m.id !== id));
-    renderMeas(); applyConditions(); render();
+    renderMeas(); aplicarClima(); render();
   });
 
   const switchPricing = () => {
@@ -1086,8 +1130,7 @@ export function iniciar(){
 
   mode = D.getMode();
   parkUnit = D.getParkUnit();
-  coldOn = D.getCold();
-  activePreset = D.getPreset();
+  clima = D.getClima();
   selectedChargerId = D.getSelectedChargerId();
 
   refreshColors();
@@ -1107,5 +1150,5 @@ export function iniciar(){
 export const _test = {
   render, renderMeas, saveMeas, saveCharger, openCharger, els,
   renderCargadoresResultados, seleccionarOcmResultado, buscarCargadoresCercanos,
-  buscarPorLugar, usarLugar
+  buscarPorLugar, usarLugar, elegirClima, clasificarMedida
 };

@@ -161,36 +161,47 @@ Sube el "% de batería ahora" del 10% al 90%: los kWh deben ir **bajando**.
 
 ---
 
-## 5. Los tres modos de conducción
+## 5. La climatización
 
-*(Sección nueva: estos botones estaban mal calculados hasta hace poco.)*
+*(Sección nueva desde el 2 de noviembre. Sustituye a los antiguos botones de
+Ciudad / Mixto / Carretera y de Frío, que se han quitado: aplicaban porcentajes
+estimados, sin datos detrás.)*
 
-Abre **Ajustes y explicaciones**. Verás Ciudad / Mixto / Carretera.
+La calefacción y el aire acondicionado gastan batería, y cuánto depende de tu coche.
+Por eso la app **no aplica ningún porcentaje**: cada medida (sección 9.8) lleva la
+climatización que usaste, y al calcular solo se usan las medidas hechas con la misma.
 
-**5.1 — Los botones cambian los dos consumos**
-Pulsa cada uno y mira los dos campos de debajo.
-- Al pasar a **Ciudad**: el consumo eléctrico **baja** y el de gasolina **sube**.
-- Al pasar a **Carretera**: el eléctrico **sube** y el de gasolina **baja**.
-- Si solo cambia uno de los dos, es un fallo.
+Abre **Ajustes y explicaciones**. Arriba verás **"¿Vas a usar la climatización?"**
+con tres botones: Calefacción / Nada / Aire.
 
-**5.2 — El resultado cambia mucho entre modos**
-Con el mismo precio de cargador, anota el ahorro en los tres.
-- **Ciudad debe dar bastante más ahorro que Carretera.** No unos céntimos: la
-  diferencia debería ser clara.
-- *Por qué:* en ciudad tu coche gasta mucha gasolina y poca electricidad; en autopista
-  es al revés. Cargar compensa mucho más en ciudad.
-- Si los tres dan casi lo mismo, es un fallo.
+**5.1 — Sin medidas, lo dice**
+Con un coche sin medidas, pulsa cada botón.
+- Bajo los botones debe aparecer, en ámbar: "No tienes medidas con … se usa el consumo
+  declarado, con un margen de error del 30%".
+- El consumo eléctrico de debajo debe ser **el que pusiste en tu vehículo**, con
+  cualquiera de los tres botones. Si cambia sin tener medidas, es un fallo.
 
-**5.3 — Editar a mano desactiva el botón**
-Cambia un consumo a mano: el botón que estaba marcado debe dejar de estarlo.
+**5.2 — Con medidas, cada climatización usa las suyas**
+Guarda una medida "Sin climatización" y otra "Calefacción" (sección 9.8).
+- Con **Nada**: "Con tu medida sin climatización: X km/kWh, ±15%".
+- Con **Calefacción**: el mismo texto con su propio km/kWh, normalmente **más bajo**.
+- Con **Aire** (sin medidas con aire): debe volver al consumo declarado y avisar.
+  **No debe usar las medidas de las otras dos.** Si lo hace, es un fallo.
 
-**5.4 — El botón de frío**
-Con **Mixto** marcado, pulsa **"Frío — el coche ha estado a la intemperie"**.
-- Los **dos** consumos deben **subir**: el eléctrico un 30% y el de gasolina un 12%
-  (por ejemplo, 22 → 28,6 kWh/100km y 5,0 → 5,6 L/100km).
-- El texto bajo el importe grande debe añadir "calculado con frío".
-- En Ciudad la subida es mayor (+45% eléctrico) y en Carretera menor (+18%).
-- Al pulsarlo otra vez, o al editar un consumo a mano, el modo frío se desactiva.
+**5.3 — Se ve en el resultado**
+Con Calefacción o Aire elegidos, el texto bajo el importe grande debe añadir
+"· con calefacción" o "· con aire". Con Nada, no añade nada.
+
+**5.4 — Se recuerda**
+Cierra la app y vuelve a abrirla: debe seguir marcada la climatización que elegiste.
+
+**5.5 — Si venías de la versión anterior**
+- Tus medidas antiguas aparecen en la pantalla de medición con tres botones
+  (calefacción / aire / sin clima) para que indiques cuál usaste, si lo recuerdas.
+- Mientras no las clasifiques, solo cuentan para una climatización sin medidas
+  propias, y solo las de los 6 últimos meses. La pista lo dice ("Se usan las que no
+  tienen climatización indicada").
+- Si tenías activado el antiguo botón de frío, la app arranca con **Calefacción**.
 
 ---
 
@@ -376,7 +387,8 @@ Cambia el modo oscuro de tu móvil (Ajustes → Pantalla y brillo).
 
 **9.6 — Que no se pierda nada**
 Cierra la app del todo y vuelve a abrirla: debe conservar vehículos, cargadores,
-historial, calibración, modo de tarifa, la unidad de tiempo y el modo en que estabas.
+historial, calibración, medidas, modo de tarifa, la unidad de tiempo, la
+climatización elegida y el modo en que estabas.
 
 **9.7 — Copia de seguridad**
 En Ajustes y explicaciones, sección "Copia de seguridad".
@@ -391,10 +403,12 @@ En Ajustes y explicaciones, sección "Copia de seguridad".
   decir "Ese archivo no es una copia de seguridad válida" y **no tocar nada**.
 
 **9.8 — Medir mi coche con datos reales**
-En Ajustes y explicaciones → "Medir mi coche con datos reales". Sigue los cuatro
+En Ajustes y explicaciones → "Medir mi coche con datos reales". Sigue los cinco
 pasos que explica la pantalla (cargar hasta tu nivel de referencia, anotar el
-cuentakilómetros, conducir, volver a cargar al mismo nivel) e introduce los km
-iniciales, los km finales, los kWh cargados y la gasolina gastada.
+cuentakilómetros, conducir, volver a cargar al mismo nivel, indicar la
+climatización) e introduce los km iniciales, los km finales, los kWh cargados, la
+gasolina gastada, **la climatización que usaste** y **si hizo frío** (menos de 10 °C
+casi todo el tiempo).
 
 - **La cuenta.** La app calcula R = km eléctricos ÷ kWh cargados. Compruébalo con la
   calculadora. Ejemplo: 250 km con 64 kWh → **3,91 km/kWh**.
@@ -405,18 +419,24 @@ iniciales, los km finales, los kWh cargados y la gasolina gastada.
   medida no sale como esperas, revisa ese campo primero.
 - **Rechazos esperados**, cada uno con su mensaje: km finales menores o iguales que
   los iniciales; sin kWh; más de la mitad de los km hechos con gasolina; resultado
-  imposible (R menor de 0,5 o mayor de 15).
-- **Tras guardar** debe aparecer "N medidas en uso", "Rindes X km por cada kWh que te
-  facturan", "Equivale a un consumo de Y kWh/100km" y el margen de error. El consumo
-  eléctrico de Ajustes pasa a ser el medido y los km del veredicto cambian.
+  imposible (R menor de 0,5 o mayor de 15); sin climatización elegida; sin indicar
+  si hizo frío.
+- **Tras guardar** debe aparecer, para **cada climatización**, su km por kWh
+  facturado, el consumo equivalente en kWh/100km, el margen de error y cuántas
+  medidas tiene, o "sin medidas todavía". En la lista, cada medida dice su
+  climatización (y ", frío" si lo marcaste). Si la climatización elegida en Ajustes
+  es la de la medida, el consumo eléctrico pasa a ser el medido y los km del
+  veredicto cambian. **Si es otra, no deben cambiar.**
 - **Borrar.** La × de cada medida pide confirmación y, al borrarla, todo se recalcula.
 - **Margen de error.** Con 1 medida sale ±15%. Con 2 sale **mucho más amplio**
   (dos medidas de 3,8 y 4,0 km/kWh → ±16%) y baja deprisa al añadir más (3,8 / 3,9 /
   4,0 → ±4%). **Con 2 medidas el margen nunca baja de ±15%** (el mismo que con una
   sola): aunque coincidan casi exactamente (6,706 y 6,714 → ±15%, no ±0%), la app no
   da por buena esa coincidencia. Desde la tercera medida el margen se calcula sin
-  ese mínimo. No te fíes mucho del margen hasta tener 4 o 5 medidas.
-- Solo cuentan las 8 últimas medidas de los últimos 6 meses.
+  ese mínimo. No te fíes mucho del margen hasta tener 4 o 5 medidas. El margen es
+  **de cada climatización por separado**.
+- De cada climatización solo cuentan las 8 últimas medidas de los últimos 12 meses.
+  Las medidas antiguas sin climatización, solo las de los últimos 6 meses.
 
 **9.9 — Buscar cargadores públicos** *(Open Charge Map)*
 - Pulsa "Buscar cargadores cercanos" y da permiso de ubicación. Debe aparecer
@@ -560,9 +580,15 @@ CADA CUÁNTO:           Dos o tres veces por semana
 - **Solo funciona con gasolina y en euros.** Si tu enchufable es diésel, o estás fuera
   de España, la app no encaja bien todavía. Dínoslo igualmente: queremos saber cuánta
   gente está en ese caso.
-- **El modo frío es una aproximación.** Muchos híbridos enchufables arrancan el motor de
-  gasolina para calentar el habitáculo; si el tuyo lo hace, en invierno los resultados
-  seguirán siendo optimistas. Si notas que se desvían, cuéntanoslo.
+- **La climatización solo cambia el consumo eléctrico.** El de gasolina sigue siendo
+  el que declaraste, aunque con frío también suba.
+- **El frío se guarda, pero todavía no se usa.** Hace falta ver con medidas de varios
+  coches si el frío cambia el consumo cuando no pones la calefacción.
+- **Si tu coche arranca el motor de gasolina para calentar el habitáculo**, la app trata
+  esos litros como si hubieran movido el coche, así que tus medidas con calefacción
+  saldrán algo más bajas de lo real. Si es tu caso, cuéntanoslo.
+- **No distingue ciudad de carretera.** Tus medidas ya reflejan tu forma habitual de
+  conducir; un viaje muy distinto de lo normal puede salir peor estimado.
 - **No contempla carga rápida en corriente continua**, que algunos enchufables tienen.
 
 **Cosas que NO son fallos, son así a propósito:**
@@ -599,7 +625,7 @@ Eficiencia usada (%):
 ── COMPROBACIONES ──────────────────────────
 Sección 3 (cuentas a mano):       Cuadra / No cuadra
 Sección 4 (coherencia):           Todo OK / Fallos: ___
-Sección 5 (modos y frío):         Todo OK / Fallos: ___
+Sección 5 (climatización):        Todo OK / Fallos: ___
 Sección 6 (química y curva):      Todo OK / Fallos: ___
 Sección 7 (límites físicos):      Todo OK / Fallos: ___
 Sección 8 (tarifa por minuto):    Todo OK / No pude probarlo / Fallos: ___

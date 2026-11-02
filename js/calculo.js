@@ -2,16 +2,11 @@
 
 import { clamp } from './util.js';
 
-// Cómo cambian los consumos según el tipo de conducción y el frío.
-// En ciudad el eléctrico rinde mejor y la gasolina peor; en carretera al revés.
-// Con frío la calefacción pesa más por km cuanto más despacio se va.
-export const PRESET_FACTORS = {
-  ciudad:    { elec: 0.86, fuel: 1.20, coldElec: 1.45, coldFuel: 1.20 },
-  mixto:     { elec: 1.00, fuel: 1.00, coldElec: 1.30, coldFuel: 1.12 },
-  carretera: { elec: 1.18, fuel: 0.92, coldElec: 1.18, coldFuel: 1.06 }
-};
-
-export const COLD_EFF = 0.95;
+// Climatización durante el trayecto. Es lo que más mueve el consumo eléctrico
+// fuera de la forma de conducir, y el usuario la conoce con certeza, tanto al
+// medir como antes de salir. No hay factores estimados: el efecto de cada una
+// sale solo de las mediciones hechas con esa misma climatización.
+export const CLIMAS = ['calefaccion', 'aire', 'nada'];
 
 // A baja potencia las pérdidas fijas del cargador de a bordo pesan mucho más.
 export function efficiencyPenalty(power){
@@ -132,15 +127,18 @@ export function findLimitHours(cfg){
  * R = km eléctricos por kWh facturado. Absorbe eficiencia, consumo y errores
  * de capacidad declarada, así que sustituye a las tres estimaciones.
  */
-// Solo cuentan las medidas recientes: R se mueve mucho más con la estación
-// del año (±30%) que con el desgaste de la batería (0,5% anual), así que una
-// medida de invierno no debe seguir pesando en verano.
-export const MEAS_MAX = 8;        // como mucho, las 8 últimas
-export const MEAS_MESES = 6;      // y solo de los últimos 6 meses
+// Las medidas se agrupan por climatización (ver rParaClima). Dentro de cada
+// grupo solo cuentan las recientes: el desgaste de la batería mueve R un 0,5%
+// al año, así que una medida con calefacción del invierno pasado sigue valiendo
+// este invierno. Las medidas sin clasificar (anteriores a la climatización)
+// mezclan estaciones, así que para ellas se mantiene la ventana corta de antes.
+export const MEAS_MAX = 8;                    // como mucho, las 8 últimas de cada grupo
+export const MEAS_MESES = 12;                 // de los últimos 12 meses
+export const MEAS_MESES_SIN_CLASIFICAR = 6;   // o de los últimos 6, si no están clasificadas
 
 /** Devuelve las medidas vigentes, de más antigua a más reciente. */
-export function measVigentes(list, ahora = Date.now()){
-  const limite = ahora - MEAS_MESES * 30 * 86400000;
+export function measVigentes(list, ahora = Date.now(), meses = MEAS_MESES){
+  const limite = ahora - meses * 30 * 86400000;
   const recientes = list.filter(m => {
     const t = new Date(m.date).getTime();
     return isFinite(t) ? t >= limite : true;
@@ -170,8 +168,8 @@ export const BAND_UNA_MEDIDA = 0.15;
 // contador mueve mucho su R) no pesa lo mismo que una de 12 kWh. Si alguna
 // medida no trae km y kWh (datos antiguos), se usa la media simple de todas.
 // La dispersión (cv y banda) sigue siendo la de los R individuales.
-export function measStats(list, ahora = Date.now()){
-  const usadas = measVigentes(list, ahora);
+export function measStats(list, ahora = Date.now(), meses = MEAS_MESES){
+  const usadas = measVigentes(list, ahora, meses);
   const descartadas = list.length - usadas.length;
   if(!usadas.length) return { n: 0, R: null, cv: null, band: 0.30, descartadas: 0 };
   const mean = usadas.reduce((s, m) => s + m.R, 0) / usadas.length;
@@ -187,8 +185,39 @@ export function measStats(list, ahora = Date.now()){
   return { n: usadas.length, R, cv, band, descartadas };
 }
 
+/** Medidas sin climatización: guardadas antes de que la app la preguntara. */
+export const sinClasificar = m => !m || CLIMAS.indexOf(m.clima) === -1;
+
+/**
+ * R para una climatización concreta, solo con datos medidos.
+ * 1) Si hay medidas con esa climatización, solo esas.
+ * 2) Si no, las medidas sin clasificar (antiguas), con su ventana corta: no
+ *    se sabe con qué climatización se hicieron, pero no se ha medido nada mejor.
+ * 3) Si tampoco, n = 0: se usa el consumo declarado con su banda del 30%.
+ * Nunca se toman prestadas medidas de otra climatización: una de verano con
+ * aire no dice nada de cuánto gasta la calefacción.
+ * `frio` se guarda en cada medida pero aún no separa grupos: primero hay que
+ * ver con datos si el frío sin calefacción cambia R de forma apreciable.
+ */
+export function rParaClima(list, clima, ahora = Date.now()){
+  const grupo = (list || []).filter(m => m && m.clima === clima);
+  if(grupo.length) return { ...measStats(grupo, ahora, MEAS_MESES), fuente: 'clima' };
+  const viejas = (list || []).filter(sinClasificar);
+  if(viejas.length) return { ...measStats(viejas, ahora, MEAS_MESES_SIN_CLASIFICAR), fuente: 'sin-clasificar' };
+  return { ...measStats([], ahora), fuente: 'ninguna' };
+}
+
+/** Ids de las medidas que cuentan ahora mismo en algún grupo (para atenuar el resto). */
+export function measEnUso(list, ahora = Date.now()){
+  const ids = new Set();
+  const add = (l, meses) => measVigentes(l, ahora, meses).forEach(m => ids.add(m.id));
+  CLIMAS.forEach(c => add((list || []).filter(m => m && m.clima === c), MEAS_MESES));
+  add((list || []).filter(sinClasificar), MEAS_MESES_SIN_CLASIFICAR);
+  return ids;
+}
+
 /** Valida una medición y devuelve {ok, R, error}. */
-export function buildMeasurement({ km1, km2, kwh, litres, fuelCons }){
+export function buildMeasurement({ km1, km2, kwh, litres, fuelCons, clima, frio }){
   const fail = error => ({ ok: false, error });
   if(!isFinite(km1) || !isFinite(km2)) return fail('Faltan los kilómetros.');
   if(km2 <= km1) return fail('Los km del final deben ser mayores que los del principio.');
@@ -205,5 +234,8 @@ export function buildMeasurement({ km1, km2, kwh, litres, fuelCons }){
   const R = kmElec / kwh;
   if(R < 0.5 || R > 15) return fail('El resultado no es creíble. Revisa los datos.');
 
-  return { ok: true, km: kmTot, kmElec, kwh, litres, R };
+  if(CLIMAS.indexOf(clima) === -1) return fail('Indica si usaste la calefacción, el aire o nada.');
+  if(frio !== true && frio !== false) return fail('Indica si hizo frío esos días.');
+
+  return { ok: true, km: kmTot, kmElec, kwh, litres, R, clima, frio };
 }

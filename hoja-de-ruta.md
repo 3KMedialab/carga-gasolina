@@ -16,7 +16,8 @@ pruebas automáticas (52 del cálculo + 22 de humo).
 - Cargadores guardados con notas, tarifa por minuto y recargo por exceso de tiempo
 - Hora límite antes de que el recargo se coma el ahorro
 - Precios reales de gasolineras (API del Ministerio)
-- Ajuste por tipo de conducción y por frío
+- R medido por climatización (calefacción / aire / nada), sin factores estimados
+  *(2 de noviembre: sustituye a los antiguos botones de ciudad/carretera/frío)*
 - Carga gratuita: sin veredicto, pero contabilizada en el historial
 - Historial con desglose entre ahorro gratuito y de pago
 - Medición de R con datos reales, con ventana de vigencia
@@ -63,11 +64,12 @@ tiempo) y compararlo con lo que ocurre de verdad.
 La pregunta incómoda: **¿usas la app o no?** Y en concreto:
 
 - ¿Miras el veredicto, o solo guardas las recargas en el historial?
-- ¿Tocas alguna vez los modos de conducción?
+- ¿Cambias la climatización antes de calcular, o se queda siempre igual?
 - ¿Usas el modo "parada dedicada" o solo "aparcado"?
 
-Si en un mes no has tocado los modos, se quitan. Si no miras el veredicto, la
-app debería reorganizarse alrededor del historial.
+Si no miras el veredicto, la app debería reorganizarse alrededor del historial.
+*(Los modos de conducción ciudad/mixto/carretera ya se quitaron el 2 de
+noviembre: sus porcentajes no tenían fuente.)*
 
 **Puerta de decisión:** con estos datos se decide qué fases siguen vivas y en
 qué orden. Es posible que alguna de las de abajo se caiga.
@@ -109,18 +111,29 @@ Sobre 621 € anuales son 110 € de ahorro fantasma.
 
 ---
 
-## Fase 3 — R por condiciones *(2 sesiones, necesita datos)*
+## Fase 3 — R por condiciones *(en marcha desde el 2 de noviembre)*
 
-Hoy los factores de ciudad, carretera y frío son **estimaciones mías**. Con
-suficientes mediciones podrían ser tuyos.
+**Hecho:** los factores estimados de ciudad, carretera y frío se han quitado.
+No tenían fuente y además se aplicaban encima de R medido, así que contaban dos
+veces la calefacción y la forma de conducir que la medida ya incluía.
 
-- R separado por tipo de conducción y por frío
-- Sustituir los factores estimados por los medidos, cuando haya al menos 3
-  mediciones de esa condición
-- Mientras no las haya, seguir con los factores actuales
+Ahora cada medida guarda la **climatización** (calefacción / aire / nada) y si
+**hizo frío**. El cálculo usa solo las medidas con la climatización que vas a
+usar; sin ninguna, lo dice y usa el consumo declarado con su ±30%. Nunca toma
+prestadas medidas de otra climatización.
 
-**Depende de:** tener mediciones de varias estaciones. Antes de la primavera no
-tiene sentido empezar.
+**Pendiente, y solo con datos:**
+
+- **Separar por frío.** Hoy el frío se guarda pero no separa grupos. Si tras un
+  invierno las medidas "sin climatización" con frío salen claramente distintas
+  de las templadas, se divide ese grupo. Si no, se queda así.
+- **Ciudad o carretera.** No se pregunta: combinada con la climatización daría
+  demasiados grupos para el número de medidas que hace una persona. Solo se
+  añadirá si los datos de varios testers muestran que hace falta.
+- **El consumo de gasolina con frío** sigue siendo el declarado. Medirlo bien
+  necesita otro procedimiento.
+
+**Depende de:** mediciones de invierno y de verano, de varios coches.
 
 ---
 
@@ -170,6 +183,9 @@ Nada de esto se construye hasta que alguien lo pida con un caso real:
 - **Conexión con el coche** — la app oficial de BYD no publica los kWh por sesión
 - **Meteorología automática** — la temperatura ambiente no es la de la batería,
   y añadía una dependencia externa para un dato aproximado
+- **Factores estimados de conducción y frío** — porcentajes sin fuente que se
+  aplicaban sobre R medido y contaban dos veces lo que la medida ya incluía.
+  Sustituidos por R medido por climatización (Fase 3)
 - **Base de datos de vehículos por marca y modelo** — los datos que harían falta
   no los publica nadie con fiabilidad; inventarlos sería peor que preguntarlos
 - **Reescritura con framework** — a 1.500 líneas no compensa, y un proceso de

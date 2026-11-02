@@ -15,7 +15,7 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   iniciar();
   ok('sin vehículos abre la configuración inicial',
      dom.get('overlay').classList.contains('open'));
-  ok('el esquema queda marcado', dom.store['cvg_schema'] === '2');
+  ok('el esquema queda marcado', dom.store['cvg_schema'] === '3');
   dom.desmontar();
 }
 
@@ -120,23 +120,39 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   ok('el nivel de referencia se adapta a LFP',
      dom.get('meas-level').innerHTML.includes('100%'));
 
+  // sin climatización indicada, la medida no se guarda
+  dom.get('meas-km1').value = '0'; dom.get('meas-km2').value = '250';
+  dom.get('meas-kwh').value = '74'; dom.get('meas-lit').value = '0';
+  dom.click('meas-save');
+  ok('sin climatización no se guarda la medida', dom.store['cvg_meas_v1'] === undefined);
+  ok('...y lo explica', dom.get('meas-err').classList.contains('show') &&
+     dom.get('meas-err').textContent.includes('calefacción'), dom.get('meas-err').textContent);
+
   const antes = dom.get('pk-km').textContent;
-  // tres medidas que reflejan un consumo peor del declarado
+  // tres medidas sin climatización que reflejan un consumo peor del declarado
   [[250,74],[210,63],[300,88]].forEach(([km,kwh]) => {
     dom.get('meas-km1').value = '0';
     dom.get('meas-km2').value = String(km);
     dom.get('meas-kwh').value = String(kwh);
     dom.get('meas-lit').value = '0';
+    dom.get('meas-clima').value = 'nada';
+    dom.get('meas-frio').value = 'no';
     dom.click('meas-save');
   });
   const m = JSON.parse(dom.store['cvg_meas_v1']);
   ok('se guardan las tres medidas', m.length === 3, String(m.length));
+  ok('cada una con su climatización y su frío', m.every(x => x.clima === 'nada' && x.frio === false));
+  ok('sin ids repetidos', new Set(m.map(x => x.id)).size === 3);
+  ok('el formulario queda limpio para la siguiente', dom.get('meas-clima').value === '');
   ok('las medidas cambian el resultado', dom.get('pk-km').textContent !== antes,
      antes + ' -> ' + dom.get('pk-km').textContent);
   ok('el consumo pasa a ser el medido',
      Math.abs(parseFloat(dom.get('inp-elecConsumption').value) - 22) > 1,
      dom.get('inp-elecConsumption').value);
   ok('el margen de error baja', dom.get('meas-summary').innerHTML.includes('Margen'));
+  ok('el resumen separa por climatización',
+     dom.get('meas-summary').innerHTML.includes('Con calefacción:</strong> sin medidas'),
+     dom.get('meas-summary').innerHTML);
   dom.desmontar();
 }
 
@@ -340,6 +356,78 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   const { iniciar } = await import('./js/interfaz.js?10');
   iniciar();
   ok('al arrancar, el campo trae el último lugar', dom.get('lugar-q').value === 'Valdemorillo');
+  dom.desmontar();
+}
+
+// ---------- 11. climatización: cada una con sus propias medidas ----------
+{
+  const hoy = new Date().toISOString();
+  const dom = montar({
+    'cvg_schema':'3',
+    'cvg_profiles_v1': JSON.stringify({ list:[{ id:'v1', name:'A', battery:18, maxPower:6.6,
+      elecCons:22, fuelCons:5, chargeEff:86, chem:'lfp' }], activeId:'v1' }),
+    'cvg_mode_v1':'parked',
+    // sin climatización rinde 4,3 km/kWh -> 86 / 4,3 = 20 kWh/100km
+    'cvg_meas_v1': JSON.stringify([
+      { id:'a', date:hoy, km:215, kmElec:215, kwh:50, litres:0, R:4.3, clima:'nada', frio:false },
+      { id:'b', date:hoy, km:200, kmElec:200, kwh:60, litres:0, R:200/60, clima:null, frio:null }
+    ])
+  });
+  const { iniciar, _test } = await import('./js/interfaz.js?11');
+  iniciar();
+  const cons = () => parseFloat(dom.get('inp-elecConsumption').value);
+
+  ok('arranca sin climatización y usa su medida', cons() === 20, String(cons()));
+  ok('la pista dice de dónde sale', dom.get('clima-hint').textContent.includes('Con tu medida sin climatización'),
+     dom.get('clima-hint').textContent);
+
+  _test.elegirClima('calefaccion');
+  ok('con calefacción y sin medidas suyas, usa la sin clasificar (86 / 3,33 = 25,8)', cons() === 25.8, String(cons()));
+  ok('...y avisa de que no tiene medidas con calefacción',
+     dom.get('clima-hint').textContent.includes('No tienes medidas con calefacción') &&
+     dom.get('clima-hint').classList.contains('warn'), dom.get('clima-hint').textContent);
+  ok('la etiqueta del veredicto lo dice', dom.get('amount-label').textContent.includes('con calefacción'),
+     dom.get('amount-label').textContent);
+  ok('la elección se guarda', dom.store['cvg_clima_v1'] === 'calefaccion');
+
+  _test.elegirClima('aire');
+  _test.clasificarMedida('b', 'nada');
+  ok('al clasificar la última sin clasificar, con aire ya no hay datos: consumo declarado', cons() === 22, String(cons()));
+  ok('...y lo dice, con el margen del 30%', dom.get('clima-hint').textContent.includes('30%'),
+     dom.get('clima-hint').textContent);
+  ok('la medida queda clasificada, sin inventar el frío',
+     JSON.parse(dom.store['cvg_meas_v1']).find(x => x.id === 'b').clima === 'nada' &&
+     JSON.parse(dom.store['cvg_meas_v1']).find(x => x.id === 'b').frio === null);
+
+  _test.elegirClima('nada');
+  ok('sin climatización usa ahora las dos medidas', dom.get('clima-hint').textContent.includes('2 medidas'),
+     dom.get('clima-hint').textContent);
+  _test.elegirClima('inventada');
+  ok('una climatización desconocida se ignora', dom.store['cvg_clima_v1'] === 'nada');
+  dom.desmontar();
+}
+
+// ---------- 12. migración al esquema 3 (adiós a ciudad/carretera/frío) ----------
+{
+  const dom = montar({
+    'cvg_schema':'2',
+    'cvg_profiles_v1': JSON.stringify({ list:[{ id:'v1', name:'A', battery:18, maxPower:6.6,
+      elecCons:22, fuelCons:5, chargeEff:86, chem:'lfp' }], activeId:'v1' }),
+    'cvg_meas_v1': JSON.stringify([{ id:'m1', date:new Date().toISOString(), km:250, kmElec:250,
+      kwh:64, litres:0, cond:'ciudad', R:250/64 }]),
+    'cvg_cold_v1':'1', 'cvg_preset_v1':'carretera', 'cvg_mode_v1':'parked'
+  });
+  const { iniciar } = await import('./js/interfaz.js?12');
+  iniciar();
+  const m = JSON.parse(dom.store['cvg_meas_v1'])[0];
+  ok('la medida antigua queda sin clasificar, nunca adivinada', m.clima === null && m.frio === null, JSON.stringify(m));
+  ok('...y pierde el modo de conducción, que ya no se usa', !('cond' in m));
+  ok('quien tenía el frío activado pasa a calefacción', dom.store['cvg_clima_v1'] === 'calefaccion');
+  ok('las claves de frío y modo de conducción desaparecen',
+     dom.store['cvg_cold_v1'] === undefined && dom.store['cvg_preset_v1'] === undefined);
+  ok('el esquema sube a 3', dom.store['cvg_schema'] === '3');
+  ok('la medida antigua sigue contando mientras no haya otra mejor',
+     dom.get('clima-hint').textContent.includes('no tienen climatización'), dom.get('clima-hint').textContent);
   dom.desmontar();
 }
 

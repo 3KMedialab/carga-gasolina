@@ -10,8 +10,9 @@ const K = {
   session:  'cvg_session_v1',
   chargers: 'cvg_chargers_v1',
   mode:     'cvg_mode_v1',
-  cold:     'cvg_cold_v1',
-  preset:   'cvg_preset_v1',
+  clima:    'cvg_clima_v1',
+  cold:     'cvg_cold_v1',     // obsoleta desde el esquema 3: solo la lee la migración
+  preset:   'cvg_preset_v1',   // obsoleta desde el esquema 3: solo la borra la migración
   parkUnit: 'cvg_parkunit_v1',
   selCh:    'cvg_selch_v1',
   ocmRef:   'cvg_ocmref_v1',
@@ -22,7 +23,7 @@ const K = {
 };
 
 // ---------- ESQUEMA ----------
-const SCHEMA = 2;
+const SCHEMA = 3;
 
 const MIGRATIONS = {
   // v1 -> v2: los cargadores guardados antes de la ficha no tenían id,
@@ -32,6 +33,26 @@ const MIGRATIONS = {
     let changed = false;
     l.forEach((c, i) => { if(!c.id){ c.id = 'c' + Date.now() + i; changed = true; } });
     if(changed) lsPut(K.chargers, l);
+  },
+  // v2 -> v3: desaparecen los factores estimados de ciudad/carretera/frío.
+  // Cada medida pasa a llevar la climatización y si hizo frío; las antiguas
+  // no lo sabemos, así que quedan sin clasificar (null), nunca adivinadas.
+  // `cond` (el modo de conducción que estaba marcado al medir) ya no se usa.
+  // Quien tenía el frío activado lo tenía por la calefacción: se conserva así.
+  3(){
+    loadProfiles().list.forEach(p => {
+      const l = lsJSON(K.meas(p.id), null);
+      if(!Array.isArray(l)) return;
+      l.forEach(m => {
+        if(!('clima' in m)) m.clima = null;
+        if(!('frio' in m)) m.frio = null;
+        delete m.cond;
+      });
+      lsPut(K.meas(p.id), l);
+    });
+    if(ls(K.cold) === '1' && !ls(K.clima)) lsSet(K.clima, 'calefaccion');
+    lsDel(K.cold);
+    lsDel(K.preset);
   }
 };
 
@@ -80,13 +101,12 @@ export function saveSessionFrom(els, keys, num){
   lsPut(K.session, o);
 }
 
-// ---------- MODO Y CONDICIONES ----------
+// ---------- MODO Y CLIMATIZACIÓN ----------
+const CLIMAS_VALIDOS = ['calefaccion', 'aire', 'nada'];   // los mismos que CLIMAS de calculo.js
 export const getMode    = () => ls(K.mode) || 'parked';
 export const setMode    = m => lsSet(K.mode, m);
-export const getCold    = () => ls(K.cold) === '1';
-export const setCold    = on => lsSet(K.cold, on ? '1' : '0');
-export const getPreset  = () => ls(K.preset) || 'mixto';
-export const setPreset  = p => lsSet(K.preset, p || '');
+export const getClima   = () => { const c = ls(K.clima); return CLIMAS_VALIDOS.indexOf(c) === -1 ? 'nada' : c; };
+export const setClima   = c => lsSet(K.clima, CLIMAS_VALIDOS.indexOf(c) === -1 ? 'nada' : c);
 export const getParkUnit = () => ls(K.parkUnit) || 'h';
 export const setParkUnit = u => lsSet(K.parkUnit, u === 'min' ? 'min' : 'h');
 

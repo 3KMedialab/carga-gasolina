@@ -17,8 +17,8 @@ node humo.mjs      # arranca interfaz.js entera contra un DOM simulado (dom-fals
 
 ### Qué cubre cada uno
 
-- `pruebas.mjs` está dividido en secciones con `seccion('...')`: invariantes del cálculo, límites físicos, química/curva de carga, recarga real de referencia (Atto 2 DM-i), modos de conducción y frío, recargo por tiempo, tarifa por minuto, mediciones reales, cargadores públicos (OCM) y gasolineras por código postal o municipio (`gasolineras.js`). No toca la red ni el DOM.
-- `humo.mjs` son 10 escenarios numerados (app vacía, app con datos, carga gratuita, migración de cargadores antiguos, mediciones, búsqueda de cargadores sin geolocalización, unidad del tiempo de aparcado, exportar/importar copia, gasolineras por CP/municipio con `fetch` simulado, último lugar recordado). Comprueba que la app arranca y reacciona, no los números del cálculo.
+- `pruebas.mjs` está dividido en secciones con `seccion('...')`: invariantes del cálculo, límites físicos, química/curva de carga, recarga real de referencia (Atto 2 DM-i), climatización (R medido por grupo), recargo por tiempo, tarifa por minuto, mediciones reales, cargadores públicos (OCM) y gasolineras por código postal o municipio (`gasolineras.js`). No toca la red ni el DOM.
+- `humo.mjs` son 12 escenarios numerados (app vacía, app con datos, carga gratuita, migración de cargadores antiguos, mediciones, búsqueda de cargadores sin geolocalización, unidad del tiempo de aparcado, exportar/importar copia, gasolineras por CP/municipio con `fetch` simulado, último lugar recordado, climatización con sus propias medidas, migración al esquema 3). Comprueba que la app arranca y reacciona, no los números del cálculo.
 
 ### Salida y código de retorno
 
@@ -50,17 +50,18 @@ Capas de `js/` (dependencias hacia abajo):
 - `app.js` — punto de entrada: autoactualización + `iniciar()`.
 - `interfaz.js` (~1000 líneas) — une DOM y módulos. **Nada de lógica de negocio aquí**: lo nuevo que haya que calcular va en `calculo.js` y se prueba en `pruebas.mjs`. Exporta `_test` para las pruebas.
 - `calculo.js` — funciones puras, sin DOM ni almacenamiento.
-- `datos.js` — único punto de acceso a localStorage (claves `cvg_*`, algunas por vehículo: `cvg_hist_<id>`, `cvg_calib_<id>`, `cvg_meas_<id>`), migraciones y copia de seguridad (`exportAll`/`importAll` vuelcan por prefijo `cvg_`, así que claves nuevas quedan cubiertas solas si usan ese prefijo).
+- `datos.js` — único punto de acceso a localStorage (claves `cvg_*`, algunas por vehículo: `cvg_hist_<id>`, `cvg_calib_<id>`, `cvg_meas_<id>`; la climatización elegida en `cvg_clima_v1`), migraciones (esquema actual: 3) y copia de seguridad (`exportAll`/`importAll` vuelcan por prefijo `cvg_`, así que claves nuevas quedan cubiertas solas si usan ese prefijo).
 - `gasolineras.js` (API del Ministerio, solo España) y `cargadores.js` (Open Charge Map) — aislados de la UI: devuelven datos o lanzan error con código. La búsqueda por CP o municipio sitúa el lugar con Nominatim (provincia por código ISO 3166-2; la de un CP, por sus 2 primeras cifras) y reutiliza `pickNearby()` desde ese punto; un CP sin gasolineras propias no es error. Nominatim solo se llama al pulsar Buscar: su política prohíbe autocompletar.
 - `util.js` — formato, acceso seguro a localStorage (`ls*`), caché de `$()` para el DOM (`resetDom()` la limpia).
 
 ### Reglas del cálculo (`calculo.js`)
 
 - `simulate()` es la **única fuente de verdad** de una sesión de carga; el veredicto y `findLimitHours()` (hora límite antes de que el recargo se coma el ahorro) la reutilizan. Modos: `parked` (aparcado, tiempo fijo) y `trip` (parada dedicada, con desvío).
-- **R** = km eléctricos por kWh facturado, obtenido de mediciones reales (`buildMeasurement`, `measStats`); sustituye a las estimaciones de eficiencia y consumo. Solo cuentan las 8 últimas medidas de los últimos 6 meses (`MEAS_MAX`, `MEAS_MESES`), porque R varía ±30% por estación y solo ~0,5%/año por desgaste.
+- **R** = km eléctricos por kWh facturado, obtenido de mediciones reales (`buildMeasurement`, `measStats`); sustituye a las estimaciones de eficiencia y consumo.
+- **R va por climatización** (`CLIMAS`: `calefaccion`, `aire`, `nada`). Cada medida guarda `clima` y `frio`; `rParaClima()` usa solo las medidas con la climatización elegida (las 8 últimas de los 12 últimos meses: `MEAS_MAX`, `MEAS_MESES`). Si no hay ninguna, usa las sin clasificar (anteriores al esquema 3, ventana de 6 meses: `MEAS_MESES_SIN_CLASIFICAR`); si tampoco, el consumo declarado con banda del 30%. **Nunca se toman prestadas medidas de otra climatización.** `frio` se guarda pero aún no separa grupos: solo se dividirá si los datos muestran que el frío sin calefacción cambia R de forma apreciable. El consumo de gasolina sigue siendo el declarado.
 - El margen de error de R usa la t de Student al 90% (`T90`), no la normal; con exactamente 2 medidas tiene suelo del 15% (`BAND_UNA_MEDIDA`) para que dos medidas casualmente iguales no den ~0%.
 - `taper()` (frenado al final de la carga) depende de la química de batería y de la tasa C; en AC lento apenas se nota. Es un punto de partida contrastado con una sola recarga real, no una curva medida.
-- Los factores de ciudad/carretera/frío (`PRESET_FACTORS`) son estimaciones, no datos medidos.
+- No hay factores de ciudad/carretera/frío: se eliminaron en el esquema 3 porque eran porcentajes estimados sin fuente y además se aplicaban encima de R medido, contando dos veces lo que la medida ya incluía. No los reintroduzcas sin datos.
 
 ### Decisiones de diseño a respetar
 
