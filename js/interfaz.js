@@ -10,7 +10,7 @@ import {
   CLIMAS, simulate, findLimitHours, rParaClima, measEnUso, sinClasificar, buildMeasurement, kmPorClima,
   MEAS_MAX, MEAS_MESES, MEAS_MESES_SIN_CLASIFICAR,
   medidasConConsumo, buildFuelMeasurement, consumoParaClima,
-  buildDescuento, precioConDescuento
+  buildDescuento, precioConDescuento, buildCasa
 } from './calculo.js';
 
 import * as D from './datos.js';
@@ -129,9 +129,13 @@ function render(){
     fuelPrice: gasolina.precio, fuelCons: baseFuelCons(prof, clima),
     elecCons: baseElecCons(prof),
     freeHours: ch && ch.overMin > 0 ? ch.freeHours : 0,
-    overMin:   ch && ch.overMin > 0 ? ch.overMin   : 0
+    overMin:   ch && ch.overMin > 0 ? ch.overMin   : 0,
+    // con casa configurada y «sí, voy a cargar en casa antes», se compara con casa
+    casa: casaActiva()
   };
   const r = simulate(cfg);
+  const enCasa = r.vs === 'casa';
+  syncCasaUI(r);
 
   // gratis y sin ataduras: no hay nada que decidir
   const precio = cfg.byMinute ? cfg.pricePerMin : cfg.chargerPrice;
@@ -146,6 +150,7 @@ function render(){
   $('badge').textContent = r.nothingToCharge ? 'Batería llena'
     : isFree ? 'Gratis'
     : tight ? 'Casi igual'
+    : enCasa ? (worth ? 'Compensa cargar aquí' : 'Mejor esperar a casa')
     : worth ? 'Compensa cargar' : 'Mejor repostar';
 
   $('amount').innerHTML = (r.net >= 0 ? '+' : '−') + fmt(Math.abs(r.net)) +
@@ -153,8 +158,9 @@ function render(){
 
   $('amount-label').textContent = (r.nothingToCharge
     ? 'no cabe energía en la batería'
-    : isFree ? 'que te habrías gastado en gasolina'
-    : r.net >= 0 ? 'de ahorro en esta recarga' : 'de sobrecoste en esta recarga')
+    : isFree ? (enCasa ? 'que te habría costado en casa' : 'que te habrías gastado en gasolina')
+    : (r.net >= 0 ? 'de ahorro en esta recarga' : 'de sobrecoste en esta recarga') +
+      (enCasa ? ' frente a casa' : ''))
     + (clima !== 'nada' ? ' · ' + CON_CLIMA[clima] : '');
 
   const detail = $('detail');
@@ -165,6 +171,11 @@ function render(){
         : '');
   } else if(isFree){
     detail.innerHTML = '<strong class="num">' + fmt(r.km, 0) + ' km</strong> sin coste.';
+  } else if(enCasa && r.homeCost > 0){
+    detail.innerHTML = 'Meter esa energía en casa te costaría <strong class="num">' + fmt(r.homeCost) + ' ' + EURO +
+      '</strong>; aquí, <strong class="num">' + fmt(r.sessionCost) + ' ' + EURO + '</strong>.' + (cfg.byMinute
+        ? ' Pagando por minuto, te salen <strong class="num">' + fmt(r.effectivePerKwh, 2) + ' ' + EURO + '/kWh</strong>.'
+        : '');
   } else if(r.equivFuel > 0){
     const pct = Math.abs(r.net) / r.equivFuel * 100;
     detail.innerHTML = 'Hacer esos <strong class="num">' + fmt(r.km, 0) + ' km</strong> enchufado te sale un ' +
@@ -186,7 +197,8 @@ function render(){
   $(pre + '-kwh').textContent = fmt(r.sessionKwh, 1) + ' kWh en ' + fmtTime(r.chargeHours);
   $(pre + '-km').textContent = '≈ ' + fmt(r.km, 0) + ' km';
   $(pre + '-cost').textContent = fmt(r.sessionCost) + ' ' + EURO;
-  $(pre + '-equiv').textContent = fmt(r.equivFuel) + ' ' + EURO;
+  $(pre + '-equiv-k').textContent = enCasa ? 'En casa te habría costado' : 'En gasolina habrían sido';
+  $(pre + '-equiv').textContent = fmt(r.altCost) + ' ' + EURO;
 
   const overRow = $(pre + '-row-over');
   if(r.overCost > 0){
@@ -214,7 +226,9 @@ function render(){
     } else if(worth){
       note.innerHTML = 'Ahorro limpio: no te cuesta ni tiempo ni desvío, porque ibas a estar aquí igualmente.';
     } else {
-      note.innerHTML = `<span class="c-bad">Sale más caro que la gasolina</span>, aunque no te cueste tiempo.`;
+      note.innerHTML = enCasa
+        ? `<span class="c-bad">Sale más caro que cargar en casa</span>: espera a llegar.`
+        : `<span class="c-bad">Sale más caro que la gasolina</span>, aunque no te cueste tiempo.`;
     }
   } else {
     const rowD = $('tr-row-detour');
@@ -237,7 +251,8 @@ function render(){
       note.innerHTML = 'Son ' + fmtTime(r.chargeHours) + ' de espera para ahorrar ' + fmt(r.net) +
         ' ' + EURO + ' — unos ' + fmt(perHour) + ' ' + EURO + ' por hora.';
     } else {
-      note.innerHTML = `<span class="c-bad">No merece la pena esta parada</span> a este precio.`;
+      note.innerHTML = `<span class="c-bad">No merece la pena esta parada</span> a este precio` +
+        (enCasa ? ': te sale mejor cargar en casa.' : '.');
     }
   }
 
@@ -286,7 +301,7 @@ function render(){
 
   lastCalc = {
     chargerPrice: cfg.byMinute ? r.effectivePerKwh : cfg.chargerPrice,
-    savings: r.net, km: r.km, free: r.sessionCost <= 0
+    savings: r.net, km: r.km, free: r.sessionCost <= 0, vs: r.vs
   };
   renderChargers();
   D.saveSessionFrom(els, SESSION_KEYS, num);
@@ -676,14 +691,17 @@ function renderHistory(){
   } else if(list.length && gratis > 0){
     nota = 'Todo el ahorro viene de cargar gratis.';
   } else if(p){ nota = 'Historial de ' + p.name + '.'; }
-  $('hist-note').textContent = nota;
+  const nCasa = list.filter(e => e.vs === 'casa').length;
+  if(nCasa) nota += ' ' + (nCasa === 1 ? '1 recarga se comparó' : nCasa + ' recargas se compararon') +
+    ' con cargar en casa, no con la gasolina.';
+  $('hist-note').textContent = nota.trim();
 
   // las 5 últimas, de más reciente a más antigua
   $('hist-list').innerHTML = list.slice(-HIST_VISIBLES).reverse().map(e => {
     const d = new Date(e.date);
     const fecha = isFinite(d) ? d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '';
     const signo = e.savings >= 0 ? '+' : '−';
-    return `<div class="item"><div><div class="n num">${fecha}${e.free ? ' · gratis' : ''}</div>` +
+    return `<div class="item"><div><div class="n num">${fecha}${e.free ? ' · gratis' : ''}${e.vs === 'casa' ? ' · frente a casa' : ''}</div>` +
       `<div class="d num">${fmt(e.km || 0, 0)} km${e.free ? '' : ' · ' + fmt(e.chargerPrice || 0, 2) + ' ' + EURO + '/kWh'}</div></div>` +
       `<div class="p num ${e.savings >= 0 ? 'pos' : 'neg'}">${signo}${fmt(Math.abs(e.savings))} ${EURO}</div></div>`;
   }).join('');
@@ -749,7 +767,9 @@ function saveRecharge(btn){
   if(!lastCalc || !D.activeProfile()) return;
   const l = D.loadHistory();
   l.push({ date: new Date().toISOString(), chargerPrice: lastCalc.chargerPrice,
-           savings: lastCalc.savings, km: lastCalc.km, free: !!lastCalc.free });
+           savings: lastCalc.savings, km: lastCalc.km, free: !!lastCalc.free,
+           // con qué se comparó: el ahorro frente a casa no es ahorro de gasolina
+           vs: lastCalc.vs === 'casa' ? 'casa' : 'gasolina' });
   D.storeHistory(l);
   renderHistory();
   flash(btn, '\u2713 Guardada');
@@ -962,6 +982,62 @@ function saveFuel(){
 function borrarConsumo(id){
   D.storeFuel(D.loadFuel().filter(m => m.id !== id));
   trasCambiarConsumo();
+}
+
+// ======================= CARGA EN CASA =======================
+
+/** La casa con la que comparar ahora: configurada y con «sí, voy a cargar en casa antes». */
+function casaActiva(){
+  const c = D.loadCasa();
+  return c && D.getVsCasa() ? c : null;
+}
+
+/** La pregunta de Calcular: solo aparece si la casa está configurada en Ajustes. */
+function syncCasaUI(r){
+  const c = D.loadCasa();
+  show($('sec-casa'), !!c);
+  if(!c) return;
+  const si = D.getVsCasa();
+  pulsado($('casa-si'), si);
+  pulsado($('casa-no'), !si);
+  $('casa-hint').textContent = si
+    ? 'Lo que cargues aquí no lo cargarás esta noche en casa, a ' + fmt(c.precio, 3) + ' ' + EURO +
+      '/kWh: se compara con eso, no con la gasolina.' +
+      (r && r.vs === 'casa' && !r.nothingToCharge ? ' Si estás cargando en casa ahora, elige «No».' : '')
+    : 'Se compara con la gasolina: vas de viaje, no llegarás a casa antes de gastar la batería o estás cargando en casa ahora.';
+}
+
+function elegirVsCasa(on){
+  D.setVsCasa(on);
+  render();
+}
+
+function renderCasa(){
+  const c = D.loadCasa();
+  $('casa-estado').textContent = c
+    ? 'Guardado: ' + fmt(c.precio, 3) + ' ' + EURO + '/kWh a ' + fmt(c.potencia, 1) + ' kW.'
+    : 'No has indicado que cargues en casa: Calcular compara siempre con la gasolina.';
+  if(c){ $('casa-precio').value = c.precio; $('casa-potencia').value = c.potencia; }
+  show($('casa-borrar'), !!c);
+}
+
+function saveCasa(){
+  const err = $('casa-err');
+  const res = buildCasa({
+    precio: parseFloat($('casa-precio').value),
+    potencia: parseFloat($('casa-potencia').value)
+  });
+  if(!res.ok){ err.textContent = res.error; err.classList.add('show'); return; }
+  err.classList.remove('show');
+  D.saveCasa(res);
+  renderCasa(); render();
+}
+
+function borrarCasa(){
+  D.saveCasa(null);
+  $('casa-precio').value = ''; $('casa-potencia').value = '';
+  $('casa-err').classList.remove('show');
+  renderCasa(); render();
 }
 
 // ======================= DESCUENTOS (AJUSTES) =======================
@@ -1332,6 +1408,7 @@ function refreshAll(){
   renderMeas();
   renderFuel();
   renderDescuentos();
+  renderCasa();
   render();
 }
 
@@ -1551,6 +1628,12 @@ function bindEvents(){
     renderMeas(); aplicarClima(); render();
   });
 
+  // --- carga en casa ---
+  $('casa-si').addEventListener('click', () => elegirVsCasa(true));
+  $('casa-no').addEventListener('click', () => elegirVsCasa(false));
+  $('casa-save').addEventListener('click', saveCasa);
+  $('casa-borrar').addEventListener('click', borrarCasa);
+
   // --- descuentos (Ajustes) ---
   $('dto-save').addEventListener('click', saveDescuento);
   $('dto-cancel').addEventListener('click', () => { limpiarFormDescuento(); renderDescuentos(); });
@@ -1617,5 +1700,6 @@ export const _test = {
   render, renderMeas, saveMeas, saveCharger, openCharger, els,
   renderCargadoresResultados, seleccionarOcmResultado, buscarCargadoresCercanos,
   buscarPorLugar, usarLugar, elegirClima, clasificarMedida, irA, usarCargador, cambiarListaOcm,
-  saveFuel, borrarConsumo, saveDescuento, editarDescuento, borrarDescuento
+  saveFuel, borrarConsumo, saveDescuento, editarDescuento, borrarDescuento,
+  saveCasa, borrarCasa, elegirVsCasa
 };

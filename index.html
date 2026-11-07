@@ -116,6 +116,16 @@
       </div>
     </section>
 
+    <!-- ¿CARGAR&Aacute;S EN CASA ANTES? (solo si la casa est&aacute; configurada en Ajustes) -->
+    <section class="section hidden" id="sec-casa" aria-labelledby="t-casa">
+      <div class="s-head"><h2 class="s-title" id="t-casa">&iquest;Vas a cargar en casa antes de gastar esta bater&iacute;a?</h2></div>
+      <div class="seg" role="group" aria-label="Con qu&eacute; se compara">
+        <button type="button" class="mode-btn active" id="casa-si">S&iacute;, comparar con casa</button>
+        <button type="button" class="mode-btn" id="casa-no">No, con gasolina</button>
+      </div>
+      <p class="mode-help" id="casa-hint"></p>
+    </section>
+
     <!-- TU COCHE AHORA -->
     <section class="section" aria-labelledby="t-coche">
       <div class="s-head"><h2 class="s-title" id="t-coche">Tu coche ahora</h2></div>
@@ -165,7 +175,7 @@
             <div class="kv"><span class="k">Cargar&aacute;s</span><span class="v num" id="pk-kwh">&mdash;</span></div>
             <div class="kv"><span class="k">Km el&eacute;ctricos que ganas</span><span class="v num" id="pk-km">&mdash;</span></div>
             <div class="kv"><span class="k">Te cuesta</span><span class="v num" id="pk-cost">&mdash;</span></div>
-            <div class="kv"><span class="k">En gasolina habr&iacute;an sido</span><span class="v num" id="pk-equiv">&mdash;</span></div>
+            <div class="kv"><span class="k" id="pk-equiv-k">En gasolina habr&iacute;an sido</span><span class="v num" id="pk-equiv">&mdash;</span></div>
             <div class="kv neg" id="pk-row-over" style="display:none;"><span class="k">Recargo por exceso</span><span class="v num" id="pk-over">&mdash;</span></div>
           </div>
           <div class="note" id="pk-note"></div>
@@ -189,7 +199,7 @@
             <div class="kv"><span class="k">Cargar&aacute;s</span><span class="v num" id="tr-kwh">&mdash;</span></div>
             <div class="kv"><span class="k">Km el&eacute;ctricos que ganas</span><span class="v num" id="tr-km">&mdash;</span></div>
             <div class="kv"><span class="k">Te cuesta</span><span class="v num" id="tr-cost">&mdash;</span></div>
-            <div class="kv"><span class="k">En gasolina habr&iacute;an sido</span><span class="v num" id="tr-equiv">&mdash;</span></div>
+            <div class="kv"><span class="k" id="tr-equiv-k">En gasolina habr&iacute;an sido</span><span class="v num" id="tr-equiv">&mdash;</span></div>
             <div class="kv neg" id="tr-row-over" style="display:none;"><span class="k">Recargo por exceso</span><span class="v num" id="tr-over">&mdash;</span></div>
             <div class="kv neg" id="tr-row-detour" style="display:none;"><span class="k">Menos el desv&iacute;o</span><span class="v num" id="tr-detour">&mdash;</span></div>
           </div>
@@ -289,6 +299,31 @@
   <section class="tab-panel" id="tab-ajustes" aria-labelledby="tabbtn-ajustes" hidden>
     <header class="topbar"><h1 class="brand">Ajustes</h1></header>
 
+    <section class="section" aria-labelledby="t-casa-aj">
+      <div class="s-head"><h2 class="s-title" id="t-casa-aj">Cargar en casa</h2></div>
+      <p class="lead">Si cargas en casa, un cargador p&uacute;blico no te ahorra gasolina: te ahorra la carga de esa noche. Con estos datos, Calcular te pregunta si vas a cargar en casa antes de gastar la bater&iacute;a y, si es as&iacute;, compara con lo que te costar&iacute;a en casa.</p>
+      <div class="card"><div class="pad">
+        <p class="r-nota" id="casa-estado" style="padding:0 0 12px"></p>
+        <div class="err" id="casa-err"></div>
+        <div class="field-row">
+          <div class="field">
+            <label for="casa-precio">Lo que pagas en casa</label>
+            <div class="field-input-wrap"><input class="num" id="casa-precio" type="number" inputmode="decimal" step="0.001" placeholder="0.12"><span class="field-unit">&euro;/kWh</span></div>
+            <div class="field-hint">Con tarifa por horas, el de las horas en que cargas (normalmente valle)</div>
+          </div>
+          <div class="field">
+            <label for="casa-potencia">Potencia</label>
+            <div class="field-input-wrap"><input class="num" id="casa-potencia" type="number" inputmode="decimal" step="0.1" placeholder="2.3"><span class="field-unit">kW</span></div>
+            <div class="field-hint">Enchufe normal: 2,3. Wallbox: la suya (3,7, 7,4&hellip;)</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn secondary" id="casa-borrar" type="button">No cargo en casa</button>
+          <button class="btn primary" id="casa-save" type="button">Guardar</button>
+        </div>
+      </div></div>
+    </section>
+
     <section class="section" aria-labelledby="t-descuentos">
       <div class="s-head"><h2 class="s-title" id="t-descuentos">Descuentos en la gasolina</h2></div>
       <p class="lead">Si pagas menos que el precio del surtidor (una app de fidelizaci&oacute;n, una tarjeta que devuelve un %&hellip;), ap&uacute;ntalo aqu&iacute;. Se aplica al tocar una gasolinera de esa marca en Calcular; nunca a la media ni al precio escrito a mano.</p>
@@ -340,7 +375,7 @@
         <details><summary>El consumo en h&iacute;brido</summary><p>Es lo que gasta tu coche cuando la bater&iacute;a est&aacute; en su nivel m&iacute;nimo y toda la energ&iacute;a sale del dep&oacute;sito. Pesa tanto como el consumo el&eacute;ctrico: si es bajo, la gasolina parece m&aacute;s barata de lo que es. Adem&aacute;s, la app lo usa para descontar los km que hizo el motor en tus medidas el&eacute;ctricas, as&iacute; que al medirlo esas medidas se recalculan solas. No sirven la cifra combinada que se anuncia (1&ndash;2 L/100km) ni el promedio acumulado del ordenador de a bordo, porque mezclan km hechos con electricidad de la red. M&iacute;delo en Mi coche: empieza y acaba con la bater&iacute;a en el mismo nivel, el m&aacute;s bajo que mantenga tu coche, sin enchufar entre medias. Igual que el el&eacute;ctrico, va por climatizaci&oacute;n.</p></details>
         <details><summary>Lo que la climatizaci&oacute;n no cubre</summary><p>Si no has medido el consumo en h&iacute;brido con la climatizaci&oacute;n elegida, se usa el que declaraste. Y muchos h&iacute;bridos enchufables arrancan el motor de gasolina para calentar el habit&aacute;culo; si el tuyo lo hace, la app trata esos litros como si hubieran movido el coche, as&iacute; que tus medidas con calefacci&oacute;n saldr&aacute;n algo m&aacute;s bajas de lo real. Si tu coche tiene precalentamiento con el coche enchufado, el calor sale de la red y no de la bater&iacute;a, que es mucho mejor negocio.</p></details>
         <details><summary>Cargadores guardados</summary><p>Guarda los puntos donde cargas para no reescribir sus datos. Toca uno para usarlo; para cambiarlo o borrarlo, usa &laquo;Editar&raquo; debajo de la fila o &laquo;Ver todos&raquo;. El reloj indica que ese punto cobra un recargo si ocupas la plaza demasiado tiempo, y la app te avisa de a qu&eacute; hora desconectar.</p></details>
-        <details><summary>Cargar en casa</summary><p>Se configura como un cargador m&aacute;s, con su potencia y su precio. Si tienes tarifa por horas, guarda dos (&laquo;Casa valle&raquo; y &laquo;Casa punta&raquo;) y alterna entre ellos. Ojo con el enchufe normal: a 2,3 kW se pierde mucha m&aacute;s energ&iacute;a que en una wallbox, y de los mismos kWh facturados sacas alrededor de un 18% menos de kil&oacute;metros. En hora punta y con enchufe dom&eacute;stico, cargar puede llegar a no compensar frente a la gasolina.</p></details>
+        <details><summary>Cargar en casa</summary><p>Si cargas en casa, apunta en Ajustes lo que pagas por kWh y la potencia de tu enchufe o wallbox. Desde entonces Calcular te pregunta si vas a cargar en casa antes de gastar la bater&iacute;a. Si dices que s&iacute;, cada kWh que metas en un cargador p&uacute;blico es uno que esa noche no cargas en casa, as&iacute; que la app compara con lo que te costar&iacute;a meter esa misma energ&iacute;a en casa, no con la gasolina. Si dices que no (vas de viaje, o el trayecto gasta m&aacute;s bater&iacute;a de la que tienes), compara con la gasolina. Cuando est&eacute;s cargando en casa, responde que no: lo que quieres saber es si te compensa frente a la gasolina. Para eso tambi&eacute;n puedes guardar tu casa como un cargador m&aacute;s; con tarifa por horas, guarda dos (&laquo;Casa valle&raquo; y &laquo;Casa punta&raquo;) y alterna entre ellos. Ojo con el enchufe normal: a 2,3 kW se pierde mucha m&aacute;s energ&iacute;a que en una wallbox, y de los mismos kWh facturados sacas alrededor de un 18% menos de kil&oacute;metros. En hora punta y con enchufe dom&eacute;stico, cargar puede llegar a no compensar frente a la gasolina.</p></details>
         <details><summary>Cargar gratis</summary><p>Cuando no pagas nada, la app no decide: solo te dice a cu&aacute;nta gasolina equivale. Gu&aacute;rdala igualmente en el historial, porque suele ser de donde sale la mayor parte del ahorro de tener un enchufable. Excepci&oacute;n: si el punto es gratuito solo un rato y luego cobra por minuto, s&iacute; hace falta el c&aacute;lculo completo, y ah&iacute; es donde m&aacute;s dinero se pierde por descuido.</p></details>
         <details><summary>Buscar gasolineras</summary><p>Usa tu ubicaci&oacute;n y los precios oficiales del Ministerio, actualizados a diario. Solo funciona en Espa&ntilde;a. Toca una gasolinera de la lista para usar su precio exacto. Si no quieres dar tu ubicaci&oacute;n, o vas a repostar en otro sitio, escribe un c&oacute;digo postal o el nombre de un municipio: ver&aacute;s las m&aacute;s cercanas a su centro, aunque all&iacute; no haya ninguna. Solo se buscan las de su provincia, as&iacute; que cerca del l&iacute;mite con otra pueden faltar algunas.</p></details>
         <details><summary>Descuentos en la gasolina</summary><p>Si repostas con una app de fidelizaci&oacute;n o con una tarjeta que te devuelve parte del gasto, la gasolina te sale m&aacute;s barata que el precio del surtidor, y cargar compensa algo menos. Ap&uacute;ntalo en Ajustes: cu&aacute;nto (en c&eacute;ntimos por litro o en %) y en qu&eacute; marcas vale. Al tocar en Calcular una gasolinera de esa marca, la lista y el c&aacute;lculo usan lo que pagas t&uacute;, y debajo del precio lo dice. La media de la zona y el precio que escribas a mano se usan tal cual. Con unos pocos c&eacute;ntimos el veredicto apenas cambia; lo que s&iacute; cambia a menudo es qu&eacute; gasolinera te sale m&aacute;s barata.</p></details>

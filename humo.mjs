@@ -776,6 +776,64 @@ const enUso = (dom, id) => parseFloat(dom.get(id).textContent.replace(',', '.'))
   dom.desmontar();
 }
 
+// ---------- 18. carga en casa: comparar con casa ----------
+// Cargador público a 0,25 €/kWh: frente a la gasolina compensa; frente a casa a 0,10, no.
+{
+  const dom = montar({
+    'cvg_schema':'3',
+    'cvg_profiles_v1': JSON.stringify({ list:[{ id:'v1', name:'A', battery:18, maxPower:6.6,
+      elecCons:22, fuelCons:5, chargeEff:86, chem:'lfp' }], activeId:'v1' }),
+    'cvg_session_v1': JSON.stringify({ chargerPrice:0.25, fuelPrice:1.744, chargerPower:7.4,
+      currentSoc:30, parkHours:2, sessionKwh:12, detourKm:0, sessionFee:0, pricingMode:0, pricePerMin:0 }),
+    'cvg_mode_v1':'parked'
+  });
+  const { iniciar, _test } = await import('./js/interfaz.js?18');
+  iniciar();
+  const badge = () => dom.get('badge').textContent;
+
+  ok('sin casa configurada, la pregunta no aparece', dom.get('sec-casa').classList.contains('hidden'));
+  ok('...y se compara con la gasolina', badge() === 'Compensa cargar', badge());
+  ok('Ajustes dice que no cargas en casa', dom.get('casa-estado').textContent.includes('No has indicado'));
+
+  // un precio imposible no se guarda
+  dom.get('casa-precio').value = '10'; dom.get('casa-potencia').value = '2.3';
+  dom.click('casa-save');
+  ok('un precio imposible se rechaza', dom.store['cvg_casa_v1'] === undefined && dom.get('casa-err').classList.contains('show'));
+
+  dom.get('casa-precio').value = '0.10'; dom.get('casa-potencia').value = '7.4';
+  dom.click('casa-save');
+  ok('se guarda la casa', JSON.parse(dom.store['cvg_casa_v1'] || 'null')?.precio === 0.1, dom.store['cvg_casa_v1']);
+  ok('...y Ajustes lo dice', dom.get('casa-estado').textContent.includes('0,100'), dom.get('casa-estado').textContent);
+  ok('la pregunta aparece en Calcular, con «sí» por defecto', !dom.get('sec-casa').classList.contains('hidden') &&
+     dom.get('casa-si').classList.contains('active'));
+  ok('frente a casa a 0,10, mejor esperar', badge() === 'Mejor esperar a casa', badge());
+  ok('la etiqueta lo dice', dom.get('amount-label').textContent.includes('frente a casa'), dom.get('amount-label').textContent);
+  ok('el detalle da los dos costes', dom.get('detail').textContent.includes('en casa te costaría'), dom.get('detail').textContent);
+  ok('la fila de la alternativa cambia de nombre', dom.get('pk-equiv-k').textContent === 'En casa te habría costado');
+  ok('...y la nota lo explica', dom.get('pk-note').textContent.includes('cargar en casa'), dom.get('pk-note').textContent);
+
+  dom.click('btn-save-parked');
+  const h = JSON.parse(dom.store['cvg_hist_v1']);
+  ok('la recarga se guarda marcada como frente a casa', h[0].vs === 'casa' && h[0].savings < 0);
+  ok('...y el historial lo avisa', dom.get('hist-note').textContent.includes('con cargar en casa') &&
+     dom.get('hist-list').innerHTML.includes('frente a casa'), dom.get('hist-note').textContent);
+
+  // «no»: de viaje, o cargando en casa ahora mismo
+  dom.click('casa-no');
+  ok('al responder que no, vuelve a la gasolina', badge() === 'Compensa cargar' &&
+     dom.get('pk-equiv-k').textContent === 'En gasolina habrían sido', badge());
+  ok('la respuesta se recuerda', dom.store['cvg_vscasa_v1'] === '0' && dom.get('casa-no').classList.contains('active'));
+  dom.click('btn-save-parked');
+  ok('esa recarga se guarda frente a la gasolina', JSON.parse(dom.store['cvg_hist_v1'])[1].vs === 'gasolina');
+  dom.click('casa-si');
+
+  _test.borrarCasa();
+  ok('al decir que no cargas en casa, la pregunta desaparece y vuelve la gasolina',
+     dom.get('sec-casa').classList.contains('hidden') && badge() === 'Compensa cargar' &&
+     dom.store['cvg_casa_v1'] === undefined, badge());
+  dom.desmontar();
+}
+
 // ---------- resumen ----------
 console.log('='.repeat(50));
 if(falla){

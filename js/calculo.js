@@ -44,16 +44,46 @@ export function taper(chem, cRate){
   };
 }
 
+/** Parte de los kWh facturados que llega a la batería a esa potencia. */
+function eficienciaA(power, chargeEff){
+  return clamp(clamp(chargeEff, 1, 100) / 100 * efficiencyPenalty(power), 0.30, 0.99);
+}
+
+/**
+ * Lo que costaría meter en casa la misma energía en la batería. A otra potencia
+ * se pierde otra cantidad (un enchufe normal pierde más que una wallbox), así
+ * que los kWh facturados en casa no son los mismos que aquí. La potencia de casa
+ * también la limita lo que admita el coche.
+ */
+export function costeEnCasa(energyIn, casa, chargeEff, maxPower){
+  if(!casa || !(energyIn > 0)) return 0;
+  const power = maxPower > 0 ? Math.min(casa.potencia, maxPower) : casa.potencia;
+  return energyIn / eficienciaA(power, chargeEff) * casa.precio;
+}
+
+/** Valida los datos de la carga en casa. Devuelve {ok, precio, potencia} o {ok:false, error}. */
+export function buildCasa({ precio, potencia }){
+  const fail = error => ({ ok: false, error });
+  if(!isFinite(precio) || precio < 0) return fail('Indica lo que pagas por kWh en casa.');
+  if(precio > 1) return fail('Más de 1 €/kWh no es creíble para casa. Revisa la cifra.');
+  if(!isFinite(potencia) || potencia <= 0) return fail('Indica la potencia del enchufe o la wallbox.');
+  if(potencia > 22) return fail('En casa no se carga a más de 22 kW. Revisa la cifra.');
+  return { ok: true, precio, potencia };
+}
+
 /**
  * Calcula una sesión de carga completa.
  * Es la única fuente de verdad: la usan tanto el veredicto como la hora límite.
+ * Con `c.casa` ({precio, potencia}) la alternativa es cargar esa misma energía en
+ * casa (el usuario va a llegar a casa antes de gastar la batería); sin él, la
+ * gasolina. El desvío se sigue valorando en gasolina: son km de más.
  */
 export function simulate(c){
   const power = Math.min(c.chargerPower, c.maxPower > 0 ? c.maxPower : c.chargerPower);
   const powerCapped = c.maxPower > 0 && c.chargerPower > c.maxPower;
 
   const penalty = efficiencyPenalty(power);
-  const eff = clamp(clamp(c.chargeEff, 1, 100) / 100 * penalty, 0.30, 0.99);
+  const eff = eficienciaA(power, c.chargeEff);
 
   const cRate = c.battery > 0 ? power / c.battery : 0;
   const { knee: KNEE, slow: SLOW } = taper(c.chem, cRate);
@@ -100,7 +130,10 @@ export function simulate(c){
   const km = c.elecCons > 0 ? (energyIn / c.elecCons) * 100 : 0;
   const sessionCost = energyCost + overCost + (c.sessionFee || 0);
   const equivFuel = costPerKmFuel * km;
-  const gross = equivFuel - sessionCost;
+  const vs = c.casa ? 'casa' : 'gasolina';
+  const homeCost = c.casa ? costeEnCasa(energyIn, c.casa, c.chargeEff, c.maxPower) : 0;
+  const altCost = c.casa ? homeCost : equivFuel;   // lo que te habría costado la alternativa
+  const gross = altCost - sessionCost;
   const detourCost = (c.mode === 'trip' ? Math.max(0, c.detourKm) : 0) * 2 * costPerKmFuel;
   const net = gross - detourCost;
 
@@ -108,7 +141,7 @@ export function simulate(c){
     power, powerCapped, eff, effReduced: penalty < 1,
     sessionKwh, capped, energyIn, finalSoc, chargeHours, occupiedHours, nothingToCharge,
     energyCost, overCost, overHours,
-    km, sessionCost, equivFuel, gross, detourCost, net,
+    km, sessionCost, equivFuel, vs, homeCost, altCost, gross, detourCost, net,
     effectivePerKwh: sessionKwh > 0 ? energyCost / sessionKwh : 0
   };
 }

@@ -20,6 +20,8 @@ const K = {
   lugar:    'cvg_lugar_v1',
   descuentos: 'cvg_descuentos_v1', // descuentos en la gasolina: del usuario, no del vehículo
   estacion:   'cvg_estacion_v1',   // gasolinera elegida {name, price}, para saber su marca
+  casa:       'cvg_casa_v1',       // carga en casa {precio, potencia}: de la casa, no del vehículo
+  vsCasa:     'cvg_vscasa_v1',     // '1' si vas a cargar en casa antes de gastar la batería
   hist:     id => 'cvg_hist_'  + id,
   calib:    id => 'cvg_calib_' + id,
   meas:     id => 'cvg_meas_'  + id,
@@ -117,6 +119,16 @@ export const setParkUnit = u => lsSet(K.parkUnit, u === 'min' ? 'min' : 'h');
 // Se guarda el texto tal cual lo escribió el usuario, no el resultado.
 export const getLugar = () => ls(K.lugar) || '';
 export const setLugar = t => lsSet(K.lugar, String(t || '').trim());
+
+// ---------- CARGA EN CASA ----------
+// Claves nuevas (desde 2026-11-07-8), sin cambiar nada de lo guardado: no hay migración.
+export const loadCasa = () => lsJSON(K.casa, null);
+export function saveCasa(c){
+  if(c) lsPut(K.casa, { precio: c.precio, potencia: c.potencia }); else lsDel(K.casa);
+}
+// Por defecto sí: quien configura la casa es porque suele volver a cargar allí.
+export const getVsCasa = () => ls(K.vsCasa) !== '0';
+export const setVsCasa = on => lsSet(K.vsCasa, on ? '1' : '0');
 
 // ---------- DESCUENTOS EN LA GASOLINA ----------
 // Claves nuevas (desde 2026-11-07-7), sin cambiar nada de lo guardado: no hay migración.

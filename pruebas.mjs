@@ -466,6 +466,54 @@ seccion('Consumo en híbrido medido (vale para cualquier PHEV)');
      bajo.net < real.net && bajo.equivFuel < real.equivFuel / 2 + 1e-9, `${bajo.net.toFixed(2)} vs ${real.net.toFixed(2)}`);
 }
 
+// ================= CARGA EN CASA =================
+seccion('Carga en casa: comparar con casa en vez de con la gasolina');
+
+{
+  const { costeEnCasa, buildCasa } = calculo;
+  const pub = { ...base('parked'), chargerPrice:0.30 };   // 6,6 kW, eficiencia 86 %
+  const sinCasa = simulate(pub);
+  ok('sin casa, como siempre: frente a la gasolina', sinCasa.vs === 'gasolina' && sinCasa.altCost === sinCasa.equivFuel &&
+     sinCasa.homeCost === 0);
+
+  // wallbox de 7,4 kW: el coche la limita a 6,6, sin pérdidas de más -> mismos kWh facturados que aquí
+  const wallbox = { precio:0.12, potencia:7.4 };
+  const conCasa = simulate({ ...pub, casa: wallbox });
+  ok('con casa: se compara con casa', conCasa.vs === 'casa' && conCasa.altCost === conCasa.homeCost);
+  casi('misma energía en casa a la misma eficiencia: kWh × precio de casa', conCasa.homeCost, conCasa.sessionKwh * 0.12, 1e-9);
+  casi('ahorro = casa − aquí', conCasa.net, conCasa.sessionKwh * (0.12 - 0.30), 1e-9);
+  ok('público a 0,30 frente a casa a 0,12: no compensa, aunque frente a la gasolina sí',
+     conCasa.net < 0 && sinCasa.net > 0, `${conCasa.net.toFixed(2)} / ${sinCasa.net.toFixed(2)}`);
+  ok('la energía y los km no cambian: solo la alternativa', conCasa.energyIn === sinCasa.energyIn && conCasa.km === sinCasa.km);
+
+  // con un enchufe normal se pierde más: meter la misma energía cuesta más kWh
+  const schuko = simulate({ ...pub, casa: { precio:0.12, potencia:2.3 } });
+  casi('enchufe de 2,3 kW: pierde un 18 % más (penalización 0,82)', schuko.homeCost, conCasa.homeCost / 0.82, 1e-9);
+  casi('costeEnCasa coincide con simulate()', costeEnCasa(conCasa.energyIn, wallbox, pub.chargeEff, pub.maxPower), conCasa.homeCost, 1e-9);
+  ok('sin energía, sin coste en casa', costeEnCasa(0, wallbox, 86, 6.6) === 0);
+
+  ok('un público más barato que casa sí compensa', simulate({ ...pub, chargerPrice:0.08, casa: wallbox }).net > 0);
+  const gratis = simulate({ ...pub, chargerPrice:0, casa: wallbox });
+  casi('gratis frente a casa: te ahorras lo que costaría en casa', gratis.net, gratis.homeCost, 1e-9);
+
+  // el desvío son km de más: se sigue valorando en gasolina
+  const viaje = { ...base('trip'), detourKm:3, chargerPrice:0.30 };
+  ok('el desvío cuesta lo mismo con y sin casa',
+     simulate({ ...viaje, casa: wallbox }).detourCost === simulate(viaje).detourCost && simulate(viaje).detourCost > 0);
+
+  // la hora límite del recargo también es frente a casa: llega antes, porque casa es más barata que la gasolina
+  const merc = { ...base('parked'), chargerPrice:0.05, chargerPower:7.4, freeHours:1.5, overMin:0.07 };
+  const limG = findLimitHours(merc), limC = findLimitHours({ ...merc, casa: wallbox });
+  ok('con casa, el recargo se come el ahorro antes', limG !== null && limC !== null && limC < limG, `${limC} vs ${limG}`);
+
+  // validación
+  ok('casa válida', buildCasa({ precio:0.12, potencia:2.3 }).ok);
+  ok('casa gratis (placas solares) también vale', buildCasa({ precio:0, potencia:7.4 }).ok);
+  ok('rechaza sin precio o negativo', !buildCasa({ precio:NaN, potencia:2.3 }).ok && !buildCasa({ precio:-1, potencia:2.3 }).ok);
+  ok('rechaza más de 1 €/kWh (errata)', !buildCasa({ precio:12, potencia:2.3 }).ok);
+  ok('rechaza sin potencia o de más de 22 kW', !buildCasa({ precio:0.12, potencia:0 }).ok && !buildCasa({ precio:0.12, potencia:50 }).ok);
+}
+
 // ================= DESCUENTOS EN LA GASOLINA =================
 seccion('Descuentos en la gasolina');
 

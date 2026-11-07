@@ -43,7 +43,8 @@ Todo lo que guardes se queda en tu móvil. No se envía a ningún sitio.
 - **Mi coche:** datos del vehículo (con sus consumos *declarados*) y cambio de vehículo,
   los **consumos que usa el cálculo** (medidos o declarados, y de dónde sale cada uno),
   tus medidas, el cuidado de la batería, el historial y la copia de seguridad.
-- **Ajustes:** tus descuentos en la gasolina (valen para todos tus vehículos).
+- **Ajustes:** si cargas en casa (precio y potencia) y tus descuentos en la gasolina.
+  Valen para todos tus vehículos.
 - **Ayuda:** las explicaciones de cómo funciona la app.
 
 Los consumos no se pueden escribir a mano en ningún sitio salvo en los datos del
@@ -414,7 +415,8 @@ Cambia el modo oscuro de tu móvil (Ajustes → Pantalla y brillo).
 **9.6 — Que no se pierda nada**
 Cierra la app del todo y vuelve a abrirla: debe conservar vehículos, cargadores,
 historial, calibración, medidas, modo de tarifa, la unidad de tiempo, la
-climatización elegida, el modo en que estabas, tus descuentos y, si habías tocado
+climatización elegida, el modo en que estabas, tu carga en casa y la respuesta a
+"¿Vas a cargar en casa antes…?", tus descuentos y, si habías tocado
 una gasolinera con descuento, la línea «Pagas…» debajo del precio.
 
 **9.7 — Copia de seguridad**
@@ -571,6 +573,35 @@ en %, y en qué marcas, como salen en la lista de gasolineras.
 - Anota en la ficha (sección 14) qué descuentos tienes y si alguna marca no casaba
   con el rótulo que da el Ministerio.
 
+**9.14 — Si cargas en casa** ⭐
+Solo si cargas en casa de verdad: es la prueba que necesitamos de ti. En **Ajustes →
+Cargar en casa**, pon lo que pagas por kWh cuando cargas en casa (con tarifa por horas,
+el de las horas en que cargas) y la potencia de tu enchufe (2,3 kW) o de tu wallbox.
+
+- **Rechazos esperados:** sin precio; más de 1 €/kWh; sin potencia; más de 22 kW. Un
+  precio de 0 (placas solares) sí vale.
+- **En Calcular** aparece, debajo de Gasolina, "¿Vas a cargar en casa antes de gastar
+  esta batería?", con **Sí** marcado. Sin la casa configurada no debe aparecer.
+- **Con "Sí"**, el resultado compara con lo que te costaría meter **la misma energía**
+  en casa: el veredicto dice "Compensa cargar aquí" o "Mejor esperar a casa", la
+  etiqueta añade "frente a casa", y la fila "En casa te habría costado" sustituye a la
+  de la gasolina. **La cuenta:** con tu wallbox, kWh de esta recarga × precio de casa.
+  Con un enchufe normal (2,3 kW) sale **un 18% más caro** que eso, porque se pierde
+  más energía por el camino.
+- **Ejemplo:** público a 0,25 €/kWh y casa a 0,10 → "Mejor esperar a casa", aunque
+  frente a la gasolina compensaría.
+- **Con "No"** (vas de viaje, no llegarás a casa antes de gastar la batería, o estás
+  cargando en casa ahora mismo) vuelve a compararse con la gasolina, como siempre.
+- **El desvío** del modo "Paro a propósito" se sigue valorando en gasolina.
+- **Con recargo por tiempo**, la hora límite llega **antes** frente a casa que frente a
+  la gasolina: hay menos ahorro que el recargo puede comerse.
+- **Historial:** las recargas guardadas con "Sí" llevan "· frente a casa" y la nota de
+  abajo dice cuántas se compararon con casa.
+- **Lo que no cubre:** si llegas a casa pero el trayecto gasta más batería de la que
+  tienes, parte de la carga pública ahorra gasolina y parte ahorra casa. La app no lo
+  reparte: elige la respuesta que más se parezca a tu caso y **anótalo en la ficha**,
+  porque nos dirá si hace falta.
+
 ---
 
 ## 10. Validación con una recarga real ⭐
@@ -726,6 +757,9 @@ Eficiencia usada (%):
 
 ── TU USO ──────────────────────────────────
 ¿Cargas en casa?          Sí / No
+  Precio en casa: ___ €/kWh · enchufe / wallbox de ___ kW · ¿tarifa por horas? Sí / No
+  ¿Cuántas veces respondiste "Sí, comparar con casa"? ___  ¿Y "No"? ___
+  ¿Te pasó llegar a casa con el trayecto gastando más batería de la que tenías? Sí / No
 ¿Dónde cargas normalmente?
 ¿Has visto cargadores que cobren por minuto?
 ¿Cuántas veces usaste la app?

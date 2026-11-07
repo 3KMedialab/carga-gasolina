@@ -163,6 +163,13 @@ cuesta cero: te cuesta 3 € de ahorro al que renuncias.
 
 **Depende de:** confirmar que el caso se te da en la práctica y no es teórico.
 
+**Hecho el caso de casa** *(7 de noviembre, lo piden dos testers que cargan en
+casa)*: si configuras la carga en casa en Ajustes y respondes que vas a cargar en
+casa antes de gastar la batería, el cálculo compara con meter esa misma energía en
+casa, no con la gasolina. Pendiente, solo si los testers lo echan en falta: repartir
+el caso mixto (llegar a casa gastando más batería de la que hay), que necesita los
+km hasta casa y el nivel mínimo real de la batería.
+
 ---
 
 ## Sin fecha — a la espera de datos de los testers
