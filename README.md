@@ -12,6 +12,9 @@ esperar a llegar.
 En el móvil, ábrela y añádela a la pantalla de inicio (en iPhone, desde Safari). Funciona
 sin cobertura una vez abierta con conexión.
 
+**Cómo se usa:** el [manual de usuario](MANUAL.md), paso a paso. Dentro de la app, la
+pestaña Ayuda empieza con una guía rápida.
+
 ## Qué hace
 
 - **Veredicto al momento**: compensa cargar o mejor repostar, con el ahorro en euros,
@@ -40,6 +43,7 @@ y de cargadores. El detalle, en [PRIVACIDAD.md](PRIVACIDAD.md).
 
 | Documento | Para qué |
 |---|---|
+| [MANUAL.md](MANUAL.md) | Cómo se usa, paso a paso |
 | [plan-de-pruebas.md](plan-de-pruebas.md) | Probar la app con tu coche y contarnos qué falla |
 | [CAMBIOS.md](CAMBIOS.md) | Qué ha cambiado en cada versión |
 | [PRIVACIDAD.md](PRIVACIDAD.md) | Qué se guarda y qué sale del móvil |

@@ -54,7 +54,9 @@ cargadores, y "Buscar" envía el código postal o municipio que escribas. El det
   tus medidas, el cuidado de la batería, el historial y la copia de seguridad.
 - **Ajustes:** si cargas en casa (precio y potencia) y tus descuentos en la gasolina.
   Valen para todos tus vehículos.
-- **Ayuda:** las explicaciones de cómo funciona la app.
+- **Ayuda:** una guía rápida con el botón **"Manual completo"** (abre el manual de
+  usuario en el navegador; con la app instalada, debe abrirse fuera de ella y poder
+  volver), las explicaciones de cómo funciona cada cosa y, al final, la versión.
 
 Los consumos no se pueden escribir a mano en ningún sitio salvo en los datos del
 vehículo: el cálculo usa el medido o, si no lo hay, el declarado.

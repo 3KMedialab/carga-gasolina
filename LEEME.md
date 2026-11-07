@@ -30,7 +30,7 @@ Se despliega subiendo los archivos tal cual a GitHub Pages.
 ## Al hacer un cambio
 
 1. Editar el módulo que toque.
-2. `node pruebas.mjs` — 228 comprobaciones del cálculo, las mediciones
+2. `node pruebas.mjs` — 231 comprobaciones del cálculo, las mediciones
    (eléctricas y del consumo en híbrido), la climatización, la carga en
    casa, los descuentos, los cargadores públicos y las gasolineras.
 3. `node humo.mjs` — arranca la app entera contra un DOM simulado
@@ -42,7 +42,8 @@ Se despliega subiendo los archivos tal cual a GitHub Pages.
    `js/`, por ejemplo), ponlo en `ARCHIVOS` de `sw.js`: si no, sin
    cobertura la app no abre. `pruebas.mjs` lo comprueba.
 6. Si el cambio se ve en la app, añade su entrada en `CAMBIOS.md` y
-   actualiza `plan-de-pruebas.md`. Si llama a un servicio externo nuevo o
+   actualiza `plan-de-pruebas.md` y `MANUAL.md` (y la guía rápida de Ayuda,
+   si cambia uno de sus pasos). Si llama a un servicio externo nuevo o
    envía algo distinto, actualiza `PRIVACIDAD.md`.
 
 ## Documentos
@@ -50,6 +51,7 @@ Se despliega subiendo los archivos tal cual a GitHub Pages.
 | Documento | Para quién | Qué es |
 |---|---|---|
 | `README.md` | quien llega al repositorio | Qué es la app, dónde abrirla y enlaces |
+| `MANUAL.md` | usuarios | Cómo se usa, por tareas; Ayuda lo resume y enlaza a él |
 | `plan-de-pruebas.md` | testers | Manual para probar la app con tu coche, sea cual sea |
 | `CAMBIOS.md` | testers y usuarios | Qué cambia en cada versión y dónde se prueba |
 | `PRIVACIDAD.md` | testers y usuarios | Qué se guarda en el móvil y qué sale de él |

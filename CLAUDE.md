@@ -32,7 +32,7 @@ node humo.mjs      # arranca interfaz.js entera contra un DOM simulado (dom-fals
 
 ### Qué cubre cada uno
 
-- `pruebas.mjs` está dividido en secciones con `seccion('...')`: invariantes del cálculo, límites físicos, química/curva de carga, recarga real de referencia (Atto 2 DM-i), climatización (R medido por grupo), recargo por tiempo, tarifa por minuto, mediciones reales, consumo en híbrido medido, carga en casa, descuentos en la gasolina, cargadores públicos (OCM) y gasolineras por código postal o municipio (`gasolineras.js`). No toca la red ni el DOM.
+- `pruebas.mjs` está dividido en secciones con `seccion('...')`: invariantes del cálculo, límites físicos, química/curva de carga, recarga real de referencia (Atto 2 DM-i), climatización (R medido por grupo), recargo por tiempo, tarifa por minuto, mediciones reales, consumo en híbrido medido, carga en casa, descuentos en la gasolina, cargadores públicos (OCM), gasolineras por código postal o municipio (`gasolineras.js`) y modo sin conexión (lista de `sw.js`, manifest, versión y enlace al manual). No toca la red ni el DOM.
 - `humo.mjs` son 18 escenarios numerados (app vacía, app con datos, carga gratuita, migración de cargadores antiguos, mediciones, búsqueda de cargadores sin geolocalización, unidad del tiempo de aparcado, exportar/importar copia, gasolineras por CP/municipio con `fetch` simulado, último lugar recordado, climatización con sus propias medidas, migración al esquema 3, interfaz —pestañas, cargadores, tarifa, vehículos—, lista de gasolineras plegada, resultados de cargadores públicos plegables, consumo en híbrido medido, descuentos en la gasolina y carga en casa). Comprueba que la app arranca y reacciona, no los números del cálculo. El DOM simulado no lee atributos (`hidden`, `aria-*`) ni hace `querySelectorAll`: para probar un botón dentro de una lista, exporta la acción en `_test` (como `irA`, `elegirClima`, `usarCargador`).
 
 ### Salida y código de retorno
@@ -56,7 +56,7 @@ Tener `pruebas.mjs` y `humo.mjs` en verde, y el paso de versión descrito abajo 
 1. Editar el módulo que toque, y correr `pruebas.mjs` y `humo.mjs`.
 2. Cada despliegue necesita una versión nueva: cambiar `version.json` **y** la constante `VERSION` de `js/app.js` al mismo valor (formato `AAAA-MM-DD-N`). `app.js` compara su `VERSION` con `version.json` y recarga con `?v=` si difieren; sin esto los móviles con la app instalada siguen en la versión vieja.
 3. Si cambia la forma de lo guardado en localStorage: subir `SCHEMA` en `js/datos.js` y añadir su función en `MIGRATIONS` (se ejecuta sola en el arranque). Saltárselo ya dejó cargadores sin `id` y sin poder seleccionarse, sin síntoma visible.
-4. Si cambia algo visible para el usuario o un resultado que `plan-de-pruebas.md` da por esperado, actualizar ese manual en el mismo cambio.
+4. Si cambia algo visible para el usuario o un resultado que `plan-de-pruebas.md` da por esperado, actualizar ese manual en el mismo cambio. Lo mismo con `MANUAL.md` (cómo se usa) y, si cambia uno de sus pasos, la guía rápida de Ayuda (`#t-guia` en `index.html`). Los textos de los manuales usan las mismas etiquetas que la pantalla.
 5. Cada versión con algo visible para el usuario lleva su entrada en `CAMBIOS.md` (arriba del todo, en lenguaje de usuario, con el apartado del plan de pruebas que la cubre). Si añade una llamada externa o envía un dato nuevo, también `PRIVACIDAD.md`.
 
 ## Arquitectura
@@ -115,6 +115,7 @@ Capas de `js/` (dependencias hacia abajo):
 
 ## Documentos del proyecto
 
+- `MANUAL.md` — manual de usuario completo, por tareas y con las etiquetas de la pantalla. La guía rápida de Ayuda lo resume y enlaza a él en GitHub (`#btn-manual`, con `target="_blank"`: un enlace al propio dominio se abriría dentro de la app instalada, sin forma de volver). `pruebas.mjs` comprueba que el enlace apunta a un fichero que existe.
 - `README.md` — la portada del repositorio en GitHub: qué es la app, dónde abrirla y enlaces al resto. Para quien llega de fuera; sin detalle técnico.
 - `hoja-de-ruta.md` — prioridades y fases; orden: números erróneos > reducir incertidumbre > dinero real > peticiones concretas. Lo construido se marca con su fecha dentro de su fase.
 - `fase-0-plan.md` — el plan de recogida de datos del autor (sus mediciones con el Atto 2 y los testers). Es el único documento que puede ser específico de un coche.

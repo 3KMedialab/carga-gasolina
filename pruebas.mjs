@@ -937,6 +937,14 @@ seccion('Modo sin conexión (sw.js y manifest)');
   const vJson = JSON.parse(leer('version.json')).v;
   const vApp = (leer('js/app.js').match(/const VERSION = '([^']+)'/) || [])[1];
   ok('VERSION de app.js y version.json coinciden', vJson === vApp, vApp + ' / ' + vJson);
+
+  // la guía rápida de Ayuda remite al manual completo: que el enlace no quede roto
+  const enlace = (leer('index.html').match(/id="btn-manual" href="([^"]+)"/) || [])[1] || '';
+  const fichero = (enlace.match(/\/blob\/main\/([^/?#]+)$/) || [])[1];
+  ok('Ayuda enlaza al manual completo del repositorio', !!fichero && enlace.startsWith('https://github.com/'), enlace);
+  ok('...y ese fichero existe', !!fichero && existe(fichero), fichero);
+  // fuera de la app, para que con la app instalada se abra en el navegador y no sin forma de volver
+  ok('...y se abre en el navegador', /id="btn-manual"[^>]*target="_blank"[^>]*rel="noopener"/.test(leer('index.html')));
 }
 
 // ================= RESUMEN =================

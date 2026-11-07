@@ -8,6 +8,13 @@ plan de pruebas que lo cubre.
 
 ---
 
+## 2026-11-08-2 — Guía rápida y manual de usuario
+
+- **Ayuda empieza con una guía rápida**: los siete pasos para usar la app, de
+  configurar el coche a descargar la copia de seguridad.
+- Debajo, **"Manual completo"** abre en el navegador el manual de usuario detallado
+  (`MANUAL.md`). Necesita conexión.
+
 ## 2026-11-08-1 — La versión, a la vista
 
 - **Al final de la pestaña Ayuda** aparece la versión que tienes. Dila cuando nos
