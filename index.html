@@ -20,7 +20,7 @@
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-bolt" viewBox="0 0 24 24"><path fill="currentColor" d="M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.6z"/></symbol>
   <symbol id="i-car" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 16v-3.5L5.2 7a2 2 0 0 1 1.9-1.4h9.8A2 2 0 0 1 18.8 7L21 12.5V16a1 1 0 0 1-1 1h-1.5M5.5 17H4a1 1 0 0 1-1-1m2.5 1a1.75 1.75 0 1 0 3.5 0m-3.5 0a1.75 1.75 0 1 1 3.5 0m0 0h6m0 0a1.75 1.75 0 1 0 3.5 0m-3.5 0a1.75 1.75 0 1 1 3.5 0M4 12h16"/></symbol>
-  <symbol id="i-gear" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 7h10m4 0h2M4 17h2m4 0h10"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.8"/><circle cx="12" cy="17" r="1.2" fill="currentColor"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 7v5l3 2"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></symbol>
@@ -213,6 +213,21 @@
       <div class="card mt list" id="veh-row"></div>
     </section>
 
+    <section class="section" aria-labelledby="t-uso">
+      <div class="s-head"><h2 class="s-title" id="t-uso">Consumos que usa el c&aacute;lculo</h2></div>
+      <div class="card">
+        <div class="clima-g">
+          <div><div class="k">El&eacute;ctrico</div><div class="d" id="uso-elec-origen"></div></div>
+          <div class="v num" id="uso-elec">&mdash;</div>
+        </div>
+        <div class="clima-g">
+          <div><div class="k">Gasolina en h&iacute;brido</div><div class="d" id="uso-fuel-origen"></div></div>
+          <div class="v num" id="uso-fuel">&mdash;</div>
+        </div>
+        <p class="r-nota" id="uso-nota"></p>
+      </div>
+    </section>
+
     <section class="section" aria-labelledby="t-rinde">
       <div class="s-head"><h2 class="s-title" id="t-rinde">Lo que rinde de verdad</h2></div>
       <div class="card">
@@ -255,26 +270,6 @@
       </div>
       <button class="btn danger wide" id="btn-clear-history" type="button">Borrar historial</button>
     </section>
-  </section>
-
-  <!-- ======================= AJUSTES ======================= -->
-  <section class="tab-panel" id="tab-ajustes" aria-labelledby="tabbtn-ajustes" hidden>
-    <header class="topbar"><h1 class="brand">Ajustes</h1></header>
-
-    <section class="section" aria-labelledby="t-consumos">
-      <div class="s-head"><h2 class="s-title" id="t-consumos">Consumos del c&aacute;lculo</h2></div>
-      <div class="card">
-        <div class="row">
-          <label class="row-l" for="inp-elecConsumption"><span class="t">El&eacute;ctrico</span></label>
-          <div class="val"><input class="num" id="inp-elecConsumption" type="number" inputmode="decimal" step="0.5" value="22"><span class="u">kWh/100km</span></div>
-        </div>
-        <div class="row">
-          <label class="row-l" for="inp-fuelConsumption"><span class="t">Gasolina</span></label>
-          <div class="val"><input class="num" id="inp-fuelConsumption" type="number" inputmode="decimal" step="0.1" value="5.0"><span class="u">L/100km</span></div>
-        </div>
-        <p class="source" id="cons-hint"></p>
-      </div>
-    </section>
 
     <section class="section" aria-labelledby="t-copia">
       <div class="s-head"><h2 class="s-title" id="t-copia">Copia de seguridad</h2></div>
@@ -286,13 +281,18 @@
       <input type="file" id="inp-backup-file" accept="application/json" class="hidden">
       <p class="source" id="backup-note"></p>
     </section>
+  </section>
 
-    <section class="section" aria-labelledby="t-ayuda">
-      <div class="s-head"><h2 class="s-title" id="t-ayuda">Ayuda</h2></div>
+  <!-- ======================= AYUDA ======================= -->
+  <section class="tab-panel" id="tab-ayuda" aria-labelledby="tabbtn-ayuda" hidden>
+    <header class="topbar"><h1 class="brand">Ayuda</h1></header>
+
+    <section class="section" aria-label="Preguntas frecuentes">
       <div class="card help">
         <details><summary>C&oacute;mo se usa</summary><p>Pon el precio y la potencia del punto donde est&aacute;s, el precio de la gasolina y el estado de tu bater&iacute;a. Arriba ves si compensa enchufar y cu&aacute;nto ahorras o pierdes. Cada cambio se refleja al momento.</p></details>
         <details><summary>Ya iba a aparcar o paro a prop&oacute;sito</summary><p>Si ya ibas a aparcar, el tiempo no cuenta como coste, porque el coche iba a estar ah&iacute; de todas formas; solo limita cu&aacute;ntos kWh caben. Si paras solo para cargar, se descuenta el desv&iacute;o, porque son km que no habr&iacute;as hecho. El desv&iacute;o se valora a precio de gasolina, que es el supuesto m&aacute;s conservador.</p></details>
         <details><summary>Medir tu coche</summary><p>Los c&aacute;lculos parten de dos datos que nadie publica, as&iacute; que de entrada tienen un margen de error de un 30%. En Mi coche puedes medir el tuyo de verdad: carga hasta tu nivel habitual, anota el cuentakil&oacute;metros, conduce unos d&iacute;as y vuelve a cargar hasta el mismo nivel. Con 5 u 8 medidas el margen baja a un 5%. No hace falta agotar la bater&iacute;a: basta con volver siempre al mismo punto de carga, igual que se rellena una cantimplora hasta la misma marca.</p></details>
+        <details><summary>Declarado y medido</summary><p>Al configurar el coche escribes dos consumos: el el&eacute;ctrico y el de h&iacute;brido. Son los <em>declarados</em> y los ves en la ficha de Mi coche. Justo debajo, &laquo;Consumos que usa el c&aacute;lculo&raquo; muestra con qu&eacute; n&uacute;meros se est&aacute; calculando ahora mismo: el medido con la climatizaci&oacute;n elegida si ya lo has medido, o el declarado si no, y de d&oacute;nde sale cada uno. No se pueden escribir a mano: un valor inventado no ser&iacute;a ni medido ni declarado. Si quieres probar con otros, edita los datos del veh&iacute;culo.</p></details>
         <details><summary>La climatizaci&oacute;n</summary><p>La calefacci&oacute;n y el aire gastan bater&iacute;a, y cu&aacute;nto depende de tu coche (bomba de calor o resistencia), de la temperatura y de lo largos que sean tus trayectos. Por eso la app no aplica ning&uacute;n porcentaje inventado: cada medida lleva la climatizaci&oacute;n que usaste, y al calcular solo se usan las medidas hechas con la que vas a usar. Si todav&iacute;a no tienes ninguna con esa climatizaci&oacute;n, la app lo dice y usa el consumo declarado, con su margen del 30%. Tambi&eacute;n se anota si hizo fr&iacute;o: el fr&iacute;o afecta a la bater&iacute;a aunque no pongas la calefacci&oacute;n, pero de momento solo se guarda, hasta ver con datos reales cu&aacute;nto pesa.</p></details>
         <details><summary>El consumo en h&iacute;brido</summary><p>Es lo que gasta tu coche cuando la bater&iacute;a est&aacute; en su nivel m&iacute;nimo y toda la energ&iacute;a sale del dep&oacute;sito. Pesa tanto como el consumo el&eacute;ctrico: si es bajo, la gasolina parece m&aacute;s barata de lo que es. Adem&aacute;s, la app lo usa para descontar los km que hizo el motor en tus medidas el&eacute;ctricas, as&iacute; que al medirlo esas medidas se recalculan solas. No sirven la cifra combinada que se anuncia (1&ndash;2 L/100km) ni el promedio acumulado del ordenador de a bordo, porque mezclan km hechos con electricidad de la red. M&iacute;delo en Mi coche: empieza y acaba con la bater&iacute;a en el mismo nivel, el m&aacute;s bajo que mantenga tu coche, sin enchufar entre medias. Igual que el el&eacute;ctrico, va por climatizaci&oacute;n.</p></details>
         <details><summary>Lo que la climatizaci&oacute;n no cubre</summary><p>Si no has medido el consumo en h&iacute;brido con la climatizaci&oacute;n elegida, se usa el que declaraste. Y muchos h&iacute;bridos enchufables arrancan el motor de gasolina para calentar el habit&aacute;culo; si el tuyo lo hace, la app trata esos litros como si hubieran movido el coche, as&iacute; que tus medidas con calefacci&oacute;n saldr&aacute;n algo m&aacute;s bajas de lo real. Si tu coche tiene precalentamiento con el coche enchufado, el calor sale de la red y no de la bater&iacute;a, que es mucho mejor negocio.</p></details>
@@ -315,7 +315,7 @@
   <div class="tabbar-in" role="tablist">
     <button class="tab active" type="button" role="tab" id="tabbtn-calcular" data-tab="tab-calcular" aria-selected="true"><svg aria-hidden="true"><use href="#i-bolt"/></svg>Calcular</button>
     <button class="tab" type="button" role="tab" id="tabbtn-coche" data-tab="tab-coche" aria-selected="false"><svg aria-hidden="true"><use href="#i-car"/></svg>Mi coche</button>
-    <button class="tab" type="button" role="tab" id="tabbtn-ajustes" data-tab="tab-ajustes" aria-selected="false"><svg aria-hidden="true"><use href="#i-gear"/></svg>Ajustes</button>
+    <button class="tab" type="button" role="tab" id="tabbtn-ayuda" data-tab="tab-ayuda" aria-selected="false"><svg aria-hidden="true"><use href="#i-help"/></svg>Ayuda</button>
   </div>
 </nav>
 

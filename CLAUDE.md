@@ -75,7 +75,7 @@ Capas de `js/` (dependencias hacia abajo):
 
 ### Interfaz (`index.html`, `estilos.css`)
 
-- Tres pestañas (`tab-calcular`, `tab-coche`, `tab-ajustes`; `irA()` cambia entre ellas) con barra fija abajo. Calcular lleva el veredicto fijo arriba (`#verdict`, se compacta al bajar) y las secciones en el orden de la decisión: dónde cargas, gasolina, batería, climatización, la recarga.
+- Tres pestañas (`tab-calcular`, `tab-coche`, `tab-ayuda`; `irA()` cambia entre ellas) con barra fija abajo. Calcular lleva el veredicto fijo arriba (`#verdict`, se compacta al bajar) y las secciones en el orden de la decisión: dónde cargas, gasolina, batería, climatización, la recarga.
 - Las fichas (`overlay`, `meas-overlay`, `ch-overlay`, `chs-overlay`) suben desde abajo; `openOverlay(id, on)` pone o quita `.open`. La del vehículo no se cierra tocando fuera: la primera vez es obligatoria.
 - El color del veredicto sale de una clase (`v-good`, `v-bad`, `v-warn`), no de estilos en línea. El resto de colores de estado, igual: `tono(el, 'good'|'bad'|'warn'|'muted'|null)` de `util.js` pone `.c-*`, y en HTML generado se escribe `class="c-warn"`. Nunca `style="color:..."`: el cambio claro/oscuro lo resuelve solo el CSS. Botones de grupo (segmentados, chips): `pulsado(el, on)` pone `.active` y `aria-pressed`.
 - Colores solo desde las variables de `:root` (tema claro y oscuro con `prefers-color-scheme`). Fuente del sistema a propósito: la app funciona sin red.

@@ -21,7 +21,7 @@ import {
 
 const SESSION_KEYS = [
   'chargerPrice','fuelPrice','chargerPower','currentSoc','parkHours',
-  'sessionKwh','detourKm','elecConsumption','fuelConsumption','sessionFee',
+  'sessionKwh','detourKm','sessionFee',
   'pricingMode','pricePerMin'
 ];
 
@@ -94,8 +94,9 @@ function render(){
     detourKm: num(els.detourKm),
     chargerPrice: num(els.chargerPrice), byMinute: num(els.pricingMode) === 1,
     pricePerMin: num(els.pricePerMin), sessionFee: num(els.sessionFee),
-    fuelPrice: num(els.fuelPrice), fuelCons: num(els.fuelConsumption),
-    elecCons: num(els.elecConsumption),
+    // los consumos no se escriben a mano: el medido con esta climatización o el declarado
+    fuelPrice: num(els.fuelPrice), fuelCons: baseFuelCons(prof, clima),
+    elecCons: baseElecCons(prof),
     freeHours: ch && ch.overMin > 0 ? ch.freeHours : 0,
     overMin:   ch && ch.overMin > 0 ? ch.overMin   : 0
   };
@@ -250,10 +251,7 @@ function render(){
     $('km-' + c).textContent = r.nothingToCharge ? '' : kpc[c] !== null ? '≈ ' + fmt(kpc[c], 0) + ' km' : 'sin medidas';
   });
 
-  $('cons-hint').textContent = 'Declarados de ' + prof.name + ': ' + fmt(prof.elecCons, 1) +
-    ' kWh/100km y ' + fmt(prof.fuelCons, 1) + ' L/100km. Cada uno se sustituye por el medido ' +
-    'con la climatización elegida, si lo hay. Si cambias estos valores a mano, se usan hasta que ' +
-    'cambies de climatización o de vehículo.';
+  renderConsumosUso(prof, cfg.elecCons, cfg.fuelCons);
 
   lastCalc = {
     chargerPrice: cfg.byMinute ? r.effectivePerKwh : cfg.chargerPrice,
@@ -265,14 +263,38 @@ function render(){
 
 // ======================= CLIMATIZACIÓN =======================
 
-/** Pone en los campos los consumos que corresponden a la climatización elegida. */
+/** Guarda la climatización elegida y actualiza sus botones y pistas. */
 function aplicarClima(){
-  const p = D.activeProfile();
-  if(!p) return;
-  els.elecConsumption.value = Math.round(baseElecCons(p) * 10) / 10;
-  els.fuelConsumption.value = Math.round(baseFuelCons(p, clima) * 10) / 10;
+  if(!D.activeProfile()) return;
   D.setClima(clima);
   syncClimaUI();
+}
+
+/**
+ * Mi coche → «Consumos que usa el cálculo»: el valor con el que se calcula
+ * ahora mismo y de dónde sale (medido con la climatización elegida o declarado).
+ * Solo se muestra: un consumo escrito a mano no sería ni medido ni declarado.
+ */
+function renderConsumosUso(prof, elecCons, fuelCons){
+  const sR = rParaClima(medidasR(prof), clima);
+  const sG = consumoParaClima(D.loadFuel(), clima);
+  const medidas = s => s.n + (s.n === 1 ? ' medida' : ' medidas') + ', ±' + fmt(s.band * 100, 0) + '%';
+
+  $('uso-elec').innerHTML = fmt(elecCons, 1) + ' <small>kWh/100km</small>';
+  const oe = $('uso-elec-origen');
+  oe.textContent = sR.fuente === 'clima' ? 'Medido: ' + medidas(sR)
+    : sR.fuente === 'sin-clasificar' ? 'Medido sin climatización indicada: ' + medidas(sR)
+    : 'Declarado, sin medir: margen de error del 30%';
+  tono(oe, sR.fuente === 'clima' ? null : 'warn');
+
+  $('uso-fuel').innerHTML = fmt(fuelCons, 1) + ' <small>L/100km</small>';
+  const of = $('uso-fuel-origen');
+  of.textContent = sG.fuente === 'clima' ? 'Medido: ' + medidas(sG) : 'Declarado, sin medir';
+  tono(of, sG.fuente === 'clima' ? null : 'warn');
+
+  $('uso-nota').textContent = 'Con la climatización elegida en Calcular (' + CON_CLIMA[clima] + '). ' +
+    'Los declarados de ' + prof.name + ' son ' + fmt(prof.elecCons, 1) + ' kWh/100km y ' +
+    fmt(prof.fuelCons, 1) + ' L/100km; cada uno se sustituye por el medido en cuanto lo midas.';
 }
 
 function elegirClima(c){
@@ -1167,7 +1189,7 @@ function setMode(m){
 
 // ======================= PESTAÑAS =======================
 
-const TABS = ['tab-calcular', 'tab-coche', 'tab-ajustes'];
+const TABS = ['tab-calcular', 'tab-coche', 'tab-ayuda'];
 
 function irA(id){
   if(TABS.indexOf(id) === -1) return;

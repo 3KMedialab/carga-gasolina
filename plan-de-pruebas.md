@@ -22,8 +22,8 @@ donde van a aparecer los fallos que nadie ha visto todavía.
 3. Elige **"Añadir a pantalla de inicio"**.
 4. Ábrela desde el icono nuevo.
 
-**Antes de borrar nada, descarga la copia de seguridad** (pestaña **Ajustes** →
-Copia de seguridad → Descargar copia de seguridad). En iPhone, quitar el icono de la
+**Antes de borrar nada, descarga la copia de seguridad** (pestaña **Mi coche** →
+Copia de seguridad, al final → Descargar copia de seguridad). En iPhone, quitar el icono de la
 pantalla de inicio puede borrar todos los datos de la app (vehículos, cargadores,
 historial y medidas), y la copia es la única forma de recuperarlos. Conviene
 descargarla de vez en cuando, aunque no vayas a borrar nada.
@@ -40,9 +40,13 @@ Todo lo que guardes se queda en tu móvil. No se envía a ningún sitio.
   orden en que decides: **Dónde cargas** (cargadores guardados, búsqueda, precio,
   potencia, tarifa fija), **Gasolina**, **Tu coche ahora** (batería), **¿Vas a usar la
   climatización?** y **La recarga**.
-- **Mi coche:** datos del vehículo y cambio de vehículo, lo que rinde de verdad
-  (tus medidas), el cuidado de la batería y el historial.
-- **Ajustes:** los consumos que usa el cálculo, la copia de seguridad y la ayuda.
+- **Mi coche:** datos del vehículo (con sus consumos *declarados*) y cambio de vehículo,
+  los **consumos que usa el cálculo** (medidos o declarados, y de dónde sale cada uno),
+  tus medidas, el cuidado de la batería, el historial y la copia de seguridad.
+- **Ayuda:** las explicaciones de cómo funciona la app.
+
+Los consumos no se pueden escribir a mano en ningún sitio salvo en los datos del
+vehículo: el cálculo usa el medido o, si no lo hay, el declarado.
 
 Las fichas (vehículo, cargador, medidas) suben desde abajo; sus botones de guardar y
 cancelar quedan siempre a la vista al pie.
@@ -190,8 +194,9 @@ con tres botones: Calefacción / Nada / Aire.
 Con un coche sin medidas, pulsa cada botón.
 - Bajo los botones debe aparecer, en ámbar: "No tienes medidas con … se usa el consumo
   declarado, con un margen de error del 30%".
-- El consumo eléctrico de debajo debe ser **el que pusiste en tu vehículo**, con
-  cualquiera de los tres botones. Si cambia sin tener medidas, es un fallo.
+- En Mi coche → "Consumos que usa el cálculo", el eléctrico debe ser **el que pusiste
+  en tu vehículo**, marcado "Declarado, sin medir" en ámbar, con cualquiera de los tres
+  botones. Si cambia sin tener medidas, es un fallo.
 
 **5.2 — Con medidas, cada climatización usa las suyas**
 Guarda una medida "Sin climatización" y otra "Calefacción" (sección 9.8).
@@ -411,7 +416,7 @@ historial, calibración, medidas, modo de tarifa, la unidad de tiempo, la
 climatización elegida y el modo en que estabas.
 
 **9.7 — Copia de seguridad**
-En la pestaña **Ajustes**, sección "Copia de seguridad".
+En la pestaña **Mi coche**, sección "Copia de seguridad" (al final).
 - Pulsa **"Descargar copia de seguridad"**. En el móvil se abre el menú de compartir
   (guárdala en Archivos o en la nube); si no, se descarga un archivo
   `carga-vs-gasolina-copia-AAAA-MM-DD.json`.
@@ -534,8 +539,8 @@ sea cual sea su sistema híbrido:
   a bordo y debe rechazarlo); más de 30 L/100km; sin climatización; sin indicar si
   hizo frío.
 - **Tras guardar**, en Calcular, bajo la climatización, debe decir "Gasolina: X
-  L/100km en híbrido, con tu medida…" y el campo Gasolina de Ajustes debe tomar ese
-  valor. **Con otra climatización, no**: vuelve al declarado y lo dice. Las medidas
+  L/100km en híbrido, con tu medida…" y en Mi coche → "Consumos que usa el
+  cálculo" la gasolina debe tomar ese valor, marcada "Medido: 1 medida". **Con otra climatización, no**: vuelve al declarado y lo dice. Las medidas
   eléctricas con litros cambian su km/kWh (apartado 9.8).
 - **Anota en la ficha** (sección 14) qué método usaste, si tu coche deja poner el
   contador a cero, qué nivel mínimo mantiene tu batería y si el resultado se parece

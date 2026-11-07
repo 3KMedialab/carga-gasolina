@@ -9,6 +9,8 @@ import { vaciarCache as vaciarCacheGasolineras } from './js/gasolineras.js';
 let pasa = 0, falla = 0;
 const fallos = [];
 const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  ' + d : '')));
+// consumo que usa el cálculo, tal como lo muestra Mi coche («21,5 kWh/100km» -> 21.5)
+const enUso = (dom, id) => parseFloat(dom.get(id).textContent.replace(',', '.'));
 
 // ---------- 1. app vacía ----------
 {
@@ -154,8 +156,9 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   ok('las medidas cambian el resultado', dom.get('pk-km').textContent !== antes,
      antes + ' -> ' + dom.get('pk-km').textContent);
   ok('el consumo pasa a ser el medido',
-     Math.abs(parseFloat(dom.get('inp-elecConsumption').value) - 22) > 1,
-     dom.get('inp-elecConsumption').value);
+     Math.abs(enUso(dom, 'uso-elec') - 22) > 1, dom.get('uso-elec').textContent);
+  ok('...y Mi coche dice que es medido', dom.get('uso-elec-origen').textContent.startsWith('Medido: 3 medidas'),
+     dom.get('uso-elec-origen').textContent);
   ok('el margen de error baja', dom.get('meas-summary').innerHTML.includes('margen de error'));
   ok('el resumen separa por climatización',
      dom.get('meas-summary').innerHTML.includes('<div class="k">Con calefacción</div><div class="d">Se usa el consumo declarado'),
@@ -394,7 +397,7 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   });
   const { iniciar, _test } = await import('./js/interfaz.js?11');
   iniciar();
-  const cons = () => parseFloat(dom.get('inp-elecConsumption').value);
+  const cons = () => enUso(dom, 'uso-elec');
 
   ok('arranca sin climatización y usa su medida', cons() === 20, String(cons()));
   ok('la pista dice de dónde sale', dom.get('clima-hint').textContent.includes('Con tu medida sin climatización'),
@@ -467,7 +470,7 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   iniciar();
 
   // pestañas
-  ok('arranca en Calcular', !dom.get('tab-calcular').hidden && dom.get('tab-coche').hidden && dom.get('tab-ajustes').hidden);
+  ok('arranca en Calcular', !dom.get('tab-calcular').hidden && dom.get('tab-coche').hidden && dom.get('tab-ayuda').hidden);
   _test.irA('tab-coche');
   ok('Mi coche se muestra y Calcular se oculta', !dom.get('tab-coche').hidden && dom.get('tab-calcular').hidden);
   ok('la pestaña activa se marca', dom.get('tabbtn-coche').classList.contains('active') &&
@@ -624,9 +627,13 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   });
   const { iniciar, _test } = await import('./js/interfaz.js?16');
   iniciar();
-  const gas = () => parseFloat(dom.get('inp-fuelConsumption').value);
+  const gas = () => enUso(dom, 'uso-fuel');
 
   ok('sin medir, la gasolina es la declarada', gas() === 5, String(gas()));
+  ok('...y Mi coche lo dice, en ámbar', dom.get('uso-fuel-origen').textContent === 'Declarado, sin medir' &&
+     dom.get('uso-fuel-origen').classList.contains('c-warn'), dom.get('uso-fuel-origen').textContent);
+  ok('la nota recuerda los declarados del vehículo', dom.get('uso-nota').textContent.includes('22,0 kWh/100km y 5,0 L/100km'),
+     dom.get('uso-nota').textContent);
   ok('...y la pista lo dice', dom.get('gas-hint').textContent.includes('declarado') &&
      dom.get('gas-hint').classList.contains('warn'), dom.get('gas-hint').textContent);
   ok('Mi coche dice que aún no se ha medido', dom.get('g-resumen').innerHTML.includes('Todavía no lo has medido'));
@@ -653,6 +660,8 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   ok('se guarda la medida', f.length === 1 && f[0].metodo === 'deposito' && Math.abs(f[0].L - 6) < 1e-9, JSON.stringify(f));
   ok('el formulario queda limpio', dom.get('fuel-valor').value === '' && dom.get('fuel-clima').value === '');
   ok('la gasolina del cálculo pasa a ser la medida', gas() === 6, String(gas()));
+  ok('...y Mi coche la marca como medida', dom.get('uso-fuel-origen').textContent.startsWith('Medido: 1 medida') &&
+     !dom.get('uso-fuel-origen').classList.contains('c-warn'), dom.get('uso-fuel-origen').textContent);
   ok('...y la pista lo dice', dom.get('gas-hint').textContent.includes('6,0 L/100km') &&
      !dom.get('gas-hint').classList.contains('warn'), dom.get('gas-hint').textContent);
   ok('el resumen sale en la ficha y en Mi coche', dom.get('g-resumen').innerHTML.includes('L/100km') &&
@@ -661,7 +670,7 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
      dom.get('meas-list').innerHTML.includes('<strong>4,00</strong>'), dom.get('meas-list').innerHTML);
   ok('...sin tocar lo guardado', JSON.parse(dom.store['cvg_meas_v1'])[0].R === 3.8);
   ok('el consumo eléctrico usa el R recalculado (86 / 4 = 21,5)',
-     parseFloat(dom.get('inp-elecConsumption').value) === 21.5, dom.get('inp-elecConsumption').value);
+     enUso(dom, 'uso-elec') === 21.5, dom.get('uso-elec').textContent);
 
   // con otra climatización no se toma prestada
   _test.elegirClima('calefaccion');

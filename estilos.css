@@ -95,7 +95,6 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
 .val input{ width:88px; text-align:right; font-size:var(--t-l); font-weight:600; border:none; background:var(--sunken);
   border-radius:8px; padding:8px 10px; min-height:40px; }
 .val .u{ font-size:var(--t-xs); color:var(--muted); min-width:44px; }
-#tab-ajustes .val .u{ min-width:72px; }   /* kWh/100km y L/100km: mismo ancho para que los campos se alineen */
 .unit-toggle{ min-height:36px; padding:0 10px; border-radius:8px; border:1px solid var(--line-strong);
   font-size:var(--t-xs); font-weight:650; color:var(--accent); }
 
@@ -206,6 +205,7 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
 .clima-g:first-child{ border-top:none; }
 .clima-g .k{ font-size:var(--t-m); }
 .clima-g .d{ font-size:var(--t-xs); color:var(--muted); }
+.clima-g .d.c-warn{ color:var(--warn); }   /* «Declarado, sin medir»: si no, .clima-g .d lo pisa */
 .clima-g .v{ font-size:var(--t-l); font-weight:600; text-align:right; white-space:nowrap; }
 .clima-g .v small{ font-size:var(--t-xs); font-weight:500; color:var(--muted); }
 .clima-g.vacio .v{ font-size:var(--t-s); font-weight:500; color:var(--warn); }
