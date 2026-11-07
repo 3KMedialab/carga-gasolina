@@ -18,6 +18,8 @@ const K = {
   selCh:    'cvg_selch_v1',
   ocmRef:   'cvg_ocmref_v1',
   lugar:    'cvg_lugar_v1',
+  descuentos: 'cvg_descuentos_v1', // descuentos en la gasolina: del usuario, no del vehículo
+  estacion:   'cvg_estacion_v1',   // gasolinera elegida {name, price}, para saber su marca
   hist:     id => 'cvg_hist_'  + id,
   calib:    id => 'cvg_calib_' + id,
   meas:     id => 'cvg_meas_'  + id,
@@ -115,6 +117,17 @@ export const setParkUnit = u => lsSet(K.parkUnit, u === 'min' ? 'min' : 'h');
 // Se guarda el texto tal cual lo escribió el usuario, no el resultado.
 export const getLugar = () => ls(K.lugar) || '';
 export const setLugar = t => lsSet(K.lugar, String(t || '').trim());
+
+// ---------- DESCUENTOS EN LA GASOLINA ----------
+// Claves nuevas (desde 2026-11-07-7), sin cambiar nada de lo guardado: no hay migración.
+export function loadDescuentos(){ return lsJSON(K.descuentos, []); }
+export function saveDescuentos(l){ lsPut(K.descuentos, l); }
+// La gasolinera tocada en la lista: su rótulo dice qué descuento le toca. Se
+// guarda para que siga valiendo al volver a abrir la app; null al usar la media.
+export const getEstacion = () => lsJSON(K.estacion, null);
+export function setEstacion(st){
+  if(st) lsPut(K.estacion, { name: st.name, price: st.price }); else lsDel(K.estacion);
+}
 
 // ---------- CARGADORES ----------
 export function loadChargers(){ return lsJSON(K.chargers, []); }

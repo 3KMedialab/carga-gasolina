@@ -9,7 +9,8 @@ import {
 import {
   CLIMAS, simulate, findLimitHours, rParaClima, measEnUso, sinClasificar, buildMeasurement, kmPorClima,
   MEAS_MAX, MEAS_MESES, MEAS_MESES_SIN_CLASIFICAR,
-  medidasConConsumo, buildFuelMeasurement, consumoParaClima
+  medidasConConsumo, buildFuelMeasurement, consumoParaClima,
+  buildDescuento, precioConDescuento
 } from './calculo.js';
 
 import * as D from './datos.js';
@@ -35,8 +36,8 @@ let editingChargerId = null;
 let editingVehicleId = null;
 let lastCalc = null;
 let lastStations = [];
-let lastCheapest = null;       // la más barata de la última lista
 let estacionElegida = null;    // índice de la que tocó el usuario (null = ninguna)
+let editingDescuento = null;   // índice del descuento que se está editando en Ajustes
 let lastLugar = null;          // lugar de la última lista de gasolineras (null = tu ubicación)
 let lugaresPendientes = [];    // candidatos cuando el municipio buscado es ambiguo
 let lastOcmResults = [];
@@ -74,6 +75,30 @@ function medidasR(prof){
   return prof ? medidasConConsumo(l, c => baseFuelCons(prof, c)) : l;
 }
 
+/**
+ * Precio de la gasolina que entra en el cálculo. Si el campo tiene el precio de
+ * la gasolinera tocada en la lista, se le aplica el descuento de su marca; la
+ * media de la zona y un precio escrito a mano se usan tal cual.
+ * Devuelve {precio, descuento} (descuento null si no se aplica ninguno).
+ */
+function precioGasolina(){
+  const p = num(els.fuelPrice), est = D.getEstacion();
+  if(!est || Math.abs(p - est.price) > 0.0005) return { precio: p, descuento: null };
+  return precioConDescuento(p, est.name, D.loadDescuentos());
+}
+
+/** Lo que pagas en cada gasolinera de la lista, con tus descuentos. */
+const pagasEn = s => precioConDescuento(s.price, s.name, D.loadDescuentos());
+
+/** La más barata de la lista con lo que pagas tú, no con el precio del surtidor. */
+function masBarata(){
+  return lastStations.reduce((b, s) => (!b || pagasEn(s).precio < pagasEn(b).precio) ? s : b, null);
+}
+
+const textoDescuento = d => d.unidad === 'pct'
+  ? fmt(d.valor, d.valor % 1 ? 1 : 0) + ' %'
+  : fmt(d.valor, d.valor % 1 ? 1 : 0) + ' c€/L';
+
 /** Consumo eléctrico base: el medido con esta climatización si lo hay, el declarado si no. */
 function baseElecCons(prof){
   const s = rParaClima(medidasR(prof), clima);
@@ -85,6 +110,12 @@ function render(){
   if(!prof) return;
 
   const ch = selectedCharger();
+  const gasolina = precioGasolina();
+  const pagas = $('fuel-pagas');
+  pagas.textContent = gasolina.descuento
+    ? 'Pagas ' + fmt(gasolina.precio, 3) + ' ' + EURO + '/L con tu descuento de ' +
+      textoDescuento(gasolina.descuento) + '. Es el precio que usa el cálculo.'
+    : '';
   const cfg = {
     mode,
     chargerPower: num(els.chargerPower), maxPower: prof.maxPower,
@@ -95,7 +126,7 @@ function render(){
     chargerPrice: num(els.chargerPrice), byMinute: num(els.pricingMode) === 1,
     pricePerMin: num(els.pricePerMin), sessionFee: num(els.sessionFee),
     // los consumos no se escriben a mano: el medido con esta climatización o el declarado
-    fuelPrice: num(els.fuelPrice), fuelCons: baseFuelCons(prof, clima),
+    fuelPrice: gasolina.precio, fuelCons: baseFuelCons(prof, clima),
     elecCons: baseElecCons(prof),
     freeHours: ch && ch.overMin > 0 ? ch.freeHours : 0,
     overMin:   ch && ch.overMin > 0 ? ch.overMin   : 0
@@ -933,6 +964,65 @@ function borrarConsumo(id){
   trasCambiarConsumo();
 }
 
+// ======================= DESCUENTOS (AJUSTES) =======================
+
+function renderDescuentos(){
+  const l = D.loadDescuentos();
+  $('dto-list').innerHTML = l.length
+    ? l.map((d, i) => `<div class="item"><div class="item-main"><div class="n num">${textoDescuento(d)}</div>` +
+        `<div class="d">en ${esc(d.marcas.join(', '))}</div></div>` +
+        `<button type="button" class="item-edit" data-dto-editar="${i}">Editar</button>` +
+        `<button type="button" class="meas-del" data-dto-borrar="${i}" aria-label="Borrar">&times;</button></div>`).join('')
+    : '<p class="r-nota" style="padding-top:12px">No tienes ninguno: se usa el precio del surtidor.</p>';
+  $('dto-save').textContent = editingDescuento !== null ? 'Guardar cambios' : 'Añadir descuento';
+  show($('dto-cancel'), editingDescuento !== null);
+}
+
+function limpiarFormDescuento(){
+  editingDescuento = null;
+  $('dto-valor').value = ''; $('dto-marcas').value = ''; $('dto-unidad').value = 'cent';
+  $('dto-err').classList.remove('show');
+}
+
+function editarDescuento(i){
+  const d = D.loadDescuentos()[i];
+  if(!d) return;
+  editingDescuento = i;
+  $('dto-valor').value = d.valor; $('dto-unidad').value = d.unidad; $('dto-marcas').value = d.marcas.join(', ');
+  $('dto-err').classList.remove('show');
+  renderDescuentos();
+}
+
+function saveDescuento(){
+  const err = $('dto-err');
+  const res = buildDescuento({
+    valor: parseFloat($('dto-valor').value),
+    // el select arranca en la primera opción, como en el navegador
+    unidad: $('dto-unidad').value || 'cent',
+    marcas: $('dto-marcas').value
+  });
+  if(!res.ok){ err.textContent = res.error; err.classList.add('show'); return; }
+  const l = D.loadDescuentos();
+  const d = { valor: res.valor, unidad: res.unidad, marcas: res.marcas };
+  if(editingDescuento !== null && l[editingDescuento]) l[editingDescuento] = d; else l.push(d);
+  D.saveDescuentos(l);
+  limpiarFormDescuento();
+  trasCambiarDescuentos();
+}
+
+function borrarDescuento(i){
+  const l = D.loadDescuentos();
+  if(!l[i]) return;
+  l.splice(i, 1);
+  D.saveDescuentos(l);
+  limpiarFormDescuento();
+  trasCambiarDescuentos();
+}
+
+function trasCambiarDescuentos(){
+  renderDescuentos(); pintarEstaciones(); render();
+}
+
 // ======================= GASOLINERAS =======================
 
 // Las dos búsquedas (ubicación y lugar) comparten nota y lista; mientras una
@@ -960,14 +1050,15 @@ function falloGasolineras(e){
     `rel="noopener" class="c-good">verlo en el Geoportal</a>.`;
 }
 
-function renderStations({ top, cheapest, avg, count, fecha, lugar }){
+function renderStations({ top, avg, count, fecha, lugar }){
   const hint = $('fuel-hint');
   lastStations = top;
-  lastCheapest = cheapest;
   lastLugar = lugar || null;
   estacionElegida = null;
 
+  // la media es de todas las marcas: sin descuento
   els.fuelPrice.value = avg.toFixed(3);
+  D.setEstacion(null);
   hint.textContent = 'Media de ' + count + ' gasolineras ' + (lugar ? 'cerca de ' + lugar.nombre : 'cercanas');
   hint.classList.add('live');
   $('refresh-note').textContent = 'Precios oficiales del Ministerio' + (fecha ? ', ' + fecha : '') + '.' +
@@ -987,16 +1078,23 @@ function renderStations({ top, cheapest, avg, count, fecha, lugar }){
 function pintarEstaciones(){
   const listEl = $('station-list');
   if(!lastStations.length){ listEl.style.display = 'none'; listEl.innerHTML = ''; return; }
-  const visible = estacionElegida !== null ? estacionElegida : Math.max(0, lastStations.indexOf(lastCheapest));
+  const cheapest = masBarata();
+  const visible = estacionElegida !== null ? estacionElegida : Math.max(0, lastStations.indexOf(cheapest));
   const abierta = listEl.classList.contains('open');
   listEl.style.display = 'block';
   listEl.innerHTML = lastStations.map((s, idx) => {
-    const tag = s === lastCheapest ? '<span class="tag">MÁS BARATA</span>' : '';
+    const tag = s === cheapest ? '<span class="tag">MÁS BARATA</span>' : '';
     const loc = lastLugar && s.localidad ? ' · ' + esc(s.localidad) : '';
     const cls = 'item station' + (idx === visible ? '' : ' extra') + (idx === estacionElegida ? ' active' : '');
+    // con descuento: lo que pagas, y debajo el precio del surtidor tachado
+    const pg = pagasEn(s);
+    const precio = pg.descuento
+      ? `${fmt(pg.precio, 3)}<span class="surtidor">${fmt(s.price, 3)}</span>`
+      : fmt(s.price, 3);
+    const conDto = pg.descuento ? ' · con tu ' + textoDescuento(pg.descuento) : '';
     return `<button type="button" class="${cls}" data-idx="${idx}"><div><div class="n">${esc(s.name)}${tag}</div>` +
-      `<div class="d">${esc(s.addr)}${loc} · ${fmt(s.dist, 1)} km</div></div>` +
-      `<div class="p num">${fmt(s.price, 3)}</div></button>`;
+      `<div class="d">${esc(s.addr)}${loc} · ${fmt(s.dist, 1)} km${conDto}</div></div>` +
+      `<div class="p num">${precio}</div></button>`;
   }).join('') + (lastStations.length > 1
     ? `<button type="button" class="item link" data-est-toggle aria-expanded="${abierta}">` +
       (abierta ? 'Ver solo ' + (estacionElegida !== null ? 'la elegida' : 'la más barata')
@@ -1189,7 +1287,7 @@ function setMode(m){
 
 // ======================= PESTAÑAS =======================
 
-const TABS = ['tab-calcular', 'tab-coche', 'tab-ayuda'];
+const TABS = ['tab-calcular', 'tab-coche', 'tab-ajustes', 'tab-ayuda'];
 
 function irA(id){
   if(TABS.indexOf(id) === -1) return;
@@ -1233,6 +1331,7 @@ function refreshAll(){
   renderHistory();
   renderMeas();
   renderFuel();
+  renderDescuentos();
   render();
 }
 
@@ -1352,6 +1451,7 @@ function bindEvents(){
     if(!st) return;
     estacionElegida = idx;
     els.fuelPrice.value = st.price.toFixed(3);
+    D.setEstacion(st);   // su rótulo decide qué descuento le toca
     const hint = $('fuel-hint');
     hint.textContent = st.name + ' · ' + fmt(st.dist, 1) + ' km' +
       (lastLugar ? ' del centro de ' + lastLugar.nombre : '');
@@ -1451,6 +1551,17 @@ function bindEvents(){
     renderMeas(); aplicarClima(); render();
   });
 
+  // --- descuentos (Ajustes) ---
+  $('dto-save').addEventListener('click', saveDescuento);
+  $('dto-cancel').addEventListener('click', () => { limpiarFormDescuento(); renderDescuentos(); });
+  $('dto-list').addEventListener('click', e => {
+    const ed = e.target.closest('[data-dto-editar]');
+    if(ed) return editarDescuento(parseInt(ed.getAttribute('data-dto-editar'), 10));
+    const b = e.target.closest('[data-dto-borrar]'); if(!b) return;
+    if(!confirm('¿Borrar este descuento?')) return;
+    borrarDescuento(parseInt(b.getAttribute('data-dto-borrar'), 10));
+  });
+
   // --- consumo en híbrido ---
   $('btn-measure-fuel').addEventListener('click', () => {
     $('fuel-err').classList.remove('show'); renderFuel(); openOverlay('fuel-overlay', true);
@@ -1506,5 +1617,5 @@ export const _test = {
   render, renderMeas, saveMeas, saveCharger, openCharger, els,
   renderCargadoresResultados, seleccionarOcmResultado, buscarCargadoresCercanos,
   buscarPorLugar, usarLugar, elegirClima, clasificarMedida, irA, usarCargador, cambiarListaOcm,
-  saveFuel, borrarConsumo
+  saveFuel, borrarConsumo, saveDescuento, editarDescuento, borrarDescuento
 };

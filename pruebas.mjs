@@ -466,6 +466,62 @@ seccion('Consumo en híbrido medido (vale para cualquier PHEV)');
      bajo.net < real.net && bajo.equivFuel < real.equivFuel / 2 + 1e-9, `${bajo.net.toFixed(2)} vs ${real.net.toFixed(2)}`);
 }
 
+// ================= DESCUENTOS EN LA GASOLINA =================
+seccion('Descuentos en la gasolina');
+
+{
+  const { buildDescuento, precioConDescuento, aplicarDescuento, esDeMarca, marcasDe,
+          UNIDADES_DESCUENTO, DESCUENTO_MAX } = calculo;
+
+  ok('dos unidades: céntimos por litro y %', UNIDADES_DESCUENTO.join(',') === 'cent,pct');
+  ok('marcas: separadas por comas, en mayúsculas y sin tildes',
+     marcasDe(' shell, Galp ;  ') .join('|') === 'SHELL|GALP');
+  ok('la marca casa con el rótulo por palabras enteras',
+     esDeMarca('REPSOL', 'repsol') && esDeMarca('E.S. Repsol Butano', 'REPSOL') && esDeMarca('GALP', 'galp'));
+  ok('...y no por trozos: «BP» no casa con «BPX» ni con «SHELL»',
+     !esDeMarca('BPX', 'BP') && !esDeMarca('SHELL', 'BP') && esDeMarca('BP OIL', 'BP'));
+  ok('sin marca no casa nada', !esDeMarca('REPSOL', ''));
+
+  // validación
+  const waylet = buildDescuento({ valor:5, unidad:'cent', marcas:'Repsol' });
+  ok('céntimos por litro: se acepta', waylet.ok && waylet.marcas[0] === 'REPSOL', waylet.error);
+  const ing = buildDescuento({ valor:3, unidad:'pct', marcas:'Shell, Galp' });
+  ok('porcentaje en varias marcas: se acepta', ing.ok && ing.marcas.length === 2, ing.error);
+  ok('rechaza sin unidad', !buildDescuento({ valor:5, marcas:'REPSOL' }).ok);
+  ok('rechaza sin cantidad', !buildDescuento({ valor:0, unidad:'cent', marcas:'REPSOL' }).ok);
+  ok('rechaza sin marcas, explicando cómo escribirlas',
+     !buildDescuento({ valor:5, unidad:'cent', marcas:' , ' }).ok &&
+     buildDescuento({ valor:5, unidad:'cent', marcas:'' }).error.includes('REPSOL'));
+  ok(`rechaza cantidades no creíbles (más de ${DESCUENTO_MAX.cent} c€/L o del ${DESCUENTO_MAX.pct}%)`,
+     !buildDescuento({ valor:60, unidad:'cent', marcas:'REPSOL' }).ok &&
+     !buildDescuento({ valor:40, unidad:'pct', marcas:'SHELL' }).ok);
+
+  // cuentas
+  casi('5 c€/L sobre 1,529: 1,479', aplicarDescuento(1.529, waylet), 1.479, 1e-9);
+  casi('3 % sobre 1,600: 1,552', aplicarDescuento(1.600, ing), 1.552, 1e-9);
+
+  const mios = [waylet, ing];
+  const enRepsol = precioConDescuento(1.529, 'REPSOL', mios);
+  ok('en una Repsol se aplica el suyo', enRepsol.descuento === waylet && Math.abs(enRepsol.precio - 1.479) < 1e-9);
+  const enGalp = precioConDescuento(1.600, 'GALP', mios);
+  ok('en una Galp, el %', enGalp.descuento === ing && Math.abs(enGalp.precio - 1.552) < 1e-9);
+  const enBp = precioConDescuento(1.500, 'BP', mios);
+  ok('sin descuento de su marca: el precio del surtidor y descuento null', enBp.precio === 1.5 && enBp.descuento === null);
+  ok('sin descuentos guardados, tampoco', precioConDescuento(1.5, 'REPSOL', []).descuento === null &&
+     precioConDescuento(1.5, 'REPSOL', undefined).precio === 1.5);
+
+  // dos que coinciden: el mejor, nunca la suma
+  const dos = [{ valor:5, unidad:'cent', marcas:['REPSOL'] }, { valor:4, unidad:'pct', marcas:['REPSOL'] }];
+  const mejor = precioConDescuento(1.500, 'REPSOL', dos);
+  casi('dos descuentos en la misma marca: el mejor (4 % de 1,50 = 6 c€ > 5 c€)', mejor.precio, 1.44, 1e-9);
+  ok('...y no se suman', mejor.precio > 1.500 - 0.05 - 0.06);
+
+  // en el cálculo: el descuento abarata la gasolina y cargar compensa algo menos
+  const sin = simulate({ ...base('parked'), fuelPrice:1.529 });
+  const con = simulate({ ...base('parked'), fuelPrice:1.479 });
+  ok('con el descuento, el ahorro de cargar baja', con.net < sin.net, `${con.net.toFixed(2)} vs ${sin.net.toFixed(2)}`);
+}
+
 // ================= CARGADORES PÚBLICOS (OCM) =================
 seccion('Cargadores públicos (OCM)');
 

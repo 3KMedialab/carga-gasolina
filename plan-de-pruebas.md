@@ -35,7 +35,7 @@ descargarla de vez en cuando, aunque no vayas a borrar nada.
 
 Todo lo que guardes se queda en tu móvil. No se envía a ningún sitio.
 
-**Cómo está organizada.** Abajo hay tres pestañas:
+**Cómo está organizada.** Abajo hay cuatro pestañas:
 - **Calcular:** arriba, el resultado (se queda fijo al bajar y se encoge). Debajo, en el
   orden en que decides: **Dónde cargas** (cargadores guardados, búsqueda, precio,
   potencia, tarifa fija), **Gasolina**, **Tu coche ahora** (batería), **¿Vas a usar la
@@ -43,6 +43,7 @@ Todo lo que guardes se queda en tu móvil. No se envía a ningún sitio.
 - **Mi coche:** datos del vehículo (con sus consumos *declarados*) y cambio de vehículo,
   los **consumos que usa el cálculo** (medidos o declarados, y de dónde sale cada uno),
   tus medidas, el cuidado de la batería, el historial y la copia de seguridad.
+- **Ajustes:** tus descuentos en la gasolina (valen para todos tus vehículos).
 - **Ayuda:** las explicaciones de cómo funciona la app.
 
 Los consumos no se pueden escribir a mano en ningún sitio salvo en los datos del
@@ -413,7 +414,8 @@ Cambia el modo oscuro de tu móvil (Ajustes → Pantalla y brillo).
 **9.6 — Que no se pierda nada**
 Cierra la app del todo y vuelve a abrirla: debe conservar vehículos, cargadores,
 historial, calibración, medidas, modo de tarifa, la unidad de tiempo, la
-climatización elegida y el modo en que estabas.
+climatización elegida, el modo en que estabas, tus descuentos y, si habías tocado
+una gasolinera con descuento, la línea «Pagas…» debajo del precio.
 
 **9.7 — Copia de seguridad**
 En la pestaña **Mi coche**, sección "Copia de seguridad" (al final).
@@ -545,6 +547,29 @@ sea cual sea su sistema híbrido:
 - **Anota en la ficha** (sección 14) qué método usaste, si tu coche deja poner el
   contador a cero, qué nivel mínimo mantiene tu batería y si el resultado se parece
   a lo que esperabas. Si mides en ciudad y en autovía, anota los dos.
+
+**9.13 — Descuentos en la gasolina**
+En la pestaña **Ajustes**. Apunta los descuentos que tengas de verdad (una app de
+fidelización, una tarjeta que devuelve un %…): cuánto, si es en céntimos por litro o
+en %, y en qué marcas, como salen en la lista de gasolineras.
+
+- **Rechazos esperados:** sin cantidad; sin marcas; más de 50 c€/L o más de un 30%.
+- **En la lista de gasolineras** (Calcular → Gasolina), las de esas marcas muestran lo
+  que pagas y, debajo, el precio del surtidor tachado. La etiqueta "MÁS BARATA" va a la
+  que te sale más barata **a ti**. Ejemplo: 5 c€/L en Repsol → una Repsol a 1,529 queda
+  en **1,479**; un 3% en Shell → una Shell a 1,560 queda en **1,513**.
+- **Al tocar una de esas gasolineras**, el precio del campo es el del surtidor y debajo
+  sale "Pagas 1,479 €/L con tu descuento de 5 c€/L": ese es el que usa el cálculo, y el
+  ahorro de cargar baja un poco.
+- **Sin descuento:** la media de la zona (al buscar), una gasolinera de otra marca y
+  cualquier precio que escribas a mano. Si vuelves a escribir justo el precio de la
+  gasolinera tocada, el descuento vuelve.
+- **Dos descuentos en la misma marca:** se usa el mejor, no la suma.
+- **Editar y borrar:** "Editar" rellena el formulario y el botón pasa a "Guardar
+  cambios"; la × pide confirmación. Al cambiarlos, la lista y el resultado se
+  actualizan sin volver a buscar.
+- Anota en la ficha (sección 14) qué descuentos tienes y si alguna marca no casaba
+  con el rótulo que da el Ministerio.
 
 ---
 
@@ -696,6 +721,7 @@ Consumo híbrido medido (9.12):             ___ L/100km · contador / depósito
   ¿Tu contador se pone a cero?             Sí / No
   Nivel mínimo que mantiene la batería:    ___%  ¿se puede elegir? Sí / No
   Ciudad: ___ L/100km  ·  Autovía: ___ L/100km
+Descuentos en la gasolina (9.13):          ___ c€/L o % en ___  ·  ¿casaba la marca? Sí / No
 Eficiencia usada (%):
 
 ── TU USO ──────────────────────────────────

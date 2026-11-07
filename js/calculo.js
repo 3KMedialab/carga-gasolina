@@ -1,6 +1,6 @@
 // calculo.js — toda la lógica de negocio. Sin DOM ni almacenamiento: funciones puras.
 
-import { clamp } from './util.js';
+import { clamp, norm } from './util.js';
 
 // Climatización durante el trayecto. Es lo que más mueve el consumo eléctrico
 // fuera de la forma de conducir, y el usuario la conoce con certeza, tanto al
@@ -366,4 +366,62 @@ export function consumoParaClima(list, clima, ahora = Date.now()){
   const grupo = (list || []).filter(m => m && m.clima === clima);
   if(grupo.length) return { ...consumoStats(grupo, ahora, MEAS_MESES), fuente: 'clima' };
   return { ...consumoStats([], ahora), fuente: 'ninguna' };
+}
+
+// ================= DESCUENTOS EN LA GASOLINA =================
+// Los pone el usuario: cuánto, en qué unidad y en qué marcas (las del rótulo
+// que da el Ministerio). La app no sabe qué descuentos existen ni sus
+// condiciones (topes, promociones): usa lo que se le dice. A cada gasolinera se
+// le aplica el mejor descuento que le corresponda; no se suman, porque que se
+// puedan combinar depende de cada oferta.
+
+/** 'cent': céntimos por litro. 'pct': porcentaje del precio del surtidor. */
+export const UNIDADES_DESCUENTO = ['cent', 'pct'];
+// Límites de credibilidad, para cazar erratas (50 en vez de 5, o un % en c€/L).
+export const DESCUENTO_MAX = { cent: 50, pct: 30 };
+
+/** Marcas de un texto libre («Shell, Galp») normalizadas: mayúsculas, sin tildes ni espacios sobrantes. */
+export function marcasDe(texto){
+  return String(texto || '').split(/[,;]/).map(normMarca).filter(Boolean);
+}
+function normMarca(s){
+  return norm(s).toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim();
+}
+
+/** ¿El rótulo es de esa marca? Por palabras enteras: «BP» no casa con «BPX». */
+export function esDeMarca(rotulo, marca){
+  const r = ' ' + normMarca(rotulo) + ' ', m = normMarca(marca);
+  return !!m && r.indexOf(' ' + m + ' ') !== -1;
+}
+
+/** Valida un descuento escrito por el usuario. Devuelve {ok, valor, unidad, marcas} o {ok:false, error}. */
+export function buildDescuento({ valor, unidad, marcas }){
+  const fail = error => ({ ok: false, error });
+  if(UNIDADES_DESCUENTO.indexOf(unidad) === -1) return fail('Indica si es en céntimos por litro o en %.');
+  if(!isFinite(valor) || valor <= 0) return fail('Indica cuánto te descuentan.');
+  if(valor > DESCUENTO_MAX[unidad]) return fail(unidad === 'cent'
+    ? `Más de ${DESCUENTO_MAX.cent} céntimos por litro no es creíble. Revisa la cifra.`
+    : `Más de un ${DESCUENTO_MAX.pct}% no es creíble. Revisa la cifra.`);
+  const lista = marcasDe(marcas);
+  if(!lista.length) return fail('Indica en qué marcas vale, como salen en la lista de gasolineras (por ejemplo, REPSOL).');
+  return { ok: true, valor, unidad, marcas: lista };
+}
+
+/** Precio por litro con un descuento concreto. */
+export function aplicarDescuento(precio, d){
+  return d.unidad === 'pct' ? precio * (1 - d.valor / 100) : precio - d.valor / 100;
+}
+
+/**
+ * Lo que pagas en una gasolinera: su precio con el mejor descuento de su marca.
+ * Devuelve {precio, descuento}; descuento es null si no le corresponde ninguno.
+ */
+export function precioConDescuento(precio, rotulo, descuentos){
+  let mejor = { precio, descuento: null };
+  (descuentos || []).forEach(d => {
+    if(!d || !(d.marcas || []).some(m => esDeMarca(rotulo, m))) return;
+    const p = aplicarDescuento(precio, d);
+    if(p < mejor.precio) mejor = { precio: p, descuento: d };
+  });
+  return mejor;
 }

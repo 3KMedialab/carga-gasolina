@@ -21,6 +21,7 @@
   <symbol id="i-bolt" viewBox="0 0 24 24"><path fill="currentColor" d="M13.5 2 4 13.5h6.5L9.5 22 20 9.5h-6.6z"/></symbol>
   <symbol id="i-car" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 16v-3.5L5.2 7a2 2 0 0 1 1.9-1.4h9.8A2 2 0 0 1 18.8 7L21 12.5V16a1 1 0 0 1-1 1h-1.5M5.5 17H4a1 1 0 0 1-1-1m2.5 1a1.75 1.75 0 1 0 3.5 0m-3.5 0a1.75 1.75 0 1 1 3.5 0m0 0h6m0 0a1.75 1.75 0 1 0 3.5 0m-3.5 0a1.75 1.75 0 1 1 3.5 0M4 12h16"/></symbol>
   <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.8"/><circle cx="12" cy="17" r="1.2" fill="currentColor"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 7h10m4 0h2M4 17h2m4 0h10"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2" d="M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3" fill="currentColor"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 7v5l3 2"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></symbol>
@@ -104,6 +105,7 @@
           <label class="row-l" for="inp-fuelPrice"><span class="t">Precio</span><span class="h" id="fuel-hint"></span></label>
           <div class="val"><input class="num" id="inp-fuelPrice" type="number" inputmode="decimal" step="0.001" value="1.744"><span class="u">&euro;/L</span></div>
         </div>
+        <p class="source c-good" id="fuel-pagas"></p>
         <form class="search" id="form-lugar" autocomplete="off">
           <input id="lugar-q" type="search" enterkeyhint="search" maxlength="60" placeholder="Municipio o CP" aria-label="C&oacute;digo postal o municipio">
           <button class="btn secondary" id="btn-lugar" type="submit">Buscar</button>
@@ -283,6 +285,47 @@
     </section>
   </section>
 
+  <!-- ======================= AJUSTES ======================= -->
+  <section class="tab-panel" id="tab-ajustes" aria-labelledby="tabbtn-ajustes" hidden>
+    <header class="topbar"><h1 class="brand">Ajustes</h1></header>
+
+    <section class="section" aria-labelledby="t-descuentos">
+      <div class="s-head"><h2 class="s-title" id="t-descuentos">Descuentos en la gasolina</h2></div>
+      <p class="lead">Si pagas menos que el precio del surtidor (una app de fidelizaci&oacute;n, una tarjeta que devuelve un %&hellip;), ap&uacute;ntalo aqu&iacute;. Se aplica al tocar una gasolinera de esa marca en Calcular; nunca a la media ni al precio escrito a mano.</p>
+      <div class="card">
+        <div class="list" id="dto-list"></div>
+        <div class="pad">
+          <div class="err" id="dto-err"></div>
+          <div class="field-row">
+            <div class="field">
+              <label for="dto-valor">Cu&aacute;nto</label>
+              <div class="field-input-wrap"><input class="num" id="dto-valor" type="number" inputmode="decimal" step="0.1" placeholder="5"></div>
+            </div>
+            <div class="field">
+              <label for="dto-unidad">En</label>
+              <div class="field-input-wrap wrap-select">
+                <select id="dto-unidad" class="sel">
+                  <option value="cent">c&eacute;ntimos por litro</option>
+                  <option value="pct">% del precio</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label for="dto-marcas">En qu&eacute; marcas</label>
+            <div class="field-input-wrap"><input id="dto-marcas" type="text" maxlength="80" placeholder="REPSOL"></div>
+            <div class="field-hint">Como salen en la lista de gasolineras. Varias, separadas por comas: SHELL, GALP</div>
+          </div>
+          <div class="actions">
+            <button class="btn secondary" id="dto-cancel" type="button">Cancelar</button>
+            <button class="btn primary" id="dto-save" type="button">A&ntilde;adir descuento</button>
+          </div>
+        </div>
+      </div>
+      <p class="source">Si dos descuentos valen en la misma gasolinera, se usa el mejor: no se suman, porque eso depende de cada oferta. Los topes mensuales y las promociones temporales no se tienen en cuenta: cambia o borra el descuento cuando dejen de valer.</p>
+    </section>
+  </section>
+
   <!-- ======================= AYUDA ======================= -->
   <section class="tab-panel" id="tab-ayuda" aria-labelledby="tabbtn-ayuda" hidden>
     <header class="topbar"><h1 class="brand">Ayuda</h1></header>
@@ -300,6 +343,7 @@
         <details><summary>Cargar en casa</summary><p>Se configura como un cargador m&aacute;s, con su potencia y su precio. Si tienes tarifa por horas, guarda dos (&laquo;Casa valle&raquo; y &laquo;Casa punta&raquo;) y alterna entre ellos. Ojo con el enchufe normal: a 2,3 kW se pierde mucha m&aacute;s energ&iacute;a que en una wallbox, y de los mismos kWh facturados sacas alrededor de un 18% menos de kil&oacute;metros. En hora punta y con enchufe dom&eacute;stico, cargar puede llegar a no compensar frente a la gasolina.</p></details>
         <details><summary>Cargar gratis</summary><p>Cuando no pagas nada, la app no decide: solo te dice a cu&aacute;nta gasolina equivale. Gu&aacute;rdala igualmente en el historial, porque suele ser de donde sale la mayor parte del ahorro de tener un enchufable. Excepci&oacute;n: si el punto es gratuito solo un rato y luego cobra por minuto, s&iacute; hace falta el c&aacute;lculo completo, y ah&iacute; es donde m&aacute;s dinero se pierde por descuido.</p></details>
         <details><summary>Buscar gasolineras</summary><p>Usa tu ubicaci&oacute;n y los precios oficiales del Ministerio, actualizados a diario. Solo funciona en Espa&ntilde;a. Toca una gasolinera de la lista para usar su precio exacto. Si no quieres dar tu ubicaci&oacute;n, o vas a repostar en otro sitio, escribe un c&oacute;digo postal o el nombre de un municipio: ver&aacute;s las m&aacute;s cercanas a su centro, aunque all&iacute; no haya ninguna. Solo se buscan las de su provincia, as&iacute; que cerca del l&iacute;mite con otra pueden faltar algunas.</p></details>
+        <details><summary>Descuentos en la gasolina</summary><p>Si repostas con una app de fidelizaci&oacute;n o con una tarjeta que te devuelve parte del gasto, la gasolina te sale m&aacute;s barata que el precio del surtidor, y cargar compensa algo menos. Ap&uacute;ntalo en Ajustes: cu&aacute;nto (en c&eacute;ntimos por litro o en %) y en qu&eacute; marcas vale. Al tocar en Calcular una gasolinera de esa marca, la lista y el c&aacute;lculo usan lo que pagas t&uacute;, y debajo del precio lo dice. La media de la zona y el precio que escribas a mano se usan tal cual. Con unos pocos c&eacute;ntimos el veredicto apenas cambia; lo que s&iacute; cambia a menudo es qu&eacute; gasolinera te sale m&aacute;s barata.</p></details>
         <details><summary>Eficiencia de carga</summary><p>No todos los kWh que pagas llegan a la bater&iacute;a: una parte se pierde por el camino. Con un 85%, de cada 10 kWh que te cobran entran unos 8,5. La app lo tiene en cuenta al comparar.</p></details>
         <details><summary>Por qu&eacute; el final tarda m&aacute;s</summary><p>Al acercarse al 100% el coche baja la corriente para proteger las celdas, as&iacute; que el &uacute;ltimo tramo tarda bastante m&aacute;s que el resto. Pasa en cualquier bater&iacute;a de litio, pero no igual: una LFP aguanta el ritmo hasta cerca del 90% y luego cae de golpe; una NMC empieza a frenar antes, sobre el 80%, de forma m&aacute;s gradual. Son aproximaciones razonables, no la curva medida de tu modelo concreto: si al cargar de verdad ves tiempos muy distintos, av&iacute;sanos.</p></details>
         <details><summary>LFP y NMC</summary><p>Son las dos qu&iacute;micas de bater&iacute;a habituales, y piden cuidados opuestos. En una LFP el voltaje apenas var&iacute;a entre el 20% y el 80%, as&iacute; que el coche calcula el porcentaje sumando la energ&iacute;a que entra y sale, y ese c&aacute;lculo se desv&iacute;a con el tiempo: llegar al 100% una vez por semana le da una referencia clara y lo corrige. En una NMC, en cambio, pasar mucho tiempo cerca del 100% acelera el desgaste, as&iacute; que lo recomendable es moverse entre el 20% y el 80% y llenar solo antes de un viaje largo.</p></details>
@@ -315,6 +359,7 @@
   <div class="tabbar-in" role="tablist">
     <button class="tab active" type="button" role="tab" id="tabbtn-calcular" data-tab="tab-calcular" aria-selected="true"><svg aria-hidden="true"><use href="#i-bolt"/></svg>Calcular</button>
     <button class="tab" type="button" role="tab" id="tabbtn-coche" data-tab="tab-coche" aria-selected="false"><svg aria-hidden="true"><use href="#i-car"/></svg>Mi coche</button>
+    <button class="tab" type="button" role="tab" id="tabbtn-ajustes" data-tab="tab-ajustes" aria-selected="false"><svg aria-hidden="true"><use href="#i-gear"/></svg>Ajustes</button>
     <button class="tab" type="button" role="tab" id="tabbtn-ayuda" data-tab="tab-ayuda" aria-selected="false"><svg aria-hidden="true"><use href="#i-help"/></svg>Ayuda</button>
   </div>
 </nav>

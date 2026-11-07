@@ -683,6 +683,99 @@ const enUso = (dom, id) => parseFloat(dom.get(id).textContent.replace(',', '.'))
   dom.desmontar();
 }
 
+// ---------- 17. descuentos en la gasolina (Ajustes) ----------
+// Tres gasolineras: BP 1,500, REPSOL 1,529 y SHELL 1,560. Sin descuentos la
+// más barata es BP; con 5 c€/L en Repsol, Repsol (1,479).
+{
+  const dom = montar({
+    'cvg_schema':'3',
+    'cvg_profiles_v1': JSON.stringify({ list:[{ id:'v1', name:'A', battery:18, maxPower:6.6,
+      elecCons:22, fuelCons:5, chargeEff:86, chem:'lfp' }], activeId:'v1' }),
+    'cvg_mode_v1':'parked'
+  });
+  const resp = d => Promise.resolve({ json: () => Promise.resolve(d) });
+  const est = (rotulo, precio, lat) => ({ 'C.P.':'28012', 'Latitud':lat, 'Longitud (WGS84)':'-3,700',
+    'Precio Gasolina 95 E5':precio, 'Rótulo':rotulo, 'Dirección':'C/ ' + rotulo, 'Municipio':'Madrid' });
+  globalThis.fetch = url => {
+    url = String(url);
+    if(url.includes('postalcode=28013')) return resp([{ name:'28013', lat:'40.418', lon:'-3.707' }]);
+    if(url.includes('FiltroProvincia/')) return resp({ Fecha:'07/11/2026', ListaEESSPrecio: [
+      est('BP', '1,500', '40,419'), est('REPSOL', '1,529', '40,420'), est('SHELL', '1,560', '40,421') ]});
+    return Promise.reject(new Error('sin-red'));
+  };
+  vaciarCacheGasolineras();
+  const { iniciar, _test } = await import('./js/interfaz.js?17');
+  iniciar();
+
+  _test.irA('tab-ajustes');
+  ok('la pestaña Ajustes existe y se muestra', !dom.get('tab-ajustes').hidden && dom.get('tab-calcular').hidden &&
+     dom.get('tabbtn-ajustes').classList.contains('active'));
+  ok('sin descuentos lo dice', dom.get('dto-list').innerHTML.includes('No tienes ninguno'));
+
+  // sin marcas no se guarda
+  dom.get('dto-valor').value = '5'; dom.get('dto-marcas').value = '';
+  dom.click('dto-save');
+  ok('sin marcas no se guarda y lo explica', dom.store['cvg_descuentos_v1'] === undefined &&
+     dom.get('dto-err').classList.contains('show'), dom.get('dto-err').textContent);
+
+  // Waylet: 5 c€/L en Repsol; ING: 3 % en Shell y Galp
+  dom.get('dto-valor').value = '5'; dom.get('dto-unidad').value = 'cent'; dom.get('dto-marcas').value = 'Repsol';
+  dom.click('dto-save');
+  dom.get('dto-valor').value = '3'; dom.get('dto-unidad').value = 'pct'; dom.get('dto-marcas').value = 'Shell, Galp';
+  dom.click('dto-save');
+  const dtos = JSON.parse(dom.store['cvg_descuentos_v1'] || '[]');
+  ok('se guardan los dos, con las marcas normalizadas', dtos.length === 2 && dtos[0].marcas[0] === 'REPSOL' &&
+     dtos[1].unidad === 'pct' && dtos[1].marcas.join(',') === 'SHELL,GALP', JSON.stringify(dtos));
+  ok('la lista los muestra', dom.get('dto-list').innerHTML.includes('5 c€/L') &&
+     dom.get('dto-list').innerHTML.includes('SHELL, GALP'));
+  ok('el formulario queda limpio', dom.get('dto-valor').value === '' && dom.get('dto-marcas').value === '');
+
+  _test.irA('tab-calcular');
+  dom.get('lugar-q').value = '28013';
+  await _test.buscarPorLugar();
+  const lista = () => dom.get('station-list').innerHTML;
+  ok('con el descuento, la más barata es la Repsol (1,479)', /<div class="n">REPSOL<span class="tag">MÁS BARATA/.test(lista()), lista());
+  ok('...con lo que pagas y el precio del surtidor tachado', lista().includes('1,479<span class="surtidor">1,529</span>'));
+  ok('la Shell lleva su 3 % (1,513)', lista().includes('1,513<span class="surtidor">1,560</span>'));
+  ok('la media va sin descuento', dom.get('fuel-pagas').textContent === '' &&
+     dom.get('inp-fuelPrice').value === '1.530', dom.get('inp-fuelPrice').value);
+
+  // tocar la Repsol
+  const idxRepsol = (lista().match(/data-idx="(\d)"><div><div class="n">REPSOL/) || [])[1];
+  const tocar = i => dom.get('station-list').fire('click',
+    { target: { closest: sel => sel === '[data-idx]' ? { getAttribute: () => i } : null } });
+  const sinDto = dom.get('amount').innerHTML;
+  tocar(idxRepsol);
+  ok('al tocar la Repsol, el campo lleva su precio de surtidor', dom.get('inp-fuelPrice').value === '1.529',
+     dom.get('inp-fuelPrice').value);
+  ok('...y debajo dice lo que pagas', dom.get('fuel-pagas').textContent.includes('Pagas 1,479') &&
+     dom.get('fuel-pagas').textContent.includes('5 c€/L'), dom.get('fuel-pagas').textContent);
+  ok('...y se recuerda su marca', JSON.parse(dom.store['cvg_estacion_v1']).name === 'REPSOL');
+  const conDto = dom.get('amount').innerHTML;
+
+  // escribir el precio a mano: se usa tal cual
+  dom.get('inp-fuelPrice').value = '1.600';
+  dom.fire('inp-fuelPrice', 'input');
+  ok('un precio escrito a mano va sin descuento', dom.get('fuel-pagas').textContent === '');
+  dom.get('inp-fuelPrice').value = '1.529';
+  dom.fire('inp-fuelPrice', 'input');
+  ok('volver al precio de la Repsol recupera el descuento', dom.get('fuel-pagas').textContent.includes('1,479'));
+
+  // editar y borrar
+  _test.editarDescuento(0);
+  ok('editar rellena el formulario', dom.get('dto-valor').value === 5 && dom.get('dto-save').textContent === 'Guardar cambios',
+     String(dom.get('dto-valor').value));
+  dom.get('dto-valor').value = '10';
+  dom.click('dto-save');
+  ok('al guardar cambia ese, sin añadir otro', JSON.parse(dom.store['cvg_descuentos_v1']).length === 2 &&
+     dom.get('fuel-pagas').textContent.includes('1,429'), dom.get('fuel-pagas').textContent);
+  _test.borrarDescuento(0);
+  ok('al borrar el de Repsol, el cálculo vuelve al surtidor', dom.get('fuel-pagas').textContent === '' &&
+     dom.get('amount').innerHTML === sinDto && conDto !== sinDto, sinDto + ' / ' + conDto);
+  ok('...y la más barata vuelve a ser la BP', /<div class="n">BP<span class="tag">MÁS BARATA/.test(lista()));
+  dom.desmontar();
+}
+
 // ---------- resumen ----------
 console.log('='.repeat(50));
 if(falla){
