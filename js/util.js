@@ -75,23 +75,11 @@ export function haversine(la1, lo1, la2, lo2){
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// --- colores del tema (se releen al cambiar claro/oscuro) ---
-export const color = { good: '#0E7C5A', bad: '#C2410C', warn: '#B45309' };
-
-function cssVar(n){
-  return getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-}
-
-export function refreshColors(){
-  color.good = cssVar('--good') || color.good;
-  color.bad  = cssVar('--bad')  || color.bad;
-  color.warn = cssVar('--warn') || color.warn;
-}
-
-export function onSchemeChange(fn){
-  if(!window.matchMedia) return;
-  const mq = window.matchMedia('(prefers-color-scheme: dark)');
-  const handler = () => { refreshColors(); fn(); };
-  if(mq.addEventListener) mq.addEventListener('change', handler);
-  else if(mq.addListener) mq.addListener(handler);
+// --- color de estado ---
+// Siempre por clase (.c-good, .c-bad, .c-warn, .c-muted en estilos.css), nunca
+// en línea: así el cambio de tema claro/oscuro lo resuelve el CSS solo.
+const TONOS = ['good', 'bad', 'warn', 'muted'];
+/** Pone a un elemento el color de un estado (o ninguno, con null). */
+export function tono(el, estado){
+  TONOS.forEach(s => el.classList.toggle('c-' + s, s === estado));
 }

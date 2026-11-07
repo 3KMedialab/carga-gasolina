@@ -3,6 +3,8 @@
 // Ejecutar con:  node humo.mjs
 
 import { JSDOMLite, montar } from './dom-falso.mjs';
+// el mismo módulo que usa interfaz.js: su caché en memoria pasa de un escenario a otro
+import { vaciarCache as vaciarCacheGasolineras } from './js/gasolineras.js';
 
 let pasa = 0, falla = 0;
 const fallos = [];
@@ -286,6 +288,7 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
     return Promise.reject(new Error('sin-red'));
   };
   const espera = () => new Promise(r => setTimeout(r, 20));
+  vaciarCacheGasolineras();
 
   const { iniciar, _test } = await import('./js/interfaz.js?9');
   iniciar();
@@ -319,8 +322,9 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   ok('ambiguo: aún no se ha pedido ninguna provincia', !pedidas.some(u => u.includes('FiltroProvincia')));
   opc.fire('click', { target: { closest: () => ({ getAttribute: () => '1' }) } });
   await espera();
-  ok('al elegir, se pide su provincia (Madrid, 28)',
-     pedidas.some(u => u.endsWith('FiltroProvincia/28')), pedidas.join(' | '));
+  // Madrid (28) ya se bajó en a): sale de la caché en memoria, sin otra descarga
+  ok('al elegir, su provincia (Madrid, 28) sale de la caché, sin volver a pedirla',
+     !pedidas.some(u => u.includes('FiltroProvincia')), pedidas.join(' | '));
   ok('...las opciones desaparecen', opc.style.display === 'none' && opc.innerHTML === '');
   ok('...y la pista nombra el municipio', dom.get('fuel-hint').textContent.includes('Arroyomolinos'));
   ok('...con el municipio de cada gasolinera en la lista', dom.get('station-list').innerHTML.includes('Madrid'));
@@ -336,11 +340,21 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
 
   // d) sin red: el mensaje del Ministerio, sin colgarse
   globalThis.fetch = () => Promise.reject(new Error('sin-red'));
+  vaciarCacheGasolineras();
   dom.get('lugar-q').value = '28013';
   await _test.buscarPorLugar();
   ok('sin red: avisa de que el servicio no responde',
      dom.get('refresh-note').textContent.includes('no ha respondido'), dom.get('refresh-note').textContent);
   ok('...y no se queda en "Buscando..."', dom.get('btn-lugar').textContent === 'Buscar');
+
+  // d2) el Ministerio responde con error HTTP: mismo aviso, sin intentar leer la respuesta
+  let leida = false;
+  globalThis.fetch = () => Promise.resolve({ ok: false, json: () => { leida = true; return Promise.resolve({}); } });
+  await _test.buscarPorLugar();
+  ok('error HTTP del Ministerio: avisa de que no responde',
+     dom.get('refresh-note').textContent.includes('no ha respondido'), dom.get('refresh-note').textContent);
+  ok('...sin leer el cuerpo de la respuesta de error', !leida);
+  globalThis.fetch = () => Promise.reject(new Error('sin-red'));
 
   // e) sin red buscando un nombre: culpa al servicio de mapas, no al Ministerio
   dom.get('lugar-q').value = 'Valdemorillo';
@@ -525,6 +539,7 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
     ]});
     return Promise.reject(new Error('sin-red'));
   };
+  vaciarCacheGasolineras();
   const { iniciar, _test } = await import('./js/interfaz.js?14');
   iniciar();
   dom.get('lugar-q').value = '28013';

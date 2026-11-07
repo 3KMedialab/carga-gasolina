@@ -3,6 +3,7 @@
 // guardados, la migración va aquí y se ejecuta una vez al arrancar.
 
 import { ls, lsSet, lsDel, lsJSON, lsPut, byId } from './util.js';
+import { CLIMAS } from './calculo.js';   // solo la constante: calculo.js es puro
 
 const K = {
   schema:   'cvg_schema',
@@ -102,11 +103,10 @@ export function saveSessionFrom(els, keys, num){
 }
 
 // ---------- MODO Y CLIMATIZACIÓN ----------
-const CLIMAS_VALIDOS = ['calefaccion', 'aire', 'nada'];   // los mismos que CLIMAS de calculo.js
 export const getMode    = () => ls(K.mode) || 'parked';
 export const setMode    = m => lsSet(K.mode, m);
-export const getClima   = () => { const c = ls(K.clima); return CLIMAS_VALIDOS.indexOf(c) === -1 ? 'nada' : c; };
-export const setClima   = c => lsSet(K.clima, CLIMAS_VALIDOS.indexOf(c) === -1 ? 'nada' : c);
+export const getClima   = () => { const c = ls(K.clima); return CLIMAS.indexOf(c) === -1 ? 'nada' : c; };
+export const setClima   = c => lsSet(K.clima, CLIMAS.indexOf(c) === -1 ? 'nada' : c);
 export const getParkUnit = () => ls(K.parkUnit) || 'h';
 export const setParkUnit = u => lsSet(K.parkUnit, u === 'min' ? 'min' : 'h');
 

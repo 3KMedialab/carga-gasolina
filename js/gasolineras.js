@@ -178,11 +178,33 @@ export function pickNearby(all, lat, lon){
   return { top, cheapest, avg, count: near.length };
 }
 
+// La lista de una provincia grande pesa mucho y el Ministerio solo refresca
+// precios cada ~30 min: se guarda en memoria (no en disco) ese tiempo, para
+// no bajarla otra vez al buscar por ubicación y luego por CP en la misma zona.
+const CACHE_PROVINCIA_MS = 30 * 60000;
+const cacheProvincias = new Map();   // código -> { t, res }
+
+// Provincia de la última posición GPS: si no te has movido, no se repite la
+// consulta inversa a Nominatim (su política pide no hacer llamadas de más).
+const MISMO_SITIO_KM = 2;
+let ultimaPosicion = null;           // { lat, lon, code }
+
+/** Vacía las cachés en memoria. Solo lo necesitan las pruebas. */
+export function vaciarCache(){
+  cacheProvincias.clear();
+  ultimaPosicion = null;
+}
+
 async function estacionesDeProvincia(code){
-  const data = await fetch(MINISTERIO + code).then(r => r.json());
+  const guardada = cacheProvincias.get(code);
+  if(guardada && Date.now() - guardada.t < CACHE_PROVINCIA_MS) return guardada.res;
+  const data = await fetch(MINISTERIO + code)
+    .then(r => { if(r.ok === false) throw new Error('default'); return r.json(); });
   const all = parseEstaciones(data);
   if(!all.length) throw new Error('sin-gasolineras');
-  return { all, fecha: (data && data.Fecha) || '' };
+  const res = { all, fecha: (data && data.Fecha) || '' };
+  cacheProvincias.set(code, { t: Date.now(), res });
+  return res;
 }
 
 // Si falla, lanza 'sin-mapa' para no culpar al Ministerio de un fallo de Nominatim.
@@ -198,9 +220,15 @@ export async function buscarCercanas(){
   const pos = await position();
   const { latitude: lat, longitude: lon } = pos.coords;
 
-  const geo = await nominatim('reverse', { lat, lon, zoom: 8 });
-  const code = provinciaDeAddress(geo && geo.address);
-  if(!code) throw new Error('sin-provincia');
+  let code;
+  if(ultimaPosicion && haversine(lat, lon, ultimaPosicion.lat, ultimaPosicion.lon) < MISMO_SITIO_KM){
+    code = ultimaPosicion.code;
+  } else {
+    const geo = await nominatim('reverse', { lat, lon, zoom: 8 });
+    code = provinciaDeAddress(geo && geo.address);
+    if(!code) throw new Error('sin-provincia');
+    ultimaPosicion = { lat, lon, code };
+  }
 
   const { all, fecha } = await estacionesDeProvincia(code);
   const res = pickNearby(all, lat, lon);

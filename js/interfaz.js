@@ -3,7 +3,7 @@
 
 import {
   $, show, openOverlay, num, byId, clamp, fmt, esc, fmtTime,
-  color, refreshColors, onSchemeChange, EURO
+  tono, EURO
 } from './util.js';
 
 import {
@@ -44,7 +44,6 @@ let mostrarTodosOcm = false;
 let ocmPlegado = false;        // lista de cargadores públicos oculta (salvo la tarjeta abierta)
 const OCM_VISIBLES = 5; // tarjetas antes de "Ver más"
 
-const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 
 const CON_CLIMA    = { calefaccion: 'con calefacción', aire: 'con aire', nada: 'sin climatización' };
 
@@ -151,14 +150,14 @@ function render(){
   if(mode === 'parked'){
     const note = $('pk-note');
     if(r.nothingToCharge){
-      note.innerHTML = `<span style="color:${color.warn}">No tiene sentido enchufar</span>: tu batería ya está llena.`;
+      note.innerHTML = `<span class="c-warn">No tiene sentido enchufar</span>: tu batería ya está llena.`;
     } else if(isFree){
       note.innerHTML = 'Enchufa el tiempo que quieras: no hay nada que decidir.';
     } else if(limit !== null && cfg.parkHours >= limit){
-      note.innerHTML = `<span style="color:${color.bad}">Llevas demasiado tiempo.</span> A partir de ` +
+      note.innerHTML = `<span class="c-bad">Llevas demasiado tiempo.</span> A partir de ` +
         fmtTime(limit) + ' el recargo se come el ahorro. Desconecta antes.';
     } else if(limit !== null){
-      note.innerHTML = `<span style="color:${color.warn}">Desconecta antes de ${fmtTime(limit)}</span>` +
+      note.innerHTML = `<span class="c-warn">Desconecta antes de ${fmtTime(limit)}</span>` +
         ' o el recargo empezará a costarte dinero.';
     } else if(r.capped){
       note.innerHTML = 'La batería se llena en ' + fmtTime(r.chargeHours) +
@@ -166,7 +165,7 @@ function render(){
     } else if(worth){
       note.innerHTML = 'Ahorro limpio: no te cuesta ni tiempo ni desvío, porque ibas a estar aquí igualmente.';
     } else {
-      note.innerHTML = `<span style="color:${color.bad}">Sale más caro que la gasolina</span>, aunque no te cueste tiempo.`;
+      note.innerHTML = `<span class="c-bad">Sale más caro que la gasolina</span>, aunque no te cueste tiempo.`;
     }
   } else {
     const rowD = $('tr-row-detour');
@@ -178,18 +177,18 @@ function render(){
     const note = $('tr-note');
     const perHour = r.chargeHours > 0 ? r.net / r.chargeHours : 0;
     if(r.nothingToCharge){
-      note.innerHTML = `<span style="color:${color.warn}">No tiene sentido desviarte</span>: tu batería ya está llena.`;
+      note.innerHTML = `<span class="c-warn">No tiene sentido desviarte</span>: tu batería ya está llena.`;
     } else if(r.capped){
       note.innerHTML = 'Pediste ' + fmt(cfg.sessionKwh, 0) + ' kWh pero solo caben ' +
         fmt(r.sessionKwh, 1) + ' antes del 100%. El cálculo usa esa cifra.';
     } else if(cfg.detourKm > 0 && r.gross > 0 && r.net < 0){
-      note.innerHTML = `<span style="color:${color.bad}">El desvío se come el ahorro.</span> ` +
+      note.innerHTML = `<span class="c-bad">El desvío se come el ahorro.</span> ` +
         'Sin el rodeo habrías ahorrado ' + fmt(r.gross) + ' ' + EURO + '.';
     } else if(worth){
       note.innerHTML = 'Son ' + fmtTime(r.chargeHours) + ' de espera para ahorrar ' + fmt(r.net) +
         ' ' + EURO + ' — unos ' + fmt(perHour) + ' ' + EURO + ' por hora.';
     } else {
-      note.innerHTML = `<span style="color:${color.bad}">No merece la pena esta parada</span> a este precio.`;
+      note.innerHTML = `<span class="c-bad">No merece la pena esta parada</span> a este precio.`;
     }
   }
 
@@ -571,6 +570,8 @@ function applyCharger(c){
 
 // ======================= HISTORIAL Y CALIBRACIÓN =======================
 
+const HIST_VISIBLES = 5;   // recargas que se ven en la lista
+
 function renderHistory(){
   const p = D.activeProfile(), list = D.loadHistory();
   $('hist-count').textContent = list.length;
@@ -580,7 +581,7 @@ function renderHistory(){
 
   const t = $('hist-total');
   t.textContent = (total >= 0 ? '+' : '\u2212') + fmt(Math.abs(total)) + ' ' + EURO;
-  t.style.color = total >= 0 ? color.good : color.bad;
+  tono(t, total >= 0 ? 'good' : 'bad');
 
   let nota = '';
   if(list.length && gratis > 0 && pagado !== 0){
@@ -601,19 +602,17 @@ function renderHistory(){
       `<div class="p num ${e.savings >= 0 ? 'pos' : 'neg'}">${signo}${fmt(Math.abs(e.savings))} ${EURO}</div></div>`;
   }).join('');
 }
-const HIST_VISIBLES = 5;
 
 function renderCalibration(){
   const p = D.activeProfile();
   const dot = $('calib-dot'), main = $('calib-main'), sub = $('calib-sub'), btn = $('btn-mark-full');
   const chem = p ? (p.chem || 'unknown') : 'unknown';
-  const muted = cssVar('--muted') || '#5A676D';
 
   $('calib-card').classList.remove('hidden');
 
   if(chem === 'nmc'){
     btn.classList.add('hidden');
-    dot.style.background = muted; main.style.color = '';
+    tono(dot, 'muted'); tono(main, null);
     main.textContent = 'No cargues al 100% por costumbre';
     sub.textContent = 'Tu batería es NMC: mantenerla cerca del 100% acelera su desgaste. ' +
       'Para el día a día basta con quedarte entre el 20% y el 80%, y llegar al 100% solo antes de un viaje largo.';
@@ -621,7 +620,7 @@ function renderCalibration(){
   }
   if(chem === 'unknown'){
     btn.classList.add('hidden');
-    dot.style.background = muted; main.style.color = '';
+    tono(dot, 'muted'); tono(main, null);
     main.textContent = 'Indica el tipo de batería';
     sub.textContent = 'El consejo de carga cambia según sea LFP o NMC. Ponlo en los datos de tu vehículo ' +
       'y aquí verás el que te corresponde.';
@@ -631,7 +630,7 @@ function renderCalibration(){
   btn.classList.remove('hidden');
   const raw = D.loadCalib();
   if(!raw){
-    dot.style.background = color.warn; main.style.color = color.warn;
+    tono(dot, 'warn'); tono(main, 'warn');
     main.textContent = 'Sin registro todavía';
     sub.textContent = 'Tu batería es LFP: conviene llegar al 100% una vez por semana para que el coche ' +
       'no pierda precisión al medir la carga.';
@@ -640,15 +639,15 @@ function renderCalibration(){
   const last = new Date(raw), days = Math.floor((Date.now() - last) / 86400000);
   const ds = last.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
   if(days <= 7){
-    dot.style.background = color.good; main.style.color = color.good;
+    tono(dot, 'good'); tono(main, 'good');
     main.textContent = days === 0 ? 'Calibrada hoy' : 'Calibrada hace ' + days + (days === 1 ? ' día' : ' días');
     sub.textContent = 'Última carga completa: ' + ds + '. Todo en orden.';
   } else if(days <= 14){
-    dot.style.background = color.warn; main.style.color = color.warn;
+    tono(dot, 'warn'); tono(main, 'warn');
     main.textContent = 'Toca cargar al 100%';
     sub.textContent = 'Han pasado ' + days + ' días desde la última (' + ds + ').';
   } else {
-    dot.style.background = color.bad; main.style.color = color.bad;
+    tono(dot, 'bad'); tono(main, 'bad');
     main.textContent = 'Calibración pendiente';
     sub.textContent = 'Han pasado ' + days + ' días (' + ds + '). El indicador puede estar desviado.';
   }
@@ -800,10 +799,10 @@ function ocultarOpcionesLugar(){
 function falloGasolineras(e){
   gasolinerasOcupado(false);
   ocultarOpcionesLugar();
-  $('refresh-note').innerHTML = `<span style="color:${color.warn}">${MENSAJES[e && e.message] || MENSAJES.default}</span> ` +
+  $('refresh-note').innerHTML = `<span class="c-warn">${MENSAJES[e && e.message] || MENSAJES.default}</span> ` +
     `Puedes escribir el precio a mano, o ` +
     `<a href="https://geoportalgasolineras.es/geoportal-instalaciones/Inicio" target="_blank" ` +
-    `rel="noopener" style="color:${color.good}">verlo en el Geoportal</a>.`;
+    `rel="noopener" class="c-good">verlo en el Geoportal</a>.`;
 }
 
 function renderStations({ top, cheapest, avg, count, fecha, lugar }){
@@ -906,7 +905,7 @@ async function buscarCargadoresCercanos(){
   const reset = () => { btn.disabled = false; label.textContent = 'Buscar cerca'; };
   const fail = msg => {
     reset();
-    note.innerHTML = `<span style="color:${color.warn}">${msg}</span>`;
+    note.innerHTML = `<span class="c-warn">${msg}</span>`;
     show(note, true);
     listEl.innerHTML = '';
     lastOcmResults = [];
@@ -1313,9 +1312,6 @@ export function iniciar(){
   parkUnit = D.getParkUnit();
   clima = D.getClima();
   selectedChargerId = D.getSelectedChargerId();
-
-  refreshColors();
-  onSchemeChange(() => { if(D.activeProfile()) render(); });
 
   bindEvents();
   irA('tab-calcular');

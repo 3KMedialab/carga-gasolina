@@ -211,7 +211,7 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
 .clima-g.vacio .v{ font-size:var(--t-s); font-weight:500; color:var(--warn); }
 .r-nota{ font-size:var(--t-xs); color:var(--muted); line-height:1.5; margin:0; padding:0 16px 12px; }
 .calib{ display:flex; align-items:flex-start; gap:12px; }
-.calib-dot{ width:10px; height:10px; border-radius:50%; background:var(--good); flex-shrink:0; margin-top:6px; }
+.calib-dot{ width:10px; height:10px; border-radius:50%; color:var(--good); background:currentColor; flex-shrink:0; margin-top:6px; }
 .calib-main{ font-weight:600; }
 .calib-sub{ font-size:var(--t-s); color:var(--muted); margin-top:2px; line-height:1.45; }
 .tiles{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -308,3 +308,7 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
   .seg.small{ width:136px; }
 }
 @media (prefers-reduced-motion: reduce){ *{ transition:none !important; } }
+
+/* Color de estado puesto desde JS con tono(): al final para ganar a los colores
+   por defecto (.calib-dot, .source...). El punto de calibración usa currentColor. */
+.c-good{ color:var(--good); } .c-bad{ color:var(--bad); } .c-warn{ color:var(--warn); } .c-muted{ color:var(--muted); }
