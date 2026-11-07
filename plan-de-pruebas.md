@@ -462,6 +462,10 @@ casi todo el tiempo).
 - Pulsa **"Buscar cerca"** (en Dónde cargas) y da permiso de ubicación. Debe aparecer
   "Distancias en línea recta, no por carretera · hasta X km" y una lista **ordenada de
   más cerca a más lejos** (las 5 primeras, y el resto tras "Ver N más").
+- Encima de las tarjetas sale "N cargadores cercanos" con un botón **Ocultar**. Al
+  pulsarlo, la lista se pliega y queda solo esa línea (con **Mostrar** para volver).
+  Si tenías una tarjeta abierta, esa se queda a la vista aunque pliegues la lista.
+  Una búsqueda nueva siempre sale desplegada.
 - Solo deben salir puntos con conector **Tipo 2** (el de carga lenta en AC),
   operativos y públicos o para clientes (supermercados, por ejemplo). **Si sale un
   punto que solo tiene carga rápida (CCS o CHAdeMO), es un fallo.**

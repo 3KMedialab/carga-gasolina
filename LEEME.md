@@ -28,7 +28,7 @@ Se despliega subiendo los archivos tal cual a GitHub Pages.
 2. `node pruebas.mjs` — 151 comprobaciones del cálculo, las mediciones,
    la climatización, los cargadores públicos y las gasolineras.
 3. `node humo.mjs` — arranca la app entera contra un DOM simulado
-   (112 comprobaciones en 14 escenarios).
+   (122 comprobaciones en 15 escenarios).
 4. Subir **también** `version.json` con un valor nuevo, y el mismo valor
    en la constante `VERSION` de `js/app.js`. Sin eso, los móviles que
    ya tienen la app instalada seguirán viendo la versión antigua.

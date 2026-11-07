@@ -41,6 +41,7 @@ let lugaresPendientes = [];    // candidatos cuando el municipio buscado es ambi
 let lastOcmResults = [];
 let selectedOcmResult = null;
 let mostrarTodosOcm = false;
+let ocmPlegado = false;        // lista de cargadores públicos oculta (salvo la tarjeta abierta)
 const OCM_VISIBLES = 5; // tarjetas antes de "Ver más"
 
 const cssVar = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
@@ -906,6 +907,7 @@ async function buscarCargadoresCercanos(){
   const fail = msg => {
     reset();
     note.innerHTML = `<span style="color:${color.warn}">${msg}</span>`;
+    show(note, true);
     listEl.innerHTML = '';
     lastOcmResults = [];
   };
@@ -918,6 +920,7 @@ async function buscarCargadoresCercanos(){
     lastOcmResults = resultados;
     selectedOcmResult = null;
     mostrarTodosOcm = false;
+    ocmPlegado = false;
 
     note.textContent = 'Distancias en línea recta, no por carretera \u00b7 hasta ' +
       fmt(radioKm, 0) + ' km.';
@@ -929,10 +932,25 @@ async function buscarCargadoresCercanos(){
   }
 }
 
+/**
+ * Lista de cargadores públicos. Desplegada: las 5 primeras y «Ver N más».
+ * Plegada: solo la cabecera y, si hay una abierta, esa tarjeta (su potencia
+ * es la que está en uso y «+ Guardar» parte de ella).
+ */
 function renderCargadoresResultados(){
   const listEl = $('cargadores-resultados');
-  const visibles = mostrarTodosOcm ? lastOcmResults : lastOcmResults.slice(0, OCM_VISIBLES);
-  const resto = lastOcmResults.length - visibles.length;
+  if(!lastOcmResults.length){ listEl.innerHTML = ''; return; }
+  const visibles = ocmPlegado
+    ? (selectedOcmResult ? [selectedOcmResult] : [])
+    : (mostrarTodosOcm ? lastOcmResults : lastOcmResults.slice(0, OCM_VISIBLES));
+  const resto = ocmPlegado ? 0 : lastOcmResults.length - visibles.length;
+  const n = lastOcmResults.length;
+  // la nota de distancias solo tiene sentido con la lista a la vista
+  show($('cargadores-note'), !ocmPlegado);
+
+  const cabecera = `<div class="ocm-cabecera"><span>${n} ${n === 1 ? 'cargador cercano' : 'cargadores cercanos'}</span>` +
+    `<button type="button" class="ocm-toggle" data-ocm-toggle="${ocmPlegado ? 'mostrar' : 'ocultar'}" ` +
+    `aria-expanded="${!ocmPlegado}">${ocmPlegado ? 'Mostrar' : 'Ocultar'}</button></div>`;
 
   const tarjetas = visibles.map(r => {
     const sel = selectedOcmResult && selectedOcmResult.id === r.id;
@@ -970,11 +988,18 @@ function renderCargadoresResultados(){
 
   const toggle = resto > 0
     ? `<button type="button" class="ocm-toggle" data-ocm-toggle="mas">Ver ${resto} m\u00e1s</button>`
-    : (mostrarTodosOcm && lastOcmResults.length > OCM_VISIBLES
+    : (!ocmPlegado && mostrarTodosOcm && lastOcmResults.length > OCM_VISIBLES
         ? `<button type="button" class="ocm-toggle" data-ocm-toggle="menos">Ver menos</button>`
         : '');
 
-  listEl.innerHTML = tarjetas + toggle;
+  listEl.innerHTML = cabecera + tarjetas + toggle;
+}
+
+/** 'ocultar' / 'mostrar' pliegan la lista; 'mas' / 'menos' cambian cuántas se ven. */
+function cambiarListaOcm(v){
+  if(v === 'ocultar' || v === 'mostrar') ocmPlegado = v === 'ocultar';
+  else if(v === 'mas' || v === 'menos') mostrarTodosOcm = v === 'mas';
+  renderCargadoresResultados();
 }
 
 function seleccionarOcmResultado(id){
@@ -1184,10 +1209,7 @@ function bindEvents(){
   $('btn-buscar-cargadores').addEventListener('click', buscarCargadoresCercanos);
   $('cargadores-resultados').addEventListener('click', e => {
     const toggle = e.target.closest('[data-ocm-toggle]');
-    if(toggle){
-      mostrarTodosOcm = toggle.getAttribute('data-ocm-toggle') === 'mas';
-      return renderCargadoresResultados();
-    }
+    if(toggle) return cambiarListaOcm(toggle.getAttribute('data-ocm-toggle'));
     const card = e.target.closest('[data-ocm-id]');
     if(card) seleccionarOcmResultado(card.getAttribute('data-ocm-id'));
   });
@@ -1318,5 +1340,5 @@ export function iniciar(){
 export const _test = {
   render, renderMeas, saveMeas, saveCharger, openCharger, els,
   renderCargadoresResultados, seleccionarOcmResultado, buscarCargadoresCercanos,
-  buscarPorLugar, usarLugar, elegirClima, clasificarMedida, irA, usarCargador
+  buscarPorLugar, usarLugar, elegirClima, clasificarMedida, irA, usarCargador, cambiarListaOcm
 };

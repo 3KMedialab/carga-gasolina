@@ -538,6 +538,62 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   dom.desmontar();
 }
 
+// ---------- 15. cargadores públicos: plegar y desplegar los resultados ----------
+// Ubicación y Open Charge Map simulados: la referencia ya está guardada y
+// vigente, así que solo se pide /poi/.
+{
+  const dom = montar({
+    'cvg_schema':'3',
+    'cvg_profiles_v1': JSON.stringify({ list:[{ id:'v1', name:'A', battery:18, maxPower:6.6,
+      elecCons:22, fuelCons:5, chargeEff:86, chem:'lfp' }], activeId:'v1' }),
+    'cvg_mode_v1':'parked',
+    'cvg_ocmref_v1': JSON.stringify({ fecha: new Date().toISOString(), connectorIds:[25], usageIds:[1],
+      operationalIds:[50], operators:{} })
+  });
+  Object.defineProperty(globalThis, 'navigator', { configurable: true, writable: true,
+    value: { geolocation: { getCurrentPosition: ok => ok({ coords: { latitude: 40.4, longitude: -3.7 } }) } } });
+  const pois = Array.from({ length: 7 }, (_, i) => ({
+    ID: 100 + i, UsageTypeID: 1, StatusTypeID: 50,
+    AddressInfo: { Title: 'Punto ' + i, Distance: 0.5 + i * 0.3 },
+    Connections: [{ ConnectionTypeID: 25, StatusTypeID: 50, PowerKW: 11, Quantity: 1 }]
+  }));
+  globalThis.fetch = url => String(url).includes('/poi/')
+    ? Promise.resolve({ ok: true, json: () => Promise.resolve(pois) })
+    : Promise.reject(new Error('sin-red'));
+
+  const { iniciar, _test } = await import('./js/interfaz.js?15');
+  iniciar();
+  await _test.buscarCargadoresCercanos();
+  const lista = () => dom.get('cargadores-resultados').innerHTML;
+  const tarjetas = () => (lista().match(/data-ocm-id=/g) || []).length;
+
+  ok('salen 5 tarjetas y la cabecera con el total', tarjetas() === 5 && lista().includes('7 cargadores cercanos'),
+     String(tarjetas()));
+  ok('con un botón para ocultarlas', lista().includes('data-ocm-toggle="ocultar"'));
+
+  _test.cambiarListaOcm('ocultar');
+  ok('plegada: ninguna tarjeta, solo la cabecera', tarjetas() === 0 && lista().includes('7 cargadores cercanos'));
+  ok('...con el botón para mostrarlas', lista().includes('data-ocm-toggle="mostrar"'));
+  ok('...y sin la nota de distancias', dom.get('cargadores-note').classList.contains('hidden'));
+
+  _test.cambiarListaOcm('mostrar');
+  ok('al mostrar vuelven las 5', tarjetas() === 5 && !dom.get('cargadores-note').classList.contains('hidden'));
+
+  _test.seleccionarOcmResultado(102);
+  _test.cambiarListaOcm('ocultar');
+  ok('plegada con una abierta: se queda solo esa', tarjetas() === 1 && lista().includes('data-ocm-id="102"'));
+  ok('...y su potencia sigue en uso', String(dom.get('inp-chargerPower').value) === '11');
+
+  _test.cambiarListaOcm('mostrar');
+  _test.cambiarListaOcm('mas');
+  ok('«Ver más» sigue funcionando: las 7', tarjetas() === 7);
+
+  await _test.buscarCargadoresCercanos();
+  ok('una búsqueda nueva sale desplegada', tarjetas() === 5);
+  Object.defineProperty(globalThis, 'navigator', { value: { geolocation: null }, configurable: true, writable: true });
+  dom.desmontar();
+}
+
 // ---------- resumen ----------
 console.log('='.repeat(50));
 if(falla){
