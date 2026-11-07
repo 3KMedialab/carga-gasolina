@@ -20,7 +20,8 @@ const K = {
   lugar:    'cvg_lugar_v1',
   hist:     id => 'cvg_hist_'  + id,
   calib:    id => 'cvg_calib_' + id,
-  meas:     id => 'cvg_meas_'  + id
+  meas:     id => 'cvg_meas_'  + id,
+  fuel:     id => 'cvg_fuel_'  + id   // medidas del consumo en híbrido (desde 2026-11-07)
 };
 
 // ---------- ESQUEMA ----------
@@ -87,7 +88,7 @@ export function deleteProfile(id){
   d.list = d.list.filter(x => x.id !== id);
   if(d.activeId === id) d.activeId = d.list[0].id;
   saveProfiles(d);
-  lsDel(K.hist(id)); lsDel(K.calib(id)); lsDel(K.meas(id));
+  lsDel(K.hist(id)); lsDel(K.calib(id)); lsDel(K.meas(id)); lsDel(K.fuel(id));
   return true;
 }
 
@@ -143,6 +144,11 @@ export const loadCalib    = ()  => withProfile(p => ls(K.calib(p.id)), null);
 export const storeCalib   = iso => withProfile(p => lsSet(K.calib(p.id), iso));
 export const loadMeas     = ()  => withProfile(p => lsJSON(K.meas(p.id), []), []);
 export const storeMeas    = l   => withProfile(p => lsPut(K.meas(p.id), l));
+// Clave nueva, sin cambiar la forma de nada de lo ya guardado: no necesita
+// migración (empieza vacía). Las medidas de R siguen guardando su R original;
+// el que se usa se recalcula con el consumo de ahora (medidasConConsumo).
+export const loadFuel     = ()  => withProfile(p => lsJSON(K.fuel(p.id), []), []);
+export const storeFuel    = l   => withProfile(p => lsPut(K.fuel(p.id), l));
 
 // ---------- COPIA DE SEGURIDAD ----------
 // Todo lo que guarda la app vive bajo claves 'cvg_', así que un volcado

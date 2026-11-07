@@ -394,6 +394,78 @@ seccion('Mediciones reales');
   }
 }
 
+// ================= CONSUMO EN HÍBRIDO MEDIDO =================
+seccion('Consumo en híbrido medido (vale para cualquier PHEV)');
+
+{
+  const { buildFuelMeasurement, consumoStats, consumoParaClima, medidasConConsumo,
+          METODOS_CONSUMO, CONSUMO_KM_MIN, CONSUMO_MIN } = calculo;
+  const CL = { clima:'nada', frio:false };
+
+  ok('dos métodos: contador y depósito', METODOS_CONSUMO.join(',') === 'contador,deposito');
+  const cont = buildFuelMeasurement({ km1:1000, km2:1200, metodo:'contador', valor:5.4, ...CL });
+  ok('contador: se acepta', cont.ok, cont.error);
+  casi('contador: los litros salen del L/100km y los km', cont.litres, 10.8, 1e-9);
+  casi('contador: el consumo es el que marca', cont.L, 5.4, 1e-9);
+  const dep = buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5, ...CL });
+  casi('depósito: litros ÷ km × 100', dep.L, 5, 1e-9);
+  ok('devuelve método, climatización y frío', dep.metodo === 'deposito' && dep.clima === 'nada' && dep.frio === false);
+
+  ok('rechaza sin método', !buildFuelMeasurement({ km1:0, km2:250, valor:12.5, ...CL }).ok);
+  ok('rechaza km al revés', !buildFuelMeasurement({ km1:250, km2:0, metodo:'deposito', valor:12.5, ...CL }).ok);
+  const corto = buildFuelMeasurement({ km1:0, km2:CONSUMO_KM_MIN - 1, metodo:'contador', valor:5, ...CL });
+  ok(`rechaza menos de ${CONSUMO_KM_MIN} km, explicando por qué`, !corto.ok && corto.error.includes('oscila'), corto.error);
+  ok('rechaza sin consumo o sin litros', !buildFuelMeasurement({ km1:0, km2:250, metodo:'contador', valor:0, ...CL }).ok);
+  // el promedio acumulado de un enchufable (aquí 2,5) mezcla km eléctricos: no es el consumo en híbrido
+  const acumulado = buildFuelMeasurement({ km1:0, km2:3000, metodo:'contador', valor:2.5, ...CL });
+  ok(`rechaza menos de ${CONSUMO_MIN} L/100km: es un promedio con km eléctricos`,
+     !acumulado.ok && acumulado.error.includes('km eléctricos'), acumulado.error);
+  ok('rechaza un consumo imposible', !buildFuelMeasurement({ km1:0, km2:100, metodo:'deposito', valor:40, ...CL }).ok);
+  ok('rechaza sin climatización', !buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5, frio:false }).ok);
+  ok('rechaza sin indicar si hizo frío', !buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5, clima:'aire' }).ok);
+
+  // estadística: litros totales ÷ km totales, el tramo largo pesa más
+  casi('consumo ponderado por km (100 km a 5 y 300 km a 6)',
+       consumoStats([{ km:100, litres:5, L:5 }, { km:300, litres:18, L:6 }]).L, 23 / 400 * 100, 1e-9);
+  ok('sin medidas, banda del 30%', consumoStats([]).band === 0.30 && consumoStats([]).L === null);
+  ok('con una medida, banda del 15%', consumoStats([{ km:200, litres:10, L:5 }]).band === 0.15);
+
+  // por climatización, sin tomar prestadas las de otra
+  const hoy = new Date().toISOString();
+  const lista = [{ id:'a', date:hoy, km:200, litres:10, L:5, clima:'nada' },
+                 { id:'b', date:hoy, km:200, litres:12, L:6, clima:'calefaccion' }];
+  casi('con calefacción, solo su medida', consumoParaClima(lista, 'calefaccion').L, 6, 1e-9);
+  ok('con aire y sin medidas suyas: declarado (fuente ninguna), nunca prestado',
+     consumoParaClima(lista, 'aire').fuente === 'ninguna' && consumoParaClima(lista, 'aire').L === null);
+  ok('una medida antigua sin climatización no tiene grupo: declarado', consumoParaClima(lista, null).fuente === 'ninguna');
+
+  // las medidas de R se recalculan con el consumo en híbrido de ahora
+  const conGas = buildMeasurement({ km1:0, km2:250, kwh:50, litres:3, fuelCons:5, ...CL });
+  const guardada = { id:'m1', date:hoy, km:conGas.km, kmElec:conGas.kmElec, kwh:50, litres:3, R:conGas.R, clima:'nada' };
+  casi('R guardado con 5 L/100km: (250 − 60) ÷ 50', guardada.R, 3.8, 1e-9);
+  const [rehecha] = medidasConConsumo([guardada], () => 6);
+  casi('con 6 L/100km, 3 L son 50 km: (250 − 50) ÷ 50 = 4,0', rehecha.R, 4.0, 1e-9);
+  ok('...y no toca lo guardado', guardada.R === 3.8);
+  casi('con el mismo consumo, el mismo R', medidasConConsumo([guardada], () => 5)[0].R, 3.8, 1e-9);
+  const sinLitros = { id:'m2', date:hoy, km:250, kmElec:250, kwh:64, litres:0, R:250/64, clima:'nada' };
+  ok('sin litros no cambia nada', medidasConConsumo([sinLitros], () => 6)[0] === sinLitros);
+  ok('una medida antigua sin km ni kWh se queda como estaba',
+     medidasConConsumo([{ id:'x', R:4.1 }], () => 6)[0].R === 4.1);
+  // 3 L a 2,5 L/100km serían 120 km de 250: casi la mitad con gasolina; a 2 son 150 km, más de la mitad
+  const invalida = medidasConConsumo([guardada], () => 2)[0];
+  ok('si con el consumo nuevo ya no vale, queda marcada y sin R', invalida.invalida === true && invalida.R === null);
+  ok('...y no cuenta para R ni para «en uso»',
+     rParaClima([invalida], 'nada').fuente === 'ninguna' && measEnUso([invalida]).size === 0);
+  const porClima = medidasConConsumo([guardada, { ...guardada, id:'m3', clima:'calefaccion' }],
+    c => c === 'calefaccion' ? 6 : 5);
+  ok('cada medida usa el consumo de su climatización', porClima[0].R === 3.8 && Math.abs(porClima[1].R - 4.0) < 1e-9);
+
+  // sin medir, el error se nota en el veredicto: con 2,5 la gasolina parece la mitad de barata
+  const bajo = simulate({ ...base('parked'), fuelCons:2.5 }), real = simulate({ ...base('parked'), fuelCons:5.1 });
+  ok('con el promedio acumulado (2,5) el ahorro sale mucho menor que con el de verdad (5,1)',
+     bajo.net < real.net && bajo.equivFuel < real.equivFuel / 2 + 1e-9, `${bajo.net.toFixed(2)} vs ${real.net.toFixed(2)}`);
+}
+
 // ================= CARGADORES PÚBLICOS (OCM) =================
 seccion('Cargadores públicos (OCM)');
 

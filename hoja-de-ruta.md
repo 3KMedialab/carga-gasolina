@@ -130,8 +130,12 @@ prestadas medidas de otra climatización.
 - **Ciudad o carretera.** No se pregunta: combinada con la climatización daría
   demasiados grupos para el número de medidas que hace una persona. Solo se
   añadirá si los datos de varios testers muestran que hace falta.
-- **El consumo de gasolina con frío** sigue siendo el declarado. Medirlo bien
-  necesita otro procedimiento.
+- **El consumo de gasolina** *(7 de noviembre: hecho)*. Se mide como R, por
+  climatización: con la batería en su nivel mínimo al empezar y al terminar, sin
+  enchufar, con el contador de a bordo o de depósito a depósito. Vale para
+  cualquier PHEV. Además corrige R: los litros de cada medida eléctrica se
+  descuentan con el consumo medido. El frío se guarda, pero, igual que en R, no
+  separa grupos hasta que los datos lo pidan.
 
 **Depende de:** mediciones de invierno y de verano, de varios coches.
 

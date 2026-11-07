@@ -58,7 +58,7 @@ La primera vez te pedirá seis datos. **De su exactitud depende todo lo demás.*
 | **Batería útil (kWh)** | Ficha técnica o web del fabricante. Si ves dos cifras (bruta y neta/útil), usa la **útil**. |
 | **Potencia máxima en AC (kW)** | Lo más rápido que admite tu coche en corriente alterna. Suele ser 3,3 / 3,7 / 6,6 / 7,4 u 11 kW. **No es la potencia del motor.** |
 | **Consumo eléctrico (kWh/100km)** | Si no lo publican: batería ÷ autonomía eléctrica real × 100. Ejemplo: 14 kWh y 60 km reales → **23**. |
-| **Consumo en híbrido (L/100km)** | Lo que gasta **con la batería agotada**. El dato de tu ordenador de a bordo en viajes largos, **no** el WLTP homologado. |
+| **Consumo en híbrido (L/100km)** | Lo que gasta **con la batería en su nivel mínimo**, cuando toda la energía sale del depósito. **No** vale la cifra combinada que se anuncia (1–2 L/100km) ni el promedio acumulado del ordenador de a bordo: los dos mezclan km eléctricos. Si no lo sabes, busca en la ficha WLTP el consumo «en modo de mantenimiento de carga»; mejor aún, mídelo (apartado 9.12). |
 | **Tipo de batería** | LFP o NMC/NCA. Búscalo como "química de la batería" de tu modelo. BYD y algunos MG usan LFP; la mayoría del resto, NMC. Si no lo encuentras, deja "No lo sé". |
 | **Eficiencia de carga (%)** | Casi nadie lo publica. Deja el 85% salvo que conozcas el tuyo. |
 
@@ -457,6 +457,12 @@ casi todo el tiempo).
   **de cada climatización por separado**.
 - De cada climatización solo cuentan las 8 últimas medidas de los últimos 12 meses.
   Las medidas antiguas sin climatización, solo las de los últimos 6 meses.
+- **El consumo en híbrido cuenta.** Los litros se descuentan con el consumo en híbrido
+  **medido** con la climatización de la medida (apartado 9.12) o, si no lo has medido,
+  con el declarado. Al medirlo o al cambiar el declarado, el km/kWh de las medidas ya
+  guardadas cambia solo. Si con el consumo nuevo una medida queda con más de la mitad
+  de los km hechos con gasolina, en la lista pone "no vale con tu consumo en híbrido"
+  y deja de contar.
 
 **9.9 — Buscar cargadores públicos** *(Open Charge Map)*
 - Pulsa **"Buscar cerca"** (en Dónde cargas) y da permiso de ubicación. Debe aparecer
@@ -503,6 +509,37 @@ La app guarda una copia de sí misma la primera vez que la abres con conexión.
   ahora.
 - **Android:** al abrir la dirección en Chrome, puede ofrecerte "Instalar aplicación".
   Instalada así, se abre a pantalla completa con el icono del rayo.
+
+**9.12 — Medir el consumo en híbrido** ⭐
+En **Mi coche** → "Medir el consumo en híbrido". Es la otra mitad de la comparación:
+con un consumo demasiado bajo, la gasolina parece más barata de lo que es y la app
+dice "no compensa" en cargadores que sí compensan. Vale para cualquier enchufable,
+sea cual sea su sistema híbrido:
+
+1. Empieza con la batería en **su nivel más bajo**, en el modo que mantiene la carga.
+   En muchos coches es el 0% que marca el indicador; en otros (los BYD DM-i, por
+   ejemplo) es el nivel que eliges en el menú de energía, y conviene ponerlo en el
+   mínimo. No uses ningún modo que cargue la batería con el motor.
+2. Anota el cuentakilómetros y el nivel de batería. Pon a cero el contador de
+   consumo, o llena el depósito si vas a medir de depósito a depósito.
+3. Conduce **al menos 150 km sin enchufar el coche**, con la misma climatización.
+4. Termina con la batería **en el mismo nivel** que al empezar. Anota los km y el
+   consumo del contador, o llena el depósito y anota los litros.
+
+- **La cuenta.** De depósito a depósito: litros ÷ km × 100. Ejemplo: 12 L en 200 km
+  → **6,0 L/100km**. Con el contador, la app usa el L/100km que marca.
+- **Rechazos esperados**, cada uno con su mensaje: km finales menores o iguales que
+  los iniciales; menos de 50 km; sin consumo o sin litros; **menos de 3 L/100km**
+  (es un promedio con km eléctricos: prueba a meter el acumulado de tu ordenador de
+  a bordo y debe rechazarlo); más de 30 L/100km; sin climatización; sin indicar si
+  hizo frío.
+- **Tras guardar**, en Calcular, bajo la climatización, debe decir "Gasolina: X
+  L/100km en híbrido, con tu medida…" y el campo Gasolina de Ajustes debe tomar ese
+  valor. **Con otra climatización, no**: vuelve al declarado y lo dice. Las medidas
+  eléctricas con litros cambian su km/kWh (apartado 9.8).
+- **Anota en la ficha** (sección 14) qué método usaste, si tu coche deja poner el
+  contador a cero, qué nivel mínimo mantiene tu batería y si el resultado se parece
+  a lo que esperabas. Si mides en ciudad y en autovía, anota los dos.
 
 ---
 
@@ -650,6 +687,10 @@ Tipo de batería (LFP / NMC / no lo sé):    ¿de dónde lo sacaste?
 Potencia máx. AC (kW):
 Consumo eléctrico (kWh/100km):             ¿de dónde lo sacaste?
 Consumo híbrido (L/100km):                 ¿de dónde lo sacaste?
+Consumo híbrido medido (9.12):             ___ L/100km · contador / depósito
+  ¿Tu contador se pone a cero?             Sí / No
+  Nivel mínimo que mantiene la batería:    ___%  ¿se puede elegir? Sí / No
+  Ciudad: ___ L/100km  ·  Autovía: ___ L/100km
 Eficiencia usada (%):
 
 ── TU USO ──────────────────────────────────

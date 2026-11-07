@@ -8,7 +8,8 @@ import {
 
 import {
   CLIMAS, simulate, findLimitHours, rParaClima, measEnUso, sinClasificar, buildMeasurement, kmPorClima,
-  MEAS_MAX, MEAS_MESES, MEAS_MESES_SIN_CLASIFICAR
+  MEAS_MAX, MEAS_MESES, MEAS_MESES_SIN_CLASIFICAR,
+  medidasConConsumo, buildFuelMeasurement, consumoParaClima
 } from './calculo.js';
 
 import * as D from './datos.js';
@@ -57,9 +58,25 @@ function pulsado(el, on){
 
 // ======================= CÁLCULO PRINCIPAL =======================
 
+/** Consumo en híbrido para una climatización: el medido con ella si lo hay, el declarado si no. */
+function baseFuelCons(prof, c){
+  const s = consumoParaClima(D.loadFuel(), c);
+  return s.L > 0 ? s.L : prof.fuelCons;
+}
+
+/**
+ * Las medidas de R con el consumo en híbrido de ahora: los litros de cada una
+ * se descuentan con el consumo de su climatización. Todo lo que muestra o usa R
+ * pasa por aquí, no por D.loadMeas() directamente.
+ */
+function medidasR(prof){
+  const l = D.loadMeas();
+  return prof ? medidasConConsumo(l, c => baseFuelCons(prof, c)) : l;
+}
+
 /** Consumo eléctrico base: el medido con esta climatización si lo hay, el declarado si no. */
 function baseElecCons(prof){
-  const s = rParaClima(D.loadMeas(), clima);
+  const s = rParaClima(medidasR(prof), clima);
   return s.R > 0 ? prof.chargeEff / s.R : prof.elecCons;
 }
 
@@ -228,13 +245,13 @@ function render(){
   $('soc-valor').textContent = fmt(pctNow, 0) + ' %';
 
   // km de esta recarga con cada climatización, solo donde hay medidas propias
-  const kpc = kmPorClima(r.energyIn, D.loadMeas(), prof.chargeEff);
+  const kpc = kmPorClima(r.energyIn, medidasR(prof), prof.chargeEff);
   CLIMAS.forEach(c => {
     $('km-' + c).textContent = r.nothingToCharge ? '' : kpc[c] !== null ? '≈ ' + fmt(kpc[c], 0) + ' km' : 'sin medidas';
   });
 
   $('cons-hint').textContent = 'Declarados de ' + prof.name + ': ' + fmt(prof.elecCons, 1) +
-    ' kWh/100km y ' + fmt(prof.fuelCons, 1) + ' L/100km. El eléctrico se sustituye por el medido ' +
+    ' kWh/100km y ' + fmt(prof.fuelCons, 1) + ' L/100km. Cada uno se sustituye por el medido ' +
     'con la climatización elegida, si lo hay. Si cambias estos valores a mano, se usan hasta que ' +
     'cambies de climatización o de vehículo.';
 
@@ -253,7 +270,7 @@ function aplicarClima(){
   const p = D.activeProfile();
   if(!p) return;
   els.elecConsumption.value = Math.round(baseElecCons(p) * 10) / 10;
-  els.fuelConsumption.value = Math.round(p.fuelCons * 10) / 10;
+  els.fuelConsumption.value = Math.round(baseFuelCons(p, clima) * 10) / 10;
   D.setClima(clima);
   syncClimaUI();
 }
@@ -269,7 +286,8 @@ function syncClimaUI(){
   document.querySelectorAll('#clima-row [data-clima]').forEach(b => {
     pulsado(b, b.getAttribute('data-clima') === clima);
   });
-  const s = rParaClima(D.loadMeas(), clima);
+  const prof = D.activeProfile();
+  const s = rParaClima(medidasR(prof), clima);
   const hint = $('clima-hint');
   if(s.fuente === 'clima'){
     hint.textContent = (s.n === 1 ? 'Con tu medida ' : 'Con tus ' + s.n + ' medidas ') + CON_CLIMA[clima] +
@@ -283,6 +301,21 @@ function syncClimaUI(){
     hint.textContent = 'No tienes medidas ' + CON_CLIMA[clima] + ': se usa el consumo declarado, ' +
       'con un margen de error del 30%. Haz una medida para que el cálculo sea fiable.';
     hint.classList.add('warn');
+  }
+
+  // la gasolina: el consumo en híbrido medido con esta climatización, o el declarado
+  const g = consumoParaClima(D.loadFuel(), clima);
+  const gh = $('gas-hint');
+  if(g.fuente === 'clima'){
+    gh.textContent = 'Gasolina: ' + fmt(g.L, 1) + ' L/100km en híbrido, ' +
+      (g.n === 1 ? 'con tu medida ' : 'con tus ' + g.n + ' medidas ') + CON_CLIMA[clima] +
+      ', ±' + fmt(g.band * 100, 0) + '%.';
+    gh.classList.remove('warn');
+  } else {
+    gh.textContent = 'Gasolina: se usa el consumo en híbrido declarado' +
+      (prof ? ' (' + fmt(prof.fuelCons, 1) + ' L/100km)' : '') +
+      ', sin medir ' + CON_CLIMA[clima] + '. Puedes medirlo en Mi coche.';
+    gh.classList.add('warn');
   }
 }
 
@@ -309,7 +342,7 @@ function renderVehicles(){
       `<div><div class="k">Batería útil</div><div class="v num">${fmt(act.battery, 1)} kWh</div></div>` +
       `<div><div class="k">Carga máx. en AC</div><div class="v num">${fmt(act.maxPower, 1)} kW</div></div>` +
       `<div><div class="k">Consumo eléctrico declarado</div><div class="v num">${fmt(act.elecCons, 1)} kWh/100km</div></div>` +
-      `<div><div class="k">Consumo en híbrido</div><div class="v num">${fmt(act.fuelCons, 1)} L/100km</div></div>` +
+      `<div><div class="k">Consumo en híbrido declarado</div><div class="v num">${fmt(act.fuelCons, 1)} L/100km</div></div>` +
       `<div><div class="k">Eficiencia de carga</div><div class="v num">${fmt(act.chargeEff, 0)}%</div></div>` +
       '</div>';
   } else sum.innerHTML = '';
@@ -706,7 +739,7 @@ function resumenClimasHTML(list, prof){
 }
 
 function renderMeas(){
-  const list = D.loadMeas(), prof = D.activeProfile();
+  const prof = D.activeProfile(), list = medidasR(prof);
   const chem = prof ? (prof.chem || 'unknown') : 'unknown';
 
   $('meas-level').innerHTML = chem === 'lfp'
@@ -725,8 +758,12 @@ function renderMeas(){
     const d = new Date(m.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
     const vieja = enUso.has(m.id) ? '' : ' meas-vieja';
     const etiqueta = sinClasificar(m) ? '' : ' · ' + CORTO[m.clima] + (m.frio ? ', frío' : '');
+    // con el consumo en híbrido de ahora, sus litros pueden explicar casi todos los km
+    const valor = m.invalida
+      ? '<span class="c-warn">no vale con tu consumo en híbrido</span>'
+      : `<strong>${fmt(m.R, 2)}</strong> km/kWh`;
     const fila = `<div class="meas-fila"><span>${d} · ${fmt(m.km, 0)} km / ${fmt(m.kwh, 1)} kWh${etiqueta}</span>` +
-      `<span><strong>${fmt(m.R, 2)}</strong> km/kWh` +
+      `<span>${valor}` +
       `<button class="meas-del" data-mid="${m.id}" aria-label="Borrar">&times;</button></span></div>`;
     if(!sinClasificar(m)) return `<div class="meas-item${vieja}">${fila}</div>`;
     return `<div class="meas-item sin-clima${vieja}">${fila}<div class="meas-clasif">` +
@@ -751,14 +788,16 @@ function saveMeas(){
   const prof = D.activeProfile();
   if(!prof) return;
 
+  const climaMedida = $('meas-clima').value;
   const res = buildMeasurement({
     km1: parseFloat($('meas-km1').value),
     km2: parseFloat($('meas-km2').value),
     kwh: parseFloat($('meas-kwh').value),
     litres: parseFloat($('meas-lit').value),
-    fuelCons: prof.fuelCons,
-    clima: $('meas-clima').value,
-    frio: $('meas-frio').value === 'si' ? true : $('meas-frio').value === 'no' ? false : null
+    // el mismo consumo con el que luego se recalcula (medidasR)
+    fuelCons: baseFuelCons(prof, climaMedida),
+    clima: climaMedida,
+    frio: leerFrio('meas-frio')
   });
 
   if(!res.ok){ err.textContent = res.error; err.classList.add('show'); return; }
@@ -776,6 +815,100 @@ function saveMeas(){
   renderMeas();
   aplicarClima();
   render();
+}
+
+const leerFrio = id => $(id).value === 'si' ? true : $(id).value === 'no' ? false : null;
+
+// ======================= CONSUMO EN HÍBRIDO =======================
+
+// el select arranca en la primera opción, como en el navegador
+const metodoConsumo = () => $('fuel-metodo').value || 'contador';
+
+/** Lo que gasta el coche en híbrido con cada climatización, solo con datos medidos. */
+function resumenConsumoHTML(list, prof){
+  if(!list.length){
+    return '<p class="r-nota" style="padding-top:12px">Todavía no lo has medido. Mientras tanto la app usa ' +
+      'el consumo en híbrido que declaraste' + (prof ? ' (' + fmt(prof.fuelCons, 1) + ' L/100km)' : '') + '.</p>';
+  }
+  const ETIQ = { calefaccion: 'Con calefacción', aire: 'Con aire', nada: 'Sin climatización' };
+  let descartadas = 0;
+  const filas = CLIMAS.map(c => {
+    const s = consumoParaClima(list, c);
+    if(s.fuente !== 'clima'){
+      return `<div class="clima-g vacio"><div><div class="k">${ETIQ[c]}</div>` +
+        '<div class="d">Se usa el declarado</div></div><div class="v">Sin medidas</div></div>';
+    }
+    descartadas += s.descartadas;
+    return `<div class="clima-g"><div><div class="k">${ETIQ[c]}</div>` +
+      `<div class="d num">${s.n} ${s.n === 1 ? 'medida' : 'medidas'} · margen de error ±${fmt(s.band * 100, 0)}%</div></div>` +
+      `<div class="v num">${fmt(s.L, 1)} <small>L/100km</small></div></div>`;
+  });
+  const nota = descartadas ? `<p class="r-nota">Hay medidas guardadas que no cuentan: de cada climatización solo se ` +
+    `usan las ${MEAS_MAX} últimas de los ${MEAS_MESES} últimos meses.</p>` : '';
+  return filas.join('') + nota;
+}
+
+function syncMetodoConsumo(){
+  const dep = metodoConsumo() === 'deposito';
+  $('fuel-valor-label').textContent = dep ? 'Litros al rellenar el depósito' : 'Consumo que marca el contador';
+  $('fuel-valor-unit').textContent = dep ? 'litros' : 'L/100km';
+  $('fuel-valor-hint').textContent = dep
+    ? 'Los que entran al llenarlo de nuevo, hasta que salte el surtidor como la primera vez'
+    : 'El del tramo que has medido, no el acumulado';
+}
+
+function renderFuel(){
+  const list = D.loadFuel(), prof = D.activeProfile();
+  const resumen = resumenConsumoHTML(list, prof);
+  $('fuel-summary').innerHTML = resumen;
+  $('g-resumen').innerHTML = resumen;
+  syncMetodoConsumo();
+
+  const enUso = measEnUso(list);
+  const CORTO = { calefaccion: 'calefacción', aire: 'aire', nada: 'sin clima' };
+  const METODO = { contador: 'contador', deposito: 'depósito' };
+  $('fuel-list').innerHTML = list.slice().reverse().map(m => {
+    const d = new Date(m.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+    const vieja = enUso.has(m.id) ? '' : ' meas-vieja';
+    return `<div class="meas-item${vieja}"><div class="meas-fila">` +
+      `<span>${d} · ${fmt(m.km, 0)} km · ${METODO[m.metodo] || ''} · ${CORTO[m.clima]}${m.frio ? ', frío' : ''}</span>` +
+      `<span><strong>${fmt(m.L, 1)}</strong> L/100km` +
+      `<button class="meas-del" data-fid="${m.id}" aria-label="Borrar">&times;</button></span></div></div>`;
+  }).join('');
+}
+
+/** Tras cambiar las medidas de consumo: cambian la gasolina del cálculo y el R de las medidas eléctricas. */
+function trasCambiarConsumo(){
+  renderFuel(); renderMeas(); aplicarClima(); render();
+}
+
+function saveFuel(){
+  const err = $('fuel-err');
+  if(!D.activeProfile()) return;
+
+  const res = buildFuelMeasurement({
+    km1: parseFloat($('fuel-km1').value),
+    km2: parseFloat($('fuel-km2').value),
+    metodo: metodoConsumo(),
+    valor: parseFloat($('fuel-valor').value),
+    clima: $('fuel-clima').value,
+    frio: leerFrio('fuel-frio')
+  });
+  if(!res.ok){ err.textContent = res.error; err.classList.add('show'); return; }
+
+  const l = D.loadFuel();
+  l.push({ id: 'f' + Date.now() + '-' + l.length, date: new Date().toISOString(),
+           km: res.km, litres: res.litres, L: res.L, metodo: res.metodo, clima: res.clima, frio: res.frio });
+  D.storeFuel(l);
+
+  ['fuel-km1', 'fuel-km2', 'fuel-valor', 'fuel-clima', 'fuel-frio'].forEach(id => { $(id).value = ''; });
+  err.classList.remove('show');
+  trasCambiarConsumo();
+}
+
+function borrarConsumo(id){
+  D.storeFuel(D.loadFuel().filter(m => m.id !== id));
+  trasCambiarConsumo();
 }
 
 // ======================= GASOLINERAS =======================
@@ -1077,6 +1210,7 @@ function refreshAll(){
   renderCalibration();
   renderHistory();
   renderMeas();
+  renderFuel();
   render();
 }
 
@@ -1295,8 +1429,21 @@ function bindEvents(){
     renderMeas(); aplicarClima(); render();
   });
 
+  // --- consumo en híbrido ---
+  $('btn-measure-fuel').addEventListener('click', () => {
+    $('fuel-err').classList.remove('show'); renderFuel(); openOverlay('fuel-overlay', true);
+  });
+  $('fuel-close').addEventListener('click', () => openOverlay('fuel-overlay', false));
+  $('fuel-save').addEventListener('click', saveFuel);
+  $('fuel-metodo').addEventListener('change', syncMetodoConsumo);
+  $('fuel-list').addEventListener('click', e => {
+    const b = e.target.closest('[data-fid]'); if(!b) return;
+    if(!confirm('¿Borrar esta medida?')) return;
+    borrarConsumo(b.getAttribute('data-fid'));
+  });
+
   // tocar fuera de una ficha la cierra (salvo la del vehículo: la primera vez es obligatoria)
-  ['meas-overlay', 'ch-overlay', 'chs-overlay'].forEach(id => {
+  ['meas-overlay', 'fuel-overlay', 'ch-overlay', 'chs-overlay'].forEach(id => {
     $(id).addEventListener('click', e => { if(e.target === $(id)) openOverlay(id, false); });
   });
 }
@@ -1336,5 +1483,6 @@ export function iniciar(){
 export const _test = {
   render, renderMeas, saveMeas, saveCharger, openCharger, els,
   renderCargadoresResultados, seleccionarOcmResultado, buscarCargadoresCercanos,
-  buscarPorLugar, usarLugar, elegirClima, clasificarMedida, irA, usarCargador, cambiarListaOcm
+  buscarPorLugar, usarLugar, elegirClima, clasificarMedida, irA, usarCargador, cambiarListaOcm,
+  saveFuel, borrarConsumo
 };

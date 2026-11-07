@@ -168,22 +168,34 @@ export const BAND_UNA_MEDIDA = 0.15;
 // contador mueve mucho su R) no pesa lo mismo que una de 12 kWh. Si alguna
 // medida no trae km y kWh (datos antiguos), se usa la media simple de todas.
 // La dispersión (cv y banda) sigue siendo la de los R individuales.
-export function measStats(list, ahora = Date.now(), meses = MEAS_MESES){
+// Estadística común a R y al consumo en híbrido: valor central (ponderado si
+// se puede), dispersión de los valores individuales y banda con la t de Student.
+function estadistica(list, ahora, meses, valor, ponderado){
   const usadas = measVigentes(list, ahora, meses);
   const descartadas = list.length - usadas.length;
-  if(!usadas.length) return { n: 0, R: null, cv: null, band: 0.30, descartadas: 0 };
-  const mean = usadas.reduce((s, m) => s + m.R, 0) / usadas.length;
-  const ponderable = usadas.every(m => m.kwh > 0 && m.kmElec > 0);
-  const R = ponderable
-    ? usadas.reduce((s, m) => s + m.kmElec, 0) / usadas.reduce((s, m) => s + m.kwh, 0)
-    : mean;
-  if(usadas.length < 2) return { n: 1, R, cv: null, band: BAND_UNA_MEDIDA, descartadas };
-  const v = usadas.reduce((s, m) => s + (m.R - mean) ** 2, 0) / (usadas.length - 1);
+  if(!usadas.length) return { n: 0, valor: null, cv: null, band: 0.30, descartadas: 0 };
+  const mean = usadas.reduce((s, m) => s + valor(m), 0) / usadas.length;
+  const p = ponderado(usadas);
+  const centro = p !== null ? p : mean;
+  if(usadas.length < 2) return { n: 1, valor: centro, cv: null, band: BAND_UNA_MEDIDA, descartadas };
+  const v = usadas.reduce((s, m) => s + (valor(m) - mean) ** 2, 0) / (usadas.length - 1);
   const cv = mean > 0 ? Math.sqrt(v) / mean : 0;
   let band = tCrit(usadas.length - 1) * cv / Math.sqrt(usadas.length);
   if(usadas.length === 2) band = Math.max(band, BAND_UNA_MEDIDA);
-  return { n: usadas.length, R, cv, band, descartadas };
+  return { n: usadas.length, valor: centro, cv, band, descartadas };
 }
+
+export function measStats(list, ahora = Date.now(), meses = MEAS_MESES){
+  const s = estadistica(list, ahora, meses, m => m.R, usadas =>
+    usadas.every(m => m.kwh > 0 && m.kmElec > 0)
+      ? usadas.reduce((t, m) => t + m.kmElec, 0) / usadas.reduce((t, m) => t + m.kwh, 0)
+      : null);
+  return { n: s.n, R: s.valor, cv: s.cv, band: s.band, descartadas: s.descartadas };
+}
+
+// Una medida de R puede quedar sin valor (R = null) si, con el consumo en
+// híbrido de ahora, sus litros explican casi todos los km: ver medidasConConsumo.
+const cuentaR = m => m && m.R !== null;
 
 /** Medidas sin climatización: guardadas antes de que la app la preguntara. */
 export const sinClasificar = m => !m || CLIMAS.indexOf(m.clima) === -1;
@@ -200,9 +212,10 @@ export const sinClasificar = m => !m || CLIMAS.indexOf(m.clima) === -1;
  * ver con datos si el frío sin calefacción cambia R de forma apreciable.
  */
 export function rParaClima(list, clima, ahora = Date.now()){
-  const grupo = (list || []).filter(m => m && m.clima === clima);
+  list = (list || []).filter(cuentaR);
+  const grupo = list.filter(m => m.clima === clima);
   if(grupo.length) return { ...measStats(grupo, ahora, MEAS_MESES), fuente: 'clima' };
-  const viejas = (list || []).filter(sinClasificar);
+  const viejas = list.filter(sinClasificar);
   if(viejas.length) return { ...measStats(viejas, ahora, MEAS_MESES_SIN_CLASIFICAR), fuente: 'sin-clasificar' };
   return { ...measStats([], ahora), fuente: 'ninguna' };
 }
@@ -221,13 +234,33 @@ export function kmPorClima(energyIn, list, chargeEff, ahora = Date.now()){
   return out;
 }
 
-/** Ids de las medidas que cuentan ahora mismo en algún grupo (para atenuar el resto). */
+/**
+ * Ids de las medidas que cuentan ahora mismo en algún grupo (para atenuar el resto).
+ * Sirve para cualquier lista agrupada por climatización: las de R y las de consumo.
+ */
 export function measEnUso(list, ahora = Date.now()){
   const ids = new Set();
   const add = (l, meses) => measVigentes(l, ahora, meses).forEach(m => ids.add(m.id));
-  CLIMAS.forEach(c => add((list || []).filter(m => m && m.clima === c), MEAS_MESES));
-  add((list || []).filter(sinClasificar), MEAS_MESES_SIN_CLASIFICAR);
+  list = (list || []).filter(cuentaR);
+  CLIMAS.forEach(c => add(list.filter(m => m.clima === c), MEAS_MESES));
+  add(list.filter(sinClasificar), MEAS_MESES_SIN_CLASIFICAR);
   return ids;
+}
+
+/**
+ * Km eléctricos y R de un periodo, descontando los km que hizo el motor:
+ * litros ÷ consumo en híbrido × 100. Devuelve {ok, kmElec, R} o {ok:false, error}.
+ * Lo usan la medida nueva y el recálculo de las guardadas, con las mismas reglas.
+ */
+function rDelPeriodo(kmTot, kwh, litres, fuelCons){
+  const fail = error => ({ ok: false, error });
+  const kmGas = fuelCons > 0 ? (litres / fuelCons) * 100 : 0;
+  const kmElec = kmTot - kmGas;
+  if(kmElec <= 0) return fail('Según la gasolina gastada, todos esos km los hizo el motor. Esta medida no sirve.');
+  if(kmGas / kmTot > 0.5) return fail('Más de la mitad de los km fueron con gasolina: la medida sería poco fiable.');
+  const R = kmElec / kwh;
+  if(R < 0.5 || R > 15) return fail('El resultado no es creíble. Revisa los datos.');
+  return { ok: true, kmElec, R };
 }
 
 /** Valida una medición y devuelve {ok, R, error}. */
@@ -239,17 +272,98 @@ export function buildMeasurement({ km1, km2, kwh, litres, fuelCons, clima, frio 
   if(!isFinite(litres) || litres < 0) litres = 0;
 
   const kmTot = km2 - km1;
-  const kmGas = fuelCons > 0 ? (litres / fuelCons) * 100 : 0;
-  const kmElec = kmTot - kmGas;
-
-  if(kmElec <= 0) return fail('Según la gasolina gastada, todos esos km los hizo el motor. Esta medida no sirve.');
-  if(kmGas / kmTot > 0.5) return fail('Más de la mitad de los km fueron con gasolina: la medida sería poco fiable.');
-
-  const R = kmElec / kwh;
-  if(R < 0.5 || R > 15) return fail('El resultado no es creíble. Revisa los datos.');
+  const r = rDelPeriodo(kmTot, kwh, litres, fuelCons);
+  if(!r.ok) return r;
 
   if(CLIMAS.indexOf(clima) === -1) return fail('Indica si usaste la calefacción, el aire o nada.');
   if(frio !== true && frio !== false) return fail('Indica si hizo frío esos días.');
 
-  return { ok: true, km: kmTot, kmElec, kwh, litres, R, clima, frio };
+  return { ok: true, km: kmTot, kmElec: r.kmElec, kwh, litres, R: r.R, clima, frio };
+}
+
+/**
+ * Las medidas de R guardadas, con el consumo en híbrido de ahora.
+ * Cada medida guarda sus km, kWh y litros, así que sus km eléctricos se pueden
+ * rehacer sin inventarse nada cuando cambia el consumo (porque se ha medido o
+ * porque se ha corregido el declarado). `consumoDe(clima)` da el consumo que
+ * toca a cada medida: el medido con su climatización o, si no hay, el declarado.
+ * Una medida sin litros no cambia. Una que con el consumo nuevo ya no pasa las
+ * reglas de buildMeasurement queda con R = null y `invalida: true`: no cuenta,
+ * pero sigue en la lista para que se vea y se pueda borrar.
+ */
+export function medidasConConsumo(list, consumoDe){
+  return (list || []).map(m => {
+    if(!m || !(m.km > 0) || !(m.kwh > 0) || !(m.litres > 0)) return m;
+    const fc = consumoDe(m.clima);
+    if(!(fc > 0)) return m;
+    const r = rDelPeriodo(m.km, m.kwh, m.litres, fc);
+    return r.ok
+      ? { ...m, kmElec: r.kmElec, R: r.R, invalida: false }
+      : { ...m, kmElec: 0, R: null, invalida: true };
+  });
+}
+
+// ================= CONSUMO EN HÍBRIDO MEDIDO =================
+// Lo que gasta el coche en el modo que mantiene la carga: con la batería en el
+// nivel más bajo que conserva sin enchufe, toda la energía sale del depósito.
+// Ese modo existe en cualquier PHEV (serie, paralelo o reparto de potencia) y
+// la homologación WLTP lo define igual para todos; el nivel lo pone cada coche
+// (0% en muchos, el SOC objetivo que elige el conductor en otros). La medida
+// vale si la batería empieza y acaba en ese mismo nivel y no se enchufa entre
+// medias. No sirven la cifra ponderada que se anuncia ni el promedio acumulado
+// del ordenador de a bordo: los dos mezclan km hechos con electricidad de la red.
+
+/** 'contador': L/100 km del ordenador de a bordo, puesto a cero al empezar. 'deposito': litros al rellenar. */
+export const METODOS_CONSUMO = ['contador', 'deposito'];
+// La batería oscila un poco alrededor de su nivel mínimo; cuanto más largo el
+// tramo, menos pesa esa oscilación en el resultado.
+export const CONSUMO_KM_MIN = 50;
+// Límites de credibilidad, como los de R. Gastándolo todo con gasolina, ni los
+// híbridos más eficientes homologan menos de unos 4 L/100 km; por debajo de 3
+// casi seguro es un promedio con km eléctricos (como el acumulado del ordenador
+// de a bordo de un enchufable, que suele rondar los 1–3 L/100 km).
+export const CONSUMO_MIN = 3, CONSUMO_MAX = 30;
+
+/** Valida una medida del consumo en híbrido y devuelve {ok, km, litres, L, ...} o {ok:false, error}. */
+export function buildFuelMeasurement({ km1, km2, metodo, valor, clima, frio }){
+  const fail = error => ({ ok: false, error });
+  if(METODOS_CONSUMO.indexOf(metodo) === -1) return fail('Indica cómo lo has medido.');
+  if(!isFinite(km1) || !isFinite(km2)) return fail('Faltan los kilómetros.');
+  if(km2 <= km1) return fail('Los km del final deben ser mayores que los del principio.');
+  const km = km2 - km1;
+  if(km < CONSUMO_KM_MIN) return fail(`Haz al menos ${CONSUMO_KM_MIN} km: en un tramo corto pesa demasiado lo que oscila la batería.`);
+  if(!isFinite(valor) || valor <= 0) return fail(metodo === 'contador'
+    ? 'Indica el consumo que marca el ordenador de a bordo.'
+    : 'Indica los litros que has repostado.');
+
+  const litres = metodo === 'contador' ? valor * km / 100 : valor;
+  const L = litres / km * 100;
+  if(L < CONSUMO_MIN) return fail('Es demasiado bajo para gastarlo todo con gasolina: seguramente incluye km eléctricos. ' +
+    'Empieza y acaba con la batería en su nivel mínimo, sin enchufar entre medias.');
+  if(L > CONSUMO_MAX) return fail('El resultado no es creíble. Revisa los datos.');
+
+  if(CLIMAS.indexOf(clima) === -1) return fail('Indica si usaste la calefacción, el aire o nada.');
+  if(frio !== true && frio !== false) return fail('Indica si hizo frío esos días.');
+
+  return { ok: true, km, litres, L, metodo, clima, frio };
+}
+
+/** Estadística del consumo medido: litros totales ÷ km totales, y la banda de los valores individuales. */
+export function consumoStats(list, ahora = Date.now(), meses = MEAS_MESES){
+  const s = estadistica(list, ahora, meses, m => m.L, usadas =>
+    usadas.every(m => m.km > 0 && m.litres > 0)
+      ? usadas.reduce((t, m) => t + m.litres, 0) / usadas.reduce((t, m) => t + m.km, 0) * 100
+      : null);
+  return { n: s.n, L: s.valor, cv: s.cv, band: s.band, descartadas: s.descartadas };
+}
+
+/**
+ * Consumo en híbrido para una climatización, solo con sus propias medidas.
+ * Igual que con R, nunca se toman prestadas las de otra: si no hay, n = 0 y
+ * se usa el consumo declarado (fuente 'ninguna').
+ */
+export function consumoParaClima(list, clima, ahora = Date.now()){
+  const grupo = (list || []).filter(m => m && m.clima === clima);
+  if(grupo.length) return { ...consumoStats(grupo, ahora, MEAS_MESES), fuente: 'clima' };
+  return { ...consumoStats([], ahora), fuente: 'ninguna' };
 }

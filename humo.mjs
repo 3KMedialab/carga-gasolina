@@ -609,6 +609,71 @@ const ok = (n, c, d = '') => c ? pasa++ : (falla++, fallos.push(n + (d ? '  ->  
   dom.desmontar();
 }
 
+// ---------- 16. consumo en híbrido medido ----------
+// Una medida eléctrica con 3 L guardada con el declarado (5 L/100km): R = 3,8.
+// Al medir 6 L/100km sin climatización, la gasolina del cálculo y ese R cambian.
+{
+  const hoy = new Date().toISOString();
+  const dom = montar({
+    'cvg_schema':'3',
+    'cvg_profiles_v1': JSON.stringify({ list:[{ id:'v1', name:'A', battery:18, maxPower:6.6,
+      elecCons:22, fuelCons:5, chargeEff:86, chem:'lfp' }], activeId:'v1' }),
+    'cvg_mode_v1':'parked', 'cvg_clima_v1':'nada',
+    'cvg_meas_v1': JSON.stringify([{ id:'m1', date:hoy, km:250, kmElec:190, kwh:50, litres:3, R:3.8,
+      clima:'nada', frio:false }])
+  });
+  const { iniciar, _test } = await import('./js/interfaz.js?16');
+  iniciar();
+  const gas = () => parseFloat(dom.get('inp-fuelConsumption').value);
+
+  ok('sin medir, la gasolina es la declarada', gas() === 5, String(gas()));
+  ok('...y la pista lo dice', dom.get('gas-hint').textContent.includes('declarado') &&
+     dom.get('gas-hint').classList.contains('warn'), dom.get('gas-hint').textContent);
+  ok('Mi coche dice que aún no se ha medido', dom.get('g-resumen').innerHTML.includes('Todavía no lo has medido'));
+
+  dom.click('btn-measure-fuel');
+  ok('la ficha se abre', dom.get('fuel-overlay').classList.contains('open'));
+  ok('por defecto, con el ordenador de a bordo', dom.get('fuel-valor-unit').textContent === 'L/100km');
+
+  // el promedio acumulado (2,5) no se acepta
+  dom.get('fuel-km1').value = '10000'; dom.get('fuel-km2').value = '13000';
+  dom.get('fuel-valor').value = '2.5'; dom.get('fuel-clima').value = 'nada'; dom.get('fuel-frio').value = 'no';
+  _test.saveFuel();
+  ok('el promedio acumulado se rechaza y se explica', dom.store['cvg_fuel_v1'] === undefined &&
+     dom.get('fuel-err').textContent.includes('km eléctricos'), dom.get('fuel-err').textContent);
+
+  // de depósito a depósito: 12 L en 200 km = 6 L/100km
+  dom.get('fuel-metodo').value = 'deposito';
+  dom.fire('fuel-metodo', 'change');
+  ok('al cambiar de método, el campo pide litros', dom.get('fuel-valor-unit').textContent === 'litros');
+  dom.get('fuel-km1').value = '13000'; dom.get('fuel-km2').value = '13200';
+  dom.get('fuel-valor').value = '12'; dom.get('fuel-clima').value = 'nada'; dom.get('fuel-frio').value = 'no';
+  _test.saveFuel();
+  const f = JSON.parse(dom.store['cvg_fuel_v1'] || '[]');
+  ok('se guarda la medida', f.length === 1 && f[0].metodo === 'deposito' && Math.abs(f[0].L - 6) < 1e-9, JSON.stringify(f));
+  ok('el formulario queda limpio', dom.get('fuel-valor').value === '' && dom.get('fuel-clima').value === '');
+  ok('la gasolina del cálculo pasa a ser la medida', gas() === 6, String(gas()));
+  ok('...y la pista lo dice', dom.get('gas-hint').textContent.includes('6,0 L/100km') &&
+     !dom.get('gas-hint').classList.contains('warn'), dom.get('gas-hint').textContent);
+  ok('el resumen sale en la ficha y en Mi coche', dom.get('g-resumen').innerHTML.includes('L/100km') &&
+     dom.get('fuel-summary').innerHTML === dom.get('g-resumen').innerHTML);
+  ok('la medida eléctrica se recalcula: (250 − 50) ÷ 50 = 4,00',
+     dom.get('meas-list').innerHTML.includes('<strong>4,00</strong>'), dom.get('meas-list').innerHTML);
+  ok('...sin tocar lo guardado', JSON.parse(dom.store['cvg_meas_v1'])[0].R === 3.8);
+  ok('el consumo eléctrico usa el R recalculado (86 / 4 = 21,5)',
+     parseFloat(dom.get('inp-elecConsumption').value) === 21.5, dom.get('inp-elecConsumption').value);
+
+  // con otra climatización no se toma prestada
+  _test.elegirClima('calefaccion');
+  ok('con calefacción, sin medidas suyas: vuelve al declarado', gas() === 5, String(gas()));
+  _test.elegirClima('nada');
+
+  _test.borrarConsumo(f[0].id);
+  ok('al borrarla, todo vuelve al declarado', gas() === 5 &&
+     dom.get('meas-list').innerHTML.includes('<strong>3,80</strong>'), dom.get('meas-list').innerHTML);
+  dom.desmontar();
+}
+
 // ---------- resumen ----------
 console.log('='.repeat(50));
 if(falla){

@@ -138,6 +138,7 @@
           <button type="button" class="preset-btn" data-clima="aire">Aire<span class="km num" id="km-aire"></span></button>
         </div>
         <p class="hint-block" id="clima-hint"></p>
+        <p class="hint-block" id="gas-hint"></p>
       </div></div>
     </section>
 
@@ -220,6 +221,14 @@
       </div>
     </section>
 
+    <section class="section" aria-labelledby="t-gasto">
+      <div class="s-head"><h2 class="s-title" id="t-gasto">Lo que gasta en h&iacute;brido</h2></div>
+      <div class="card">
+        <div id="g-resumen"></div>
+        <div class="pad"><button class="btn primary" id="btn-measure-fuel" type="button">Medir el consumo en h&iacute;brido</button></div>
+      </div>
+    </section>
+
     <section class="section" aria-labelledby="t-bateria">
       <div class="s-head"><h2 class="s-title" id="t-bateria">Cuidado de la bater&iacute;a</h2></div>
       <div class="card"><div class="pad">
@@ -285,7 +294,8 @@
         <details><summary>Ya iba a aparcar o paro a prop&oacute;sito</summary><p>Si ya ibas a aparcar, el tiempo no cuenta como coste, porque el coche iba a estar ah&iacute; de todas formas; solo limita cu&aacute;ntos kWh caben. Si paras solo para cargar, se descuenta el desv&iacute;o, porque son km que no habr&iacute;as hecho. El desv&iacute;o se valora a precio de gasolina, que es el supuesto m&aacute;s conservador.</p></details>
         <details><summary>Medir tu coche</summary><p>Los c&aacute;lculos parten de dos datos que nadie publica, as&iacute; que de entrada tienen un margen de error de un 30%. En Mi coche puedes medir el tuyo de verdad: carga hasta tu nivel habitual, anota el cuentakil&oacute;metros, conduce unos d&iacute;as y vuelve a cargar hasta el mismo nivel. Con 5 u 8 medidas el margen baja a un 5%. No hace falta agotar la bater&iacute;a: basta con volver siempre al mismo punto de carga, igual que se rellena una cantimplora hasta la misma marca.</p></details>
         <details><summary>La climatizaci&oacute;n</summary><p>La calefacci&oacute;n y el aire gastan bater&iacute;a, y cu&aacute;nto depende de tu coche (bomba de calor o resistencia), de la temperatura y de lo largos que sean tus trayectos. Por eso la app no aplica ning&uacute;n porcentaje inventado: cada medida lleva la climatizaci&oacute;n que usaste, y al calcular solo se usan las medidas hechas con la que vas a usar. Si todav&iacute;a no tienes ninguna con esa climatizaci&oacute;n, la app lo dice y usa el consumo declarado, con su margen del 30%. Tambi&eacute;n se anota si hizo fr&iacute;o: el fr&iacute;o afecta a la bater&iacute;a aunque no pongas la calefacci&oacute;n, pero de momento solo se guarda, hasta ver con datos reales cu&aacute;nto pesa.</p></details>
-        <details><summary>Lo que la climatizaci&oacute;n no cubre</summary><p>El consumo de gasolina se mantiene en el que declaraste, aunque con fr&iacute;o tambi&eacute;n suba: medirlo bien necesita otro procedimiento. Y muchos h&iacute;bridos enchufables arrancan el motor de gasolina para calentar el habit&aacute;culo; si el tuyo lo hace, la app trata esos litros como si hubieran movido el coche, as&iacute; que tus medidas con calefacci&oacute;n saldr&aacute;n algo m&aacute;s bajas de lo real. Si tu coche tiene precalentamiento con el coche enchufado, el calor sale de la red y no de la bater&iacute;a, que es mucho mejor negocio.</p></details>
+        <details><summary>El consumo en h&iacute;brido</summary><p>Es lo que gasta tu coche cuando la bater&iacute;a est&aacute; en su nivel m&iacute;nimo y toda la energ&iacute;a sale del dep&oacute;sito. Pesa tanto como el consumo el&eacute;ctrico: si es bajo, la gasolina parece m&aacute;s barata de lo que es. Adem&aacute;s, la app lo usa para descontar los km que hizo el motor en tus medidas el&eacute;ctricas, as&iacute; que al medirlo esas medidas se recalculan solas. No sirven la cifra combinada que se anuncia (1&ndash;2 L/100km) ni el promedio acumulado del ordenador de a bordo, porque mezclan km hechos con electricidad de la red. M&iacute;delo en Mi coche: empieza y acaba con la bater&iacute;a en el mismo nivel, el m&aacute;s bajo que mantenga tu coche, sin enchufar entre medias. Igual que el el&eacute;ctrico, va por climatizaci&oacute;n.</p></details>
+        <details><summary>Lo que la climatizaci&oacute;n no cubre</summary><p>Si no has medido el consumo en h&iacute;brido con la climatizaci&oacute;n elegida, se usa el que declaraste. Y muchos h&iacute;bridos enchufables arrancan el motor de gasolina para calentar el habit&aacute;culo; si el tuyo lo hace, la app trata esos litros como si hubieran movido el coche, as&iacute; que tus medidas con calefacci&oacute;n saldr&aacute;n algo m&aacute;s bajas de lo real. Si tu coche tiene precalentamiento con el coche enchufado, el calor sale de la red y no de la bater&iacute;a, que es mucho mejor negocio.</p></details>
         <details><summary>Cargadores guardados</summary><p>Guarda los puntos donde cargas para no reescribir sus datos. Toca uno para usarlo; para cambiarlo o borrarlo, usa &laquo;Editar&raquo; debajo de la fila o &laquo;Ver todos&raquo;. El reloj indica que ese punto cobra un recargo si ocupas la plaza demasiado tiempo, y la app te avisa de a qu&eacute; hora desconectar.</p></details>
         <details><summary>Cargar en casa</summary><p>Se configura como un cargador m&aacute;s, con su potencia y su precio. Si tienes tarifa por horas, guarda dos (&laquo;Casa valle&raquo; y &laquo;Casa punta&raquo;) y alterna entre ellos. Ojo con el enchufe normal: a 2,3 kW se pierde mucha m&aacute;s energ&iacute;a que en una wallbox, y de los mismos kWh facturados sacas alrededor de un 18% menos de kil&oacute;metros. En hora punta y con enchufe dom&eacute;stico, cargar puede llegar a no compensar frente a la gasolina.</p></details>
         <details><summary>Cargar gratis</summary><p>Cuando no pagas nada, la app no decide: solo te dice a cu&aacute;nta gasolina equivale. Gu&aacute;rdala igualmente en el historial, porque suele ser de donde sale la mayor parte del ahorro de tener un enchufable. Excepci&oacute;n: si el punto es gratuito solo un rato y luego cobra por minuto, s&iacute; hace falta el c&aacute;lculo completo, y ah&iacute; es donde m&aacute;s dinero se pierde por descuido.</p></details>
@@ -345,7 +355,7 @@
         <div class="field">
           <label for="ov-fuelCons">Consumo en h&iacute;brido</label>
           <div class="field-input-wrap"><input class="num" id="ov-fuelCons" type="number" inputmode="decimal" step="0.1" placeholder="p. ej. 5,5"><span class="field-unit">L/100km</span></div>
-          <div class="field-hint">Con la bater&iacute;a agotada, no el dato WLTP</div>
+          <div class="field-hint">Con la bater&iacute;a en su nivel m&iacute;nimo. No la cifra combinada (1&ndash;2 L/100km) ni el promedio del ordenador de a bordo: mezclan km el&eacute;ctricos. Luego puedes medirlo en Mi coche.</div>
         </div>
       </div>
       <div class="field">
@@ -445,6 +455,83 @@
       </div>
     </div>
     <div class="sheet-foot"><button class="btn primary" id="meas-save" type="button">Guardar medida</button></div>
+  </div>
+</div>
+
+<!-- MEDICI&Oacute;N DEL CONSUMO EN H&Iacute;BRIDO -->
+<div class="overlay" id="fuel-overlay" role="dialog" aria-modal="true" aria-labelledby="fuel-title">
+  <div class="sheet">
+    <div class="sheet-head"><h2 id="fuel-title">Consumo en h&iacute;brido</h2><button class="btn ghost" id="fuel-close" type="button">Cerrar</button></div>
+    <div class="sheet-body">
+      <p class="lead">Lo que gasta tu coche cuando ya no le queda bater&iacute;a de la red y toda la energ&iacute;a sale del dep&oacute;sito. Es la otra mitad de la comparaci&oacute;n, y la cifra que se anuncia no sirve: mezcla km el&eacute;ctricos.</p>
+
+      <div class="s-head"><h3 class="s-title">Tus medidas</h3></div>
+      <div class="card">
+        <div id="fuel-summary"></div>
+        <div class="list" id="fuel-list"></div>
+      </div>
+
+      <div class="s-head mt"><h3 class="s-title">Nueva medida</h3></div>
+      <ol class="steps">
+        <li><strong>Empieza con la bater&iacute;a en su nivel m&aacute;s bajo</strong>, en el modo que mantiene la carga (h&iacute;brido, HEV&hellip;). Si tu coche deja elegir el nivel que mantiene, ponlo en el m&iacute;nimo, y no uses ning&uacute;n modo que cargue la bater&iacute;a con el motor.</li>
+        <li><strong>Anota el cuentakil&oacute;metros y el nivel de bater&iacute;a.</strong> Si vas a usar el ordenador de a bordo, ponlo a cero ahora; si vas a medir de dep&oacute;sito a dep&oacute;sito, llena el dep&oacute;sito.</li>
+        <li><strong>Conduce con normalidad al menos 150 km sin enchufar</strong> el coche ni una vez, con la misma climatizaci&oacute;n todo el rato.</li>
+        <li><strong>Termina con la bater&iacute;a en el mismo nivel que al empezar.</strong> Si marca otra cosa, sigue un poco hasta que vuelva. Anota los km y el consumo del contador, o llena el dep&oacute;sito y anota los litros.</li>
+      </ol>
+      <div class="notice plain">Evita tener el coche parado y encendido mucho rato: algunos arrancan el motor para cargar la bater&iacute;a sin moverse, y esa gasolina no suma km. Si puedes, mide <strong>de dep&oacute;sito a dep&oacute;sito</strong>: sirve en cualquier coche y los ordenadores de a bordo suelen marcar algo menos de lo real. Ciudad y autov&iacute;a pueden dar cifras distintas: m&iacute;delas como hagas tus trayectos.</div>
+
+      <div class="err" id="fuel-err"></div>
+      <div class="field">
+        <label for="fuel-metodo">C&oacute;mo lo mides</label>
+        <div class="field-input-wrap wrap-select">
+          <select id="fuel-metodo" class="sel">
+            <option value="contador">Ordenador de a bordo, puesto a cero al empezar</option>
+            <option value="deposito">De dep&oacute;sito a dep&oacute;sito</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="fuel-km1">Km al empezar</label>
+          <div class="field-input-wrap"><input class="num" id="fuel-km1" type="number" inputmode="decimal" step="1" placeholder="52140"><span class="field-unit">km</span></div>
+        </div>
+        <div class="field">
+          <label for="fuel-km2">Km al terminar</label>
+          <div class="field-input-wrap"><input class="num" id="fuel-km2" type="number" inputmode="decimal" step="1" placeholder="52340"><span class="field-unit">km</span></div>
+        </div>
+      </div>
+      <div class="field">
+        <label for="fuel-valor" id="fuel-valor-label">Consumo que marca el contador</label>
+        <div class="field-input-wrap"><input class="num" id="fuel-valor" type="number" inputmode="decimal" step="0.1" placeholder="5.4"><span class="field-unit" id="fuel-valor-unit">L/100km</span></div>
+        <div class="field-hint" id="fuel-valor-hint">El del tramo que has medido, no el acumulado</div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="fuel-clima">Climatizaci&oacute;n</label>
+          <div class="field-input-wrap wrap-select">
+            <select id="fuel-clima" class="sel">
+              <option value="">Elige...</option>
+              <option value="calefaccion">Calefacci&oacute;n</option>
+              <option value="aire">Aire acondicionado</option>
+              <option value="nada">Nada</option>
+            </select>
+          </div>
+          <div class="field-hint">La que usaste casi todo el tiempo</div>
+        </div>
+        <div class="field">
+          <label for="fuel-frio">&iquest;Hizo fr&iacute;o?</label>
+          <div class="field-input-wrap wrap-select">
+            <select id="fuel-frio" class="sel">
+              <option value="">Elige...</option>
+              <option value="si">S&iacute;, menos de 10 &deg;C</option>
+              <option value="no">No</option>
+            </select>
+          </div>
+          <div class="field-hint">Casi todo el tiempo</div>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-foot"><button class="btn primary" id="fuel-save" type="button">Guardar medida</button></div>
   </div>
 </div>
 
