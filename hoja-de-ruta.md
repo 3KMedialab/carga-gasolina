@@ -1,13 +1,14 @@
 # Carga vs Gasolina — Hoja de ruta
 
-Estado a 7 de septiembre de 2026.
+Estado a 8 de noviembre de 2026 (el plan de fases es del 7 de septiembre).
 
 ---
 
 ## Dónde estamos
 
 La app funciona, está desplegada en GitHub Pages y estructurada en módulos con
-pruebas automáticas (52 del cálculo + 22 de humo).
+pruebas automáticas (228 del cálculo + 183 de humo en 18 escenarios). Abre sin
+cobertura y se instala como app.
 
 **Lo que ya hace:**
 
@@ -15,17 +16,26 @@ pruebas automáticas (52 del cálculo + 22 de humo).
 - Perfiles de vehículo, con química de batería y consejo de carga adaptado
 - Cargadores guardados con notas, tarifa por minuto y recargo por exceso de tiempo
 - Hora límite antes de que el recargo se coma el ahorro
-- Precios reales de gasolineras (API del Ministerio)
+- Búsqueda de cargadores públicos cercanos (Open Charge Map), sin inventar precios
+- Precios reales de gasolineras (API del Ministerio), por ubicación, código postal
+  o municipio
 - R medido por climatización (calefacción / aire / nada), sin factores estimados
   *(2 de noviembre: sustituye a los antiguos botones de ciudad/carretera/frío)*
+- **Consumo en híbrido medido**, también por climatización, y R recalculado con él
+  *(7 de noviembre; vale para cualquier PHEV)*
+- **Comparar con cargar en casa** en vez de con la gasolina, si vas a llegar a casa
+  antes de gastar la batería *(7 de noviembre)*
+- **Descuentos en la gasolina** por marca, en c€/L o en % *(7 de noviembre)*
 - Carga gratuita: sin veredicto, pero contabilizada en el historial
-- Historial con desglose entre ahorro gratuito y de pago
-- Medición de R con datos reales, con ventana de vigencia
+- Historial con desglose entre ahorro gratuito y de pago, y entre recargas
+  comparadas con la gasolina o con casa
+- Copia de seguridad en un archivo
 
-**La limitación honesta:** sin mediciones propias, el margen de error del
-veredicto es de un ±30%, y eso deja indecidibles la mayoría de los cargadores
-públicos (entre 0,25 y 0,45 €/kWh). Todo lo que viene está ordenado por cuánto
-reduce esa incertidumbre o cuánto dinero real pone en juego.
+**La limitación honesta:** sin mediciones propias, los dos consumos (el eléctrico
+y el de híbrido) son los declarados, y el margen de error del veredicto es de un
+±30% o más. Eso deja indecidibles la mayoría de los cargadores públicos (entre
+0,25 y 0,45 €/kWh). Todo lo que viene está ordenado por cuánto reduce esa
+incertidumbre o cuánto dinero real pone en juego.
 
 ---
 
@@ -40,6 +50,11 @@ en vez de suposiciones mías.
 - Anotar: km inicial, km final, kWh facturados, litros
 - **Criterio de éxito:** margen de error por debajo del ±10% (con 3 medidas si
   se parecen mucho entre sí; con 5 o 6 si varían de forma normal)
+- **Y el consumo en híbrido** *(añadido el 7 de noviembre)*: al menos una medida
+  con la batería en su nivel mínimo (en el Atto 2, el 25%) al empezar y al
+  terminar. Sin ella, la gasolina usa el declarado, y además ese consumo es el
+  que descuenta los km del motor en las medidas de R. El promedio acumulado del
+  ordenador de a bordo (2,5 L/100 km) no sirve: mezcla km eléctricos.
 
 ### 0.2 Validación contra la realidad
 
@@ -83,7 +98,14 @@ qué orden. Es posible que alguna de las de abajo se caiga.
 Hoy la app da un veredicto con dos decimales aunque su margen de error sea del
 ±30%. Debería admitir cuándo no lo sabe.
 
-- Calcular la banda real a partir de tus mediciones
+- Calcular la banda real a partir de tus mediciones. *(Desde el 7 de noviembre
+  son dos: la de R y la del consumo en híbrido. El precio límite del cargador es
+  R × consumo en híbrido ÷ 100 × precio de la gasolina, así que sus márgenes se
+  combinan: sin medir nada, unos ±42%; con las dos bien medidas, en torno al ±7%.
+  Queda por decidir qué margen se da al consumo de gasolina declarado: el mismo
+  ±30% que al eléctrico es coherente, pero es una convención, no un dato. Frente
+  a casa no entran ni R ni la gasolina: solo la diferencia de pérdidas entre la
+  potencia de aquí y la de casa, así que ese veredicto ya es mucho más seguro.)*
 - Si el precio del cargador cae dentro de la banda, decir *"con tus datos no
   puedo distinguirlo"* en vez de fingir precisión
 - Indicar cuántas mediciones faltan para resolver **ese cargador concreto**
@@ -199,7 +221,7 @@ Nada de esto se construye hasta que alguien lo pida con un caso real:
   Sustituidos por R medido por climatización (Fase 3)
 - **Base de datos de vehículos por marca y modelo** — los datos que harían falta
   no los publica nadie con fiabilidad; inventarlos sería peor que preguntarlos
-- **Reescritura con framework** — a 1.500 líneas no compensa, y un proceso de
+- **Reescritura con framework** — a 3.000 líneas no compensa, y un proceso de
   compilación rompería el despliegue desde el móvil
 
 ---
@@ -208,9 +230,9 @@ Nada de esto se construye hasta que alguien lo pida con un caso real:
 
 | Qué | Gravedad |
 |---|---|
-| `interfaz.js` tiene 705 líneas; podría partirse en vistas | Baja |
-| El plan de pruebas no cubre aún medición, gratis ni modularización | **Media** |
-| No hay prueba automática de que index.html y los módulos casen tras editar | Media |
+| `interfaz.js` tiene unas 1.700 líneas; podría partirse en vistas | Media |
+| El plan de pruebas no cubre aún la carga gratuita | **Media** |
+| Si el JS busca un `id` que no está en index.html, `humo.mjs` solo avisa (AVISO), no falla | Media |
 | Sin comprobación de contraste en tema claro a pleno sol | Baja |
 
 ---

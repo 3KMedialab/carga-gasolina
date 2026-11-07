@@ -2,7 +2,11 @@
 
 Gracias por echar una mano. Esta app sirve para decidir, estando delante de un punto
 de carga público, si compensa enchufar el coche o si sale más barato tirar de
-gasolina.
+gasolina (o, si cargas en casa, esperar a llegar).
+
+**Si ya la estabas probando**, mira en `CAMBIOS.md` qué hay de nuevo desde la última
+vez: cada cambio dice qué apartado de este documento lo cubre. La versión que tienes
+aparece al final de la pestaña **Ayuda**.
 
 **Qué te pedimos:** que la uses con **tu propio coche** durante unos días y nos
 cuentes qué falla, qué no se entiende y qué echas de menos.
@@ -28,17 +32,22 @@ pantalla de inicio puede borrar todos los datos de la app (vehículos, cargadore
 historial y medidas), y la copia es la única forma de recuperarlos. Conviene
 descargarla de vez en cuando, aunque no vayas a borrar nada.
 
-**Si necesitas empezar de cero** (por ejemplo para repetir la configuración inicial):
+**Si necesitas empezar de cero** (por ejemplo para repetir la configuración inicial),
+desde los ajustes del móvil, no los de la app:
 - **iPhone:** Ajustes → Safari → Avanzado → Datos de sitios web → busca el sitio → Eliminar.
 - **Android:** Ajustes de Chrome → Privacidad → Borrar datos de navegación → Datos de sitios.
 - O simplemente ábrela en una pestaña privada.
 
-Todo lo que guardes se queda en tu móvil. No se envía a ningún sitio.
+**Todo lo que guardes se queda en tu móvil.** Lo único que sale son las búsquedas:
+"Cerca de mí" y "Buscar cerca" envían tu posición a los servicios de mapas y de
+cargadores, y "Buscar" envía el código postal o municipio que escribas. El detalle, en
+`PRIVACIDAD.md`.
 
 **Cómo está organizada.** Abajo hay cuatro pestañas:
 - **Calcular:** arriba, el resultado (se queda fijo al bajar y se encoge). Debajo, en el
   orden en que decides: **Dónde cargas** (cargadores guardados, búsqueda, precio,
-  potencia, tarifa fija), **Gasolina**, **Tu coche ahora** (batería), **¿Vas a usar la
+  potencia, tarifa fija), **Gasolina**, **¿Vas a cargar en casa antes…?** (solo si has
+  configurado la carga en casa), **Tu coche ahora** (batería), **¿Vas a usar la
   climatización?** y **La recarga**.
 - **Mi coche:** datos del vehículo (con sus consumos *declarados*) y cambio de vehículo,
   los **consumos que usa el cálculo** (medidos o declarados, y de dónde sale cada uno),
@@ -50,7 +59,7 @@ Todo lo que guardes se queda en tu móvil. No se envía a ningún sitio.
 Los consumos no se pueden escribir a mano en ningún sitio salvo en los datos del
 vehículo: el cálculo usa el medido o, si no lo hay, el declarado.
 
-Las fichas (vehículo, cargador, medidas) suben desde abajo; sus botones de guardar y
+Las fichas (vehículo, cargador, medidas eléctricas, consumo en híbrido) suben desde abajo; sus botones de guardar y
 cancelar quedan siempre a la vista al pie.
 
 ---
@@ -71,10 +80,10 @@ La primera vez te pedirá seis datos. **De su exactitud depende todo lo demás.*
 > **Apunta los valores que uses.** Te los pedimos al final, y nos sirven para montar
 > una tabla de referencia por modelos.
 
-**Aviso honesto:** el consumo eléctrico y la eficiencia son estimaciones. Si el
-consumo que pones está mal, todos los resultados estarán mal en la misma proporción.
-Por eso la sección 10 (validación con recarga real) es la más importante del documento,
-y por eso existe también la sección 9.8 (medir tu coche con datos reales).
+**Aviso honesto:** los dos consumos y la eficiencia son estimaciones. Si un consumo
+está mal, todos los resultados estarán mal en la misma proporción. Por eso la sección
+10 (validación con recarga real) es la más importante del documento, y por eso existen
+la 9.8 (medir el consumo eléctrico) y la 9.12 (medir el consumo en híbrido).
 
 ---
 
@@ -83,6 +92,11 @@ y por eso existe también la sección 9.8 (medir tu coche con datos reales).
 Verifica que las cuentas cuadran **con tu coche**. Coge calculadora, ponte en modo
 **Ya iba a aparcar**, y **empieza con la batería por debajo del 70%** — así evitas el tramo
 final de carga, que tiene su propia lógica y lo comprobaremos aparte en la sección 6.
+
+Los dos consumos que entran en las cuentas son **los que usa el cálculo**: míralos en
+Mi coche → "Consumos que usa el cálculo" (el medido, si lo tienes, o el declarado).
+Si has configurado la carga en casa, responde **"No, con gasolina"** en Calcular para
+esta sección; la cuenta frente a casa está en la 9.14.
 
 **Paso 1 — ¿A qué potencia carga de verdad?**
 ```
@@ -136,9 +150,10 @@ kWh del paso 4 × precio del cargador
 
 **Paso 8 — ¿Cuánto costaría en gasolina?**
 ```
-km del paso 6 × consumo híbrido ÷ 100 × precio de la gasolina
+km del paso 6 × consumo en híbrido ÷ 100 × precio de la gasolina
 ```
-→ Compara con **"En gasolina habrían sido"**.
+→ Compara con **"En gasolina habrían sido"**. Si tocaste una gasolinera con descuento
+(9.13), el precio es el de la línea "Pagas…", no el del surtidor.
 
 **Paso 9 — El ahorro**
 ```
@@ -153,6 +168,9 @@ Diferencias de ±0,02 € son normales por redondeo. **Diferencias mayores son u
 ## 4. Pruebas de coherencia
 
 Estas reglas se cumplen **con cualquier coche**. Si alguna falla, hay un fallo.
+Hazlas comparando con la gasolina: si has configurado la carga en casa, responde
+**"No, con gasolina"** en Calcular. Frente a casa, el veredicto dice "Compensa cargar
+aquí" / "Mejor esperar a casa" y el precio de la gasolina no influye (9.14).
 
 **4.1 — El veredicto nunca contradice al número**
 Prueba cinco o seis precios de cargador (0,10 / 0,25 / 0,35 / 0,50 / 0,70 €/kWh).
@@ -181,9 +199,8 @@ Sube el "% de batería ahora" del 10% al 90%: los kWh deben ir **bajando**.
 
 ## 5. La climatización
 
-*(Sección nueva desde el 2 de noviembre. Sustituye a los antiguos botones de
-Ciudad / Mixto / Carretera y de Frío, que se han quitado: aplicaban porcentajes
-estimados, sin datos detrás.)*
+*(Desde el 2 de noviembre sustituye a los antiguos botones de Ciudad / Mixto /
+Carretera y de Frío, que aplicaban porcentajes estimados, sin datos detrás.)*
 
 La calefacción y el aire acondicionado gastan batería, y cuánto depende de tu coche.
 Por eso la app **no aplica ningún porcentaje**: cada medida (sección 9.8) lleva la
@@ -199,6 +216,8 @@ Con un coche sin medidas, pulsa cada botón.
 - En Mi coche → "Consumos que usa el cálculo", el eléctrico debe ser **el que pusiste
   en tu vehículo**, marcado "Declarado, sin medir" en ámbar, con cualquiera de los tres
   botones. Si cambia sin tener medidas, es un fallo.
+- Debajo, otra línea dice lo mismo de la gasolina: "Gasolina: se usa el consumo en
+  híbrido declarado…". El consumo en híbrido también va por climatización (9.12).
 
 **5.2 — Con medidas, cada climatización usa las suyas**
 Guarda una medida "Sin climatización" y otra "Calefacción" (sección 9.8).
@@ -225,8 +244,6 @@ Cierra la app y vuelve a abrirla: debe seguir marcada la climatización que eleg
 ---
 
 ## 6. Química de la batería y final de carga
-
-*(Sección nueva.)*
 
 **6.1 — El consejo de carga depende de la química**
 Edita tu vehículo (Mi coche → Editar datos) y cambia el tipo de batería. Mira
@@ -332,7 +349,7 @@ Prueba 0, negativos y cifras enormes.
 
 ## 8. Cargadores que cobran por minuto
 
-*(Sección nueva. Importante: es donde un enchufable pierde más dinero.)*
+*(Importante: es donde un enchufable pierde más dinero.)*
 
 En Dónde cargas hay un selector: **"Cobra por: Energía / Tiempo"**.
 
@@ -407,7 +424,8 @@ Guarda un cargador estando en modo "Tiempo". La etiqueta debe mostrar el precio 
 - Cambia de vehículo: ese otro debe seguir sin registro.
 
 **9.5 — Tema claro y oscuro**
-Cambia el modo oscuro de tu móvil (Ajustes → Pantalla y brillo).
+Cambia el modo oscuro de tu móvil (en los ajustes del móvil, no de la app: Pantalla y
+brillo).
 - La app debe cambiar con él, **sin cerrarla ni recargarla**.
 - En tema claro, a pleno sol: ¿se leen todos los textos, incluidos los grises?
 - La barra de estado del móvil debe acompañar al fondo, sin franjas de otro color.
@@ -657,8 +675,10 @@ QUÉ HICE:      (pasos, uno por línea)
 QUÉ ESPERABA:
 QUÉ PASÓ:
 MI COCHE:      (marca, modelo y los 6 datos que configuraste)
-VALORES:       (precio y modo de tarifa, gasolina, potencia, % batería, tiempo)
+VALORES:       (precio y modo de tarifa, gasolina, potencia, % batería, tiempo,
+                y si comparabas con casa o con gasolina)
 MÓVIL:         (modelo y navegador)
+VERSIÓN:       (al final de la pestaña Ayuda)
 CAPTURA:       (si puedes)
 ```
 
@@ -670,6 +690,7 @@ QUÉ PASÓ:      Dijo "Compensa cargar" con +0,00 €
 MI COCHE:      Kia Niro PHEV — 8,9 kWh / NMC / 3,3 kW / 19 kWh100 / 5,4 L100 / 85%
 VALORES:       0,30 €/kWh, 1,74 €/L, 7,4 kW, 100%, 2 h
 MÓVIL:         iPhone 13, Safari
+VERSIÓN:       2026-11-08-1
 ```
 
 ### Qué fallos importan más
@@ -715,8 +736,13 @@ CADA CUÁNTO:           Dos o tres veces por semana
 - **Solo funciona con gasolina y en euros.** Si tu enchufable es diésel, o estás fuera
   de España, la app no encaja bien todavía. Dínoslo igualmente: queremos saber cuánta
   gente está en ese caso.
-- **La climatización solo cambia el consumo eléctrico.** El de gasolina sigue siendo
-  el que declaraste, aunque con frío también suba.
+- **El consumo en híbrido solo cambia con la climatización si lo has medido** con ella
+  (9.12). Sin medidas, se usa el que declaraste, aunque con frío también suba.
+- **Frente a casa no se reparte el caso mixto:** si llegas a casa pero el trayecto
+  gasta más batería de la que tienes, la app no divide la carga entre lo que ahorra
+  gasolina y lo que ahorra casa (9.14).
+- **Los descuentos no tienen topes ni fechas:** si tu tarjeta deja de devolver al
+  llegar a un importe, o una promoción termina, cambia o borra el descuento a mano.
 - **El frío se guarda, pero todavía no se usa.** Hace falta ver con medidas de varios
   coches si el frío cambia el consumo cuando no pones la calefacción.
 - **Si tu coche arranca el motor de gasolina para calentar el habitáculo**, la app trata
@@ -734,6 +760,11 @@ CADA CUÁNTO:           Dos o tres veces por semana
 - **El desvío se valora a precio de gasolina**, aunque lo hagas en eléctrico. Es
   deliberadamente conservador.
 - **Cargar en un poste que cobra por minuto casi nunca compensa** con un enchufable.
+- **Comparando con casa, el precio de la gasolina no cambia nada**: la alternativa es tu
+  carga de esa noche, no repostar.
+- **La media de gasolineras y el precio escrito a mano van sin descuento**: solo se
+  aplica al tocar una gasolinera de una marca con descuento.
+- **Los descuentos y la carga en casa son comunes a todos tus vehículos.**
 
 ---
 
@@ -741,6 +772,7 @@ CADA CUÁNTO:           Dos o tres veces por semana
 
 ```
 ── TU COCHE ────────────────────────────────
+Versión de la app (al final de Ayuda):
 Marca y modelo:
 Año:
 Batería útil (kWh):

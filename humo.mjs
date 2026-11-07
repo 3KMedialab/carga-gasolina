@@ -16,7 +16,9 @@ const enUso = (dom, id) => parseFloat(dom.get(id).textContent.replace(',', '.'))
 {
   const dom = montar({});
   const { iniciar } = await import('./js/interfaz.js?1');
-  iniciar();
+  iniciar('2026-01-01-1');
+  ok('la versión se ve al final de Ayuda', dom.get('app-version').textContent.includes('Versión 2026-01-01-1'),
+     dom.get('app-version').textContent);
   ok('sin vehículos abre la configuración inicial',
      dom.get('overlay').classList.contains('open'));
   ok('el esquema queda marcado', dom.store['cvg_schema'] === '3');

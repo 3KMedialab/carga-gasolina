@@ -133,6 +133,37 @@ margen mucho más ancho. Estos son los valores que debería mostrar:
 
 **Apunta el R final:** ____________ km/kWh
 
+## A2 — El consumo en híbrido *(añadido el 7 de noviembre)*
+
+R no es lo único que pesa: la gasolina usa el **consumo en híbrido**, y ese mismo
+consumo descuenta los km del motor en tus medidas de R. El que marca el ordenador
+de a bordo como acumulado (2,5 L/100 km) no sirve, porque mezcla km eléctricos;
+la ficha del manual da 5,1 L/100 km (WLTC). Mídelo al menos una vez
+(apartado 9.12 del plan de pruebas):
+
+1. Modo HEV, con el **SOC objetivo en el 25%** (Energía → Gestor de energía) y la
+   batería ya en el 25%
+2. Pon a cero el contador de consumo si se puede; si no, llena el depósito
+3. Al menos **150 km sin enchufar**, con la misma climatización
+4. Termina con la batería otra vez en el 25%. Anota km y L/100 km (o los litros
+   al rellenar)
+
+```
+CONSUMO EN HÍBRIDO   fecha: ____________
+  método                   contador / depósito
+  km al empezar            ______________
+  km al terminar           ______________
+  L/100 km o litros        ______________
+  SOC al empezar / acabar  ______ % / ______ %
+  climatización            calefacción / aire / nada
+  ¿hizo frío (< 10 °C)?    sí / no
+  ¿más ciudad o autovía?   ______________
+```
+
+Al guardarla, tus medidas de R con litros se recalculan solas.
+
+**Apunta el consumo en híbrido:** ____________ L/100 km
+
 ---
 
 # BLOQUE B — Validación contra la realidad
@@ -192,7 +223,8 @@ Configura la app con los datos reales del punto y anota lo que predice:
 
 1. Alguien con **batería NMC** (la mayoría que no sea BYD) — nunca se ha
    probado el consejo de carga invertido con un usuario real
-2. Alguien que **cargue en casa**, con wallbox o enchufe normal
+2. Alguien que **cargue en casa**, con wallbox o enchufe normal *(hay dos: que
+   prueben el apartado 9.14 del plan de pruebas, la comparación con casa)*
 3. Alguien con un coche de **poca potencia de carga** (3,3 kW), donde el ajuste
    de eficiencia es más agresivo
 4. Alguien **fuera de España**, si lo tienes a mano — para saber si el buscador
@@ -233,6 +265,9 @@ Y estos casos, que activan fases hoy congeladas:
   ¿Alguno tiene carga rápida en continua?       sí / no
   ¿Alguno está fuera de España?                 sí / no
   ¿Alguno no puede leer los kWh al cargar?      sí / no
+  ¿Alguno llega a casa con trayectos que gastan
+   más batería de la que tiene?                 sí / no   (el caso mixto de casa)
+  ¿Su contador de consumo se pone a cero?       sí / no
 ```
 
 ---
@@ -253,13 +288,16 @@ cuatro semanas, responder con sinceridad.
   ¿Guardaste recargas en el historial?
      siempre / a veces / casi nunca
 
-  ¿Tocaste los modos de conducción?
+  ¿Cambiaste la climatización antes de calcular?
      sí, varias veces / una o dos / nunca
 
   ¿Usaste el modo "parada dedicada"?
      sí / no
 
   ¿Usaste el buscador de gasolineras?
+     sí / no
+
+  ¿Pusiste algún descuento en Ajustes (Waylet, una tarjeta…)?
      sí / no
 
   ¿Te sirvió el aviso de la hora límite del Mercadona?
@@ -273,7 +311,7 @@ cuatro semanas, responder con sinceridad.
 
 | Si… | Entonces |
 |---|---|
-| Nunca tocaste los modos de conducción | Se quitan, y con ellos los factores estimados |
+| Nunca cambiaste la climatización | Se plantea fijarla en la ficha del coche en vez de en Calcular *(los modos de conducción ya se quitaron el 2 de noviembre)* |
 | Casi nunca miras el veredicto | La app se reorganiza alrededor del historial |
 | No usaste "parada dedicada" | Se plantea dejar un solo modo |
 | No usaste el buscador de gasolineras | Se simplifica a un campo de texto |
@@ -297,7 +335,7 @@ sesión: que la app admita cuándo no puede decidir.
 ## Lo mínimo, si andas corto de tiempo
 
 Si solo puedes hacer una cosa de todo esto, haz el **bloque A**: tres
-mediciones como mínimo, mejor cuatro o cinco. Es lo que convierte los números de
+mediciones como mínimo, mejor cuatro o cinco, y una del consumo en híbrido. Es lo que convierte los números de
 la app en fiables, y sin ello todo lo demás se apoya en estimaciones que ya
 sabemos que fallan un ±30%.
 

@@ -1666,8 +1666,12 @@ function bindEvents(){
 
 // ======================= ARRANQUE =======================
 
-export function iniciar(){
+/** Arranca la app. `version` (la VERSION de app.js) se enseña al final de Ayuda. */
+export function iniciar(version){
   D.migrate();
+  $('app-version').textContent = version
+    ? 'Versión ' + version + '. Si nos cuentas un fallo, dinos esta versión.'
+    : '';
 
   SESSION_KEYS.forEach(k => { els[k] = $('inp-' + k); });
 
