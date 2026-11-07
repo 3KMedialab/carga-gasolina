@@ -47,7 +47,15 @@ Tener `pruebas.mjs` y `humo.mjs` en verde, y el paso de versión descrito abajo 
 
 Capas de `js/` (dependencias hacia abajo):
 
-- `app.js` — punto de entrada: autoactualización + `iniciar()`.
+- `app.js` — punto de entrada: autoactualización + `iniciar()` + registro de `sw.js`.
+
+### Modo sin conexión (`sw.js`, `manifest.webmanifest`, `icono-*.png`)
+
+- `sw.js` sirve primero la red y la copia guardada solo si la red falla o tarda más de 4 s (`ESPERA_RED_MS`). Por eso no lleva número de versión ni interfiere con la autoactualización: con red siempre llega lo último. `CACHE` solo se cambia si cambia la estrategia.
+- Solo intercepta el mismo origen; nunca `version.json` ni las APIs (Ministerio, OCM, Nominatim). La página se guarda como `index.html`, venga con `?v=` o sin él.
+- **Un módulo nuevo en `js/` (o cualquier fichero que haga falta para arrancar) va en `ARCHIVOS` de `sw.js`**; si no, sin red la app no arranca. `pruebas.mjs` lo comprueba, igual que que coincidan `VERSION` y `version.json`.
+- Los iconos del manifest son el mismo rayo que el `apple-touch-icon` en línea de `index.html`.
+- `humo.mjs` no ejecuta `sw.js` (no hay service worker en Node). Para probarlo de verdad: servidor local, Chrome, abrir una vez, apagar el servidor y recargar.
 - `interfaz.js` (~1300 líneas) — une DOM y módulos. **Nada de lógica de negocio aquí**: lo nuevo que haya que calcular va en `calculo.js` y se prueba en `pruebas.mjs`. Exporta `_test` para las pruebas.
 
 ### Interfaz (`index.html`, `estilos.css`)

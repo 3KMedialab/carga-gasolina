@@ -728,6 +728,41 @@ seccion('Gasolineras por código postal o municipio');
   ok('centroDeCP: CP sin gasolineras -> null, no se inventa un punto', centroDeCP(all, '28013') === null);
 }
 
+// ================= MODO SIN CONEXIÓN =================
+seccion('Modo sin conexión (sw.js y manifest)');
+
+{
+  const { readFileSync, readdirSync, existsSync } = await import('node:fs');
+  const leer = f => readFileSync(new URL('./' + f, import.meta.url), 'utf8');
+  const existe = f => existsSync(new URL('./' + f, import.meta.url));
+
+  const sw = leer('sw.js');
+  const lista = (sw.match(/const ARCHIVOS = \[([\s\S]*?)\];/) || [])[1] || '';
+  const archivos = [...lista.matchAll(/'([^']+)'/g)].map(m => m[1]);
+  ok('sw.js: se lee la lista de archivos', archivos.length > 0);
+
+  const modulos = readdirSync(new URL('./js/', import.meta.url)).filter(f => f.endsWith('.js'));
+  const faltan = modulos.filter(f => !archivos.includes('js/' + f));
+  ok('sw.js guarda todos los módulos de js/ (si no, sin red la app no arranca)', !faltan.length, faltan.join(', '));
+  const noExisten = archivos.filter(f => !existe(f));
+  ok('cada archivo de la lista existe (si no, el service worker no se instala)', !noExisten.length, noExisten.join(', '));
+  ok('version.json no se guarda: es la pregunta de si hay versión nueva', !archivos.includes('version.json'));
+
+  let man = null;
+  try{ man = JSON.parse(leer('manifest.webmanifest')); }catch(e){}
+  ok('manifest.webmanifest es JSON válido', !!man);
+  const iconos = (man && man.icons || []).map(i => i.src);
+  ok('el manifest tiene iconos de 192 y 512', iconos.includes('icono-192.png') && iconos.includes('icono-512.png'));
+  ok('los iconos del manifest existen y se guardan para sin red',
+     iconos.every(i => existe(i) && archivos.includes(i)), iconos.join(', '));
+  ok('index.html enlaza el manifest', leer('index.html').includes('rel="manifest" href="manifest.webmanifest"'));
+
+  // la autoactualización depende de que coincidan: si no, recarga en bucle o nunca
+  const vJson = JSON.parse(leer('version.json')).v;
+  const vApp = (leer('js/app.js').match(/const VERSION = '([^']+)'/) || [])[1];
+  ok('VERSION de app.js y version.json coinciden', vJson === vApp, vApp + ' / ' + vJson);
+}
+
 // ================= RESUMEN =================
 console.log('\n' + '='.repeat(50));
 if(falla){

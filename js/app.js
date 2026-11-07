@@ -2,7 +2,7 @@
 
 import { iniciar } from './interfaz.js';
 
-const VERSION = '2026-11-07-3';
+const VERSION = '2026-11-07-4';
 
 (function comprobarActualizacion(){
   try{
@@ -20,3 +20,9 @@ const VERSION = '2026-11-07-3';
 })();
 
 iniciar();
+
+// Para abrir la app sin cobertura (ver sw.js). Si el navegador no lo admite
+// o falla, la app funciona igual que antes, solo que necesita red para abrir.
+try{
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(() => {});
+}catch(e){}

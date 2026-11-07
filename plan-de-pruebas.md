@@ -491,6 +491,19 @@ con la unidad ("horas" o "min").
 - 39 minutos deben dar exactamente el mismo resultado que 0,65 horas.
 - Cierra la app y ábrela: debe recordar la unidad elegida.
 
+**9.11 — Sin cobertura**
+La app guarda una copia de sí misma la primera vez que la abres con conexión.
+- Ábrela una vez con conexión. Ciérrala del todo, pon el **modo avión** y vuelve a
+  abrirla desde el icono: debe abrirse con tus datos y calcular igual.
+- Sin conexión, "Cerca de mí", "Buscar" y "Buscar cerca" deben dar su mensaje de
+  siempre, sin colgarse. El precio de la gasolina se puede escribir a mano.
+- Con **cobertura muy débil** (un garaje, un parking subterráneo), anota cuánto
+  tarda en abrir: no debería pasar de unos 5 segundos.
+- Cuando haya una versión nueva, con conexión debe seguir llegando sola, como hasta
+  ahora.
+- **Android:** al abrir la dirección en Chrome, puede ofrecerte "Instalar aplicación".
+  Instalada así, se abre a pantalla completa con el icono del rayo.
+
 ---
 
 ## 10. Validación con una recarga real ⭐
