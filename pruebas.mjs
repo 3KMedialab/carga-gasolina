@@ -400,7 +400,8 @@ seccion('Consumo en híbrido medido (vale para cualquier PHEV)');
 {
   const { buildFuelMeasurement, consumoStats, consumoParaClima, medidasConConsumo,
           METODOS_CONSUMO, CONSUMO_KM_MIN, CONSUMO_MIN } = calculo;
-  const CL = { clima:'nada', frio:false };
+  const SOC = { socIni:25, socFin:25 };
+  const CL = { clima:'nada', frio:false, ...SOC };
 
   ok('dos métodos: contador y depósito', METODOS_CONSUMO.join(',') === 'contador,deposito');
   const cont = buildFuelMeasurement({ km1:1000, km2:1200, metodo:'contador', valor:5.4, ...CL });
@@ -421,8 +422,27 @@ seccion('Consumo en híbrido medido (vale para cualquier PHEV)');
   ok(`rechaza menos de ${CONSUMO_MIN} L/100km: es un promedio con km eléctricos`,
      !acumulado.ok && acumulado.error.includes('km eléctricos'), acumulado.error);
   ok('rechaza un consumo imposible', !buildFuelMeasurement({ km1:0, km2:100, metodo:'deposito', valor:40, ...CL }).ok);
-  ok('rechaza sin climatización', !buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5, frio:false }).ok);
-  ok('rechaza sin indicar si hizo frío', !buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5, clima:'aire' }).ok);
+  const sinClima = buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5, frio:false, ...SOC });
+  ok('rechaza sin climatización', !sinClima.ok && sinClima.error.includes('calefacción'), sinClima.error);
+  const sinFrio = buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5, clima:'aire', ...SOC });
+  ok('rechaza sin indicar si hizo frío', !sinFrio.ok && sinFrio.error.includes('frío'), sinFrio.error);
+
+  // la batería tiene que acabar como empezó: si no, parte de la gasolina se quedó en ella (o salió de ella)
+  const { SOC_TOLERANCIA } = calculo;
+  const med = (socIni, socFin) => buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5,
+    clima:'nada', frio:false, socIni, socFin });
+  ok('tolerancia de 1 punto: lo que distingue el indicador', SOC_TOLERANCIA === 1);
+  ok('misma batería al empezar y al terminar: vale, y se guarda', med(25, 25).ok && med(25, 25).socIni === 25 && med(25, 25).socFin === 25);
+  ok('1 punto de diferencia, arriba o abajo: vale', med(25, 26).ok && med(26, 25).ok);
+  const subio = med(25, 35);
+  ok('acaba 10 puntos más llena: se rechaza, porque parte de la gasolina se quedó en la batería',
+     !subio.ok && subio.error.includes('se quedó guardada') && subio.error.includes('25%') && subio.error.includes('35%'), subio.error);
+  const vacia = med(30, 25);
+  ok('acaba más vacía: se rechaza, porque parte de los km los puso la batería',
+     !vacia.ok && vacia.error.includes('los puso la batería'), vacia.error);
+  ok('sin el % de batería no se guarda', !buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5, clima:'nada', frio:false }).ok);
+  ok('un % fuera de 0–100 se rechaza', !med(-1, -1).ok && !med(120, 120).ok);
+  ok('con 0 % al empezar y al terminar (coches que marcan 0 al mínimo): vale', med(0, 0).ok);
 
   // estadística: litros totales ÷ km totales, el tramo largo pesa más
   casi('consumo ponderado por km (100 km a 5 y 300 km a 6)',

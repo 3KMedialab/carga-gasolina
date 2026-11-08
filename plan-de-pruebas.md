@@ -551,24 +551,30 @@ sea cual sea su sistema híbrido:
    mínimo. No uses ningún modo que cargue la batería con el motor.
 2. Anota el cuentakilómetros y el nivel de batería. Pon a cero el contador de
    consumo, o llena el depósito si vas a medir de depósito a depósito.
-3. Conduce **al menos 150 km sin enchufar el coche**, con la misma climatización.
-4. Termina con la batería **en el mismo nivel** que al empezar. Anota los km y el
-   consumo del contador, o llena el depósito y anota los litros.
+3. Conduce **sin enchufar el coche**, con la misma climatización: al menos 50 km, y
+   cuantos más, mejor. Con el contador puedes juntar varios trayectos.
+4. Termina con la batería **en el mismo %** que al empezar (la batería sube y baja
+   mientras el motor la carga: sigue conduciendo hasta que vuelva). Anota los km y el
+   consumo del contador, o llena el depósito y anota los litros. La app te pide el %
+   al empezar y al terminar.
 
 - **La cuenta.** De depósito a depósito: litros ÷ km × 100. Ejemplo: 12 L en 200 km
   → **6,0 L/100km**. Con el contador, la app usa el L/100km que marca.
 - **Rechazos esperados**, cada uno con su mensaje: km finales menores o iguales que
   los iniciales; menos de 50 km; sin consumo o sin litros; **menos de 3 L/100km**
   (es un promedio con km eléctricos: prueba a meter el acumulado de tu ordenador de
-  a bordo y debe rechazarlo); más de 30 L/100km; sin climatización; sin indicar si
-  hizo frío.
+  a bordo y debe rechazarlo); más de 30 L/100km; **sin el % de batería, o con más de
+  1 punto de diferencia entre el principio y el final** (por ejemplo, 25% y 35%: debe
+  decir que parte de la gasolina se quedó guardada en la batería; 25% y 26% sí vale);
+  sin climatización; sin indicar si hizo frío.
+- **En la lista**, cada medida nueva muestra el % de batería: "25→26 %".
 - **Tras guardar**, en Calcular, bajo la climatización, debe decir "Gasolina: X
   L/100km en híbrido, con tu medida…" y en Mi coche → "Consumos que usa el
   cálculo" la gasolina debe tomar ese valor, marcada "Medido: 1 medida". **Con otra climatización, no**: vuelve al declarado y lo dice. Las medidas
   eléctricas con litros cambian su km/kWh (apartado 9.8).
 - **Anota en la ficha** (sección 14) qué método usaste, si tu coche deja poner el
-  contador a cero, qué nivel mínimo mantiene tu batería y si el resultado se parece
-  a lo que esperabas. Si mides en ciudad y en autovía, anota los dos.
+  contador a cero, qué nivel mínimo mantiene tu batería, **entre qué % oscila** mientras
+  el motor la carga, y si el resultado se parece a lo que esperabas. Si mides en ciudad y en autovía, anota los dos.
 
 **9.13 — Descuentos en la gasolina**
 En la pestaña **Ajustes**. Apunta los descuentos que tengas de verdad (una app de
@@ -785,6 +791,7 @@ Consumo híbrido (L/100km):                 ¿de dónde lo sacaste?
 Consumo híbrido medido (9.12):             ___ L/100km · contador / depósito
   ¿Tu contador se pone a cero?             Sí / No
   Nivel mínimo que mantiene la batería:    ___%  ¿se puede elegir? Sí / No
+  Con el motor encendido, oscila entre:    ___% y ___%
   Ciudad: ___ L/100km  ·  Autovía: ___ L/100km
 Descuentos en la gasolina (9.13):          ___ c€/L o % en ___  ·  ¿casaba la marca? Sí / No
 Eficiencia usada (%):

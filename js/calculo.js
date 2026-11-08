@@ -356,9 +356,16 @@ export const CONSUMO_KM_MIN = 50;
 // casi seguro es un promedio con km eléctricos (como el acumulado del ordenador
 // de a bordo de un enchufable, que suele rondar los 1–3 L/100 km).
 export const CONSUMO_MIN = 3, CONSUMO_MAX = 30;
+// La batería tiene que acabar como empezó: si acaba más llena, parte de la
+// gasolina se quedó guardada en ella; si acaba más vacía, parte de los km los
+// pagó la batería. Se admite 1 punto de diferencia, lo mínimo que distingue el
+// indicador del coche (va en % enteros). No se corrige la diferencia con una
+// fórmula: haría falta suponer cuánta gasolina cuesta cada kWh que el motor
+// mete en la batería, y eso depende de cada coche.
+export const SOC_TOLERANCIA = 1;
 
 /** Valida una medida del consumo en híbrido y devuelve {ok, km, litres, L, ...} o {ok:false, error}. */
-export function buildFuelMeasurement({ km1, km2, metodo, valor, clima, frio }){
+export function buildFuelMeasurement({ km1, km2, metodo, valor, socIni, socFin, clima, frio }){
   const fail = error => ({ ok: false, error });
   if(METODOS_CONSUMO.indexOf(metodo) === -1) return fail('Indica cómo lo has medido.');
   if(!isFinite(km1) || !isFinite(km2)) return fail('Faltan los kilómetros.');
@@ -375,10 +382,18 @@ export function buildFuelMeasurement({ km1, km2, metodo, valor, clima, frio }){
     'Empieza y acaba con la batería en su nivel mínimo, sin enchufar entre medias.');
   if(L > CONSUMO_MAX) return fail('El resultado no es creíble. Revisa los datos.');
 
+  if(!isFinite(socIni) || !isFinite(socFin)) return fail('Indica el % de batería al empezar y al terminar.');
+  if(socIni < 0 || socIni > 100 || socFin < 0 || socFin > 100) return fail('El % de batería va de 0 a 100.');
+  if(Math.abs(socFin - socIni) > SOC_TOLERANCIA) return fail(
+    `La batería empezó en el ${socIni}% y acabó en el ${socFin}%: ` +
+    (socFin > socIni ? 'parte de la gasolina se quedó guardada en ella' : 'parte de los km los puso la batería') +
+    ', y el consumo saldría falseado. Sigue conduciendo hasta que vuelva a marcar lo mismo que al empezar ' +
+    `(como mucho ${SOC_TOLERANCIA} punto de diferencia).`);
+
   if(CLIMAS.indexOf(clima) === -1) return fail('Indica si usaste la calefacción, el aire o nada.');
   if(frio !== true && frio !== false) return fail('Indica si hizo frío esos días.');
 
-  return { ok: true, km, litres, L, metodo, clima, frio };
+  return { ok: true, km, litres, L, metodo, socIni, socFin, clima, frio };
 }
 
 /** Estadística del consumo medido: litros totales ÷ km totales, y la banda de los valores individuales. */

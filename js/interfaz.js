@@ -944,7 +944,10 @@ function renderFuel(){
     const d = new Date(m.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
     const vieja = enUso.has(m.id) ? '' : ' meas-vieja';
     return `<div class="meas-item${vieja}"><div class="meas-fila">` +
-      `<span>${d} · ${fmt(m.km, 0)} km · ${METODO[m.metodo] || ''} · ${CORTO[m.clima]}${m.frio ? ', frío' : ''}</span>` +
+      `<span>${d} · ${fmt(m.km, 0)} km · ${METODO[m.metodo] || ''}` +
+      // las medidas anteriores al 2026-11-08-3 no guardaban el % de batería
+      (isFinite(m.socIni) && isFinite(m.socFin) ? ` · ${fmt(m.socIni, 0)}→${fmt(m.socFin, 0)} %` : '') +
+      ` · ${CORTO[m.clima]}${m.frio ? ', frío' : ''}</span>` +
       `<span><strong>${fmt(m.L, 1)}</strong> L/100km` +
       `<button class="meas-del" data-fid="${m.id}" aria-label="Borrar">&times;</button></span></div></div>`;
   }).join('');
@@ -964,6 +967,8 @@ function saveFuel(){
     km2: parseFloat($('fuel-km2').value),
     metodo: metodoConsumo(),
     valor: parseFloat($('fuel-valor').value),
+    socIni: parseFloat($('fuel-soc1').value),
+    socFin: parseFloat($('fuel-soc2').value),
     clima: $('fuel-clima').value,
     frio: leerFrio('fuel-frio')
   });
@@ -971,10 +976,12 @@ function saveFuel(){
 
   const l = D.loadFuel();
   l.push({ id: 'f' + Date.now() + '-' + l.length, date: new Date().toISOString(),
-           km: res.km, litres: res.litres, L: res.L, metodo: res.metodo, clima: res.clima, frio: res.frio });
+           km: res.km, litres: res.litres, L: res.L, metodo: res.metodo,
+           socIni: res.socIni, socFin: res.socFin, clima: res.clima, frio: res.frio });
   D.storeFuel(l);
 
-  ['fuel-km1', 'fuel-km2', 'fuel-valor', 'fuel-clima', 'fuel-frio'].forEach(id => { $(id).value = ''; });
+  ['fuel-km1', 'fuel-km2', 'fuel-valor', 'fuel-soc1', 'fuel-soc2', 'fuel-clima', 'fuel-frio']
+    .forEach(id => { $(id).value = ''; });
   err.classList.remove('show');
   trasCambiarConsumo();
 }

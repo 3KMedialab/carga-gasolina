@@ -655,12 +655,24 @@ const enUso = (dom, id) => parseFloat(dom.get(id).textContent.replace(',', '.'))
   dom.get('fuel-metodo').value = 'deposito';
   dom.fire('fuel-metodo', 'change');
   ok('al cambiar de método, el campo pide litros', dom.get('fuel-valor-unit').textContent === 'litros');
-  dom.get('fuel-km1').value = '13000'; dom.get('fuel-km2').value = '13200';
-  dom.get('fuel-valor').value = '12'; dom.get('fuel-clima').value = 'nada'; dom.get('fuel-frio').value = 'no';
+  const rellenar = (soc1, soc2) => {
+    dom.get('fuel-km1').value = '13000'; dom.get('fuel-km2').value = '13200';
+    dom.get('fuel-valor').value = '12'; dom.get('fuel-clima').value = 'nada'; dom.get('fuel-frio').value = 'no';
+    dom.get('fuel-soc1').value = soc1; dom.get('fuel-soc2').value = soc2;
+  };
+  // la batería acabó 10 puntos más llena: el motor dejó gasolina guardada en ella
+  rellenar('25', '35');
+  _test.saveFuel();
+  ok('si la batería acaba más llena, no se guarda y lo explica', dom.store['cvg_fuel_v1'] === undefined &&
+     dom.get('fuel-err').textContent.includes('se quedó guardada'), dom.get('fuel-err').textContent);
+  rellenar('25', '26');
   _test.saveFuel();
   const f = JSON.parse(dom.store['cvg_fuel_v1'] || '[]');
   ok('se guarda la medida', f.length === 1 && f[0].metodo === 'deposito' && Math.abs(f[0].L - 6) < 1e-9, JSON.stringify(f));
-  ok('el formulario queda limpio', dom.get('fuel-valor').value === '' && dom.get('fuel-clima').value === '');
+  ok('...con el % de batería al empezar y al terminar', f[0].socIni === 25 && f[0].socFin === 26);
+  ok('...y la lista lo muestra', dom.get('fuel-list').innerHTML.includes('25→26 %'), dom.get('fuel-list').innerHTML);
+  ok('el formulario queda limpio', dom.get('fuel-valor').value === '' && dom.get('fuel-clima').value === '' &&
+     dom.get('fuel-soc1').value === '' && dom.get('fuel-soc2').value === '');
   ok('la gasolina del cálculo pasa a ser la medida', gas() === 6, String(gas()));
   ok('...y Mi coche la marca como medida', dom.get('uso-fuel-origen').textContent.startsWith('Medido: 1 medida') &&
      !dom.get('uso-fuel-origen').classList.contains('c-warn'), dom.get('uso-fuel-origen').textContent);

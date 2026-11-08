@@ -574,9 +574,10 @@
       <ol class="steps">
         <li><strong>Empieza con la bater&iacute;a en su nivel m&aacute;s bajo</strong>, en el modo que mantiene la carga (h&iacute;brido, HEV&hellip;). Si tu coche deja elegir el nivel que mantiene, ponlo en el m&iacute;nimo, y no uses ning&uacute;n modo que cargue la bater&iacute;a con el motor.</li>
         <li><strong>Anota el cuentakil&oacute;metros y el nivel de bater&iacute;a.</strong> Si vas a usar el ordenador de a bordo, ponlo a cero ahora; si vas a medir de dep&oacute;sito a dep&oacute;sito, llena el dep&oacute;sito.</li>
-        <li><strong>Conduce con normalidad al menos 150 km sin enchufar</strong> el coche ni una vez, con la misma climatizaci&oacute;n todo el rato.</li>
-        <li><strong>Termina con la bater&iacute;a en el mismo nivel que al empezar.</strong> Si marca otra cosa, sigue un poco hasta que vuelva. Anota los km y el consumo del contador, o llena el dep&oacute;sito y anota los litros.</li>
+        <li><strong>Conduce con normalidad sin enchufar</strong> el coche ni una vez, con la misma climatizaci&oacute;n todo el rato: al menos 50 km, y cuantos m&aacute;s, mejor.</li>
+        <li><strong>Termina con la bater&iacute;a en el mismo nivel que al empezar.</strong> Si marca otra cosa, sigue un poco hasta que vuelva: la bater&iacute;a sube y baja mientras el motor la carga, y la medida no se guarda con m&aacute;s de 1 punto de diferencia. Anota los km y el consumo del contador, o llena el dep&oacute;sito y anota los litros.</li>
       </ol>
+      <p class="r-nota" style="padding:0 4px 12px">Con el ordenador de a bordo puedes juntar varios trayectos en una medida, sin ponerlo a cero entre ellos, mientras no enchufes el coche. Repite la medida 3 o 4 veces: los errores peque&ntilde;os se compensan.</p>
       <div class="notice plain">Evita tener el coche parado y encendido mucho rato: algunos arrancan el motor para cargar la bater&iacute;a sin moverse, y esa gasolina no suma km. Si puedes, mide <strong>de dep&oacute;sito a dep&oacute;sito</strong>: sirve en cualquier coche y los ordenadores de a bordo suelen marcar algo menos de lo real. Ciudad y autov&iacute;a pueden dar cifras distintas: m&iacute;delas como hagas tus trayectos.</div>
 
       <div class="err" id="fuel-err"></div>
@@ -597,6 +598,17 @@
         <div class="field">
           <label for="fuel-km2">Km al terminar</label>
           <div class="field-input-wrap"><input class="num" id="fuel-km2" type="number" inputmode="decimal" step="1" placeholder="52340"><span class="field-unit">km</span></div>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="fuel-soc1">Bater&iacute;a al empezar</label>
+          <div class="field-input-wrap"><input class="num" id="fuel-soc1" type="number" inputmode="numeric" step="1" placeholder="25"><span class="field-unit">%</span></div>
+        </div>
+        <div class="field">
+          <label for="fuel-soc2">Bater&iacute;a al terminar</label>
+          <div class="field-input-wrap"><input class="num" id="fuel-soc2" type="number" inputmode="numeric" step="1" placeholder="25"><span class="field-unit">%</span></div>
+          <div class="field-hint">La misma que al empezar: como mucho 1 punto de diferencia</div>
         </div>
       </div>
       <div class="field">

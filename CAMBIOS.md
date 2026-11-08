@@ -8,6 +8,17 @@ plan de pruebas que lo cubre.
 
 ---
 
+## 2026-11-08-3 — El % de batería en la medida del consumo en híbrido
+
+- La medida del consumo en híbrido pide **el % de batería al empezar y al terminar**.
+  Mientras el motor funciona, la batería sube y baja (en algunos coches, varios
+  puntos): si acaba más llena, parte de la gasolina se quedó guardada en ella y el
+  consumo saldría falseado. **Con más de 1 punto de diferencia, la medida no se
+  guarda** y la app explica por qué.
+- Con el ordenador de a bordo puedes juntar varios trayectos en una medida, mientras
+  no enchufes el coche.
+- Plan de pruebas: **9.12**.
+
 ## 2026-11-08-2 — Guía rápida y manual de usuario
 
 - **Ayuda empieza con una guía rápida**: los siete pasos para usar la app, de

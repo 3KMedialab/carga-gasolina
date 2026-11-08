@@ -7,7 +7,7 @@ Estado a 8 de noviembre de 2026 (el plan de fases es del 7 de septiembre).
 ## Dónde estamos
 
 La app funciona, está desplegada en GitHub Pages y estructurada en módulos con
-pruebas automáticas (231 del cálculo + 183 de humo en 18 escenarios). Abre sin
+pruebas automáticas (239 del cálculo + 186 de humo en 18 escenarios). Abre sin
 cobertura y se instala como app.
 
 **Lo que ya hace:**

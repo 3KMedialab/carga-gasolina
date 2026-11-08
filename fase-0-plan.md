@@ -141,12 +141,24 @@ de a bordo como acumulado (2,5 L/100 km) no sirve, porque mezcla km eléctricos;
 la ficha del manual da 5,1 L/100 km (WLTC). Mídelo al menos una vez
 (apartado 9.12 del plan de pruebas):
 
-1. Modo HEV, con el **SOC objetivo en el 25%** (Energía → Gestor de energía) y la
-   batería ya en el 25%
-2. Pon a cero el contador de consumo si se puede; si no, llena el depósito
-3. Al menos **150 km sin enchufar**, con la misma climatización
-4. Termina con la batería otra vez en el 25%. Anota km y L/100 km (o los litros
-   al rellenar)
+Con tu uso, el método es el del **ordenador de a bordo** (de depósito a depósito
+pediría trayectos largos sin enchufar):
+
+1. Modo HEV, con el **SOC objetivo en el 25%** (Energía → Gestor de energía), y la
+   batería ya en el 25% después de un rato en HEV, no recién bajada
+2. **Pon a cero el contador de consumo** y apunta el % exacto. *Primero comprueba que
+   tu coche lo permite: el acumulado (2,5 L/100 km) no sirve*
+3. Junta trayectos **sin enchufar** (no cargues en la oficina entre medias) hasta pasar
+   de **50 km**, con la misma climatización
+4. Antes de enchufar, con la batería en el **mismo % que al empezar (±1)**, anota km y
+   L/100 km. La batería oscila del 25 a ~35% mientras el motor carga: si marca más,
+   sigue un poco. La app no guarda la medida con más de 1 punto de diferencia
+5. **Repítelo 3 o 4 veces**
+
+**Una vez, para saber cuánto se desvía el ordenador**: al llenar el depósito, pon a
+cero un contador desde el último repostaje (si lo hay) y, en el siguiente lleno,
+compara sus litros con los del surtidor. Si se desvía más de un 2–3%, corrige tus
+medidas por ese factor.
 
 ```
 CONSUMO EN HÍBRIDO   fecha: ____________
