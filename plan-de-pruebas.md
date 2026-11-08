@@ -572,6 +572,11 @@ un botón.
   sin indicar si hizo frío.
 - **En la lista**, cada medida muestra km, litros, el % de batería ("25→26 %") y la
   climatización.
+- **Notas (opcional).** Escribe algo (por ejemplo "SAVE activado"): debe salir debajo
+  de la medida en la lista, sin cambiar ningún número. Si escribes símbolos como
+  `<b>`, deben verse tal cual, no como formato. Si tu coche tiene un modo que reserva
+  batería (SAVE, Battery Hold, E-Save…), mide con el que uses normalmente y dinos en
+  la ficha cuál fue.
 - **Tras guardar**, en Calcular, bajo la climatización, debe decir "Gasolina: X
   L/100km en híbrido, con tu medida…" y en Mi coche → "Consumos que usa el cálculo"
   la gasolina debe tomar ese valor, marcada "Medido: 1 medida". **Con otra

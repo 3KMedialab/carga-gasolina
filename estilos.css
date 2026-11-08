@@ -227,6 +227,7 @@ a.btn{ display:flex; align-items:center; justify-content:center; text-decoration
 .meas-fila{ display:flex; justify-content:space-between; align-items:center; gap:8px; }
 .meas-fila > span:last-child{ display:flex; align-items:center; gap:2px; white-space:nowrap; }
 .meas-vieja{ opacity:.5; }
+.meas-nota{ font-size:var(--t-xs); color:var(--muted); margin-top:-2px; }
 .meas-del{ min-width:36px; min-height:36px; color:var(--muted); font-size:18px; }
 .meas-clasif{ display:flex; gap:6px; }
 .meas-clasif button{ flex:1; min-height:34px; border-radius:8px; border:1px solid var(--line-strong); color:var(--accent); font-size:var(--t-xs); font-weight:600; }

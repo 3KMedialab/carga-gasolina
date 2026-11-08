@@ -258,6 +258,16 @@ batería mientras conduces (en muchos híbridos es lo normal) o que mueva las ru
 la batería acaba como empezó, toda la energía del trayecto ha salido del depósito. Así
 mide también la homologación.
 
+**Mide como conduces normalmente.** Si tu coche tiene un modo que reserva batería
+(SAVE en los BYD, "Battery Hold" o "E-Save" en otros), haz la medida con el modo que
+usas de verdad cuando se te acaba la batería, y siempre con el mismo: el consumo puede
+cambiar de uno a otro, y la app mezclaría las medidas.
+
+**¿Quieres saber qué modo gasta menos?** Haz 2 o 3 medidas con cada uno y apúntalo en
+**Notas** (por ejemplo, "SAVE activado"). Compara los L/100 km de la lista, quédate
+conduciendo con el que gaste menos y **borra las medidas del otro**, para que el
+cálculo use solo las de tu forma real de conducir. Las notas no cambian ningún cálculo.
+
 **Consejos:**
 - Con el ordenador de a bordo, **repite la medida 3 o 4 veces**: los errores pequeños
   se compensan.

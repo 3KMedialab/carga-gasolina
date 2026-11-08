@@ -155,7 +155,10 @@ te da el coche (de depósito a depósito pediría trayectos largos sin enchufar)
    sigue un trayecto más. La app no guarda la medida con más de 1 punto de diferencia
 5. En la app: los km del cuentakilómetros al empezar y al terminar, el % de los dos
    momentos y, en "Gasolina gastada" (en **litros**), la suma de los litros
-6. **Repítelo 3 o 4 veces**
+6. **Repítelo 3 o 4 veces**, siempre con el mismo modo **SAVE** (el que uses
+   normalmente). Si quieres saber cuál gasta menos, haz 2 o 3 con SAVE activado y 2 o
+   3 desactivado, apúntalo en **Notas**, compara, y borra las del modo que no vayas a
+   usar
 
 **Una vez, para saber cuánto se desvía el ordenador**: al llenar el depósito, pon a
 cero un contador desde el último repostaje (si lo hay) y, en el siguiente lleno,
@@ -172,6 +175,7 @@ CONSUMO EN HÍBRIDO   fecha: ____________
   climatización            calefacción / aire / nada
   ¿hizo frío (< 10 °C)?    sí / no
   ¿más ciudad o autovía?   ______________
+  SAVE                     activado / desactivado
 ```
 
 Al guardarla, tus medidas de R con litros se recalculan solas.

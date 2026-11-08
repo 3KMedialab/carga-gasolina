@@ -670,11 +670,18 @@ const enUso = (dom, id) => parseFloat(dom.get(id).textContent.replace(',', '.'))
   ok('si la batería acaba más llena, no se guarda y lo explica', dom.store['cvg_fuel_v1'] === undefined &&
      dom.get('fuel-err').textContent.includes('se quedó guardada'), dom.get('fuel-err').textContent);
   rellenar('25', '26');
+  // notas libres: se guardan recortadas y se muestran escapadas (las escribe el usuario)
+  dom.get('fuel-notas').value = '  SAVE <b>activado</b>  ';
   _test.saveFuel();
   const f = JSON.parse(dom.store['cvg_fuel_v1'] || '[]');
   ok('se guarda la medida', f.length === 1 && f[0].litres === 12 && Math.abs(f[0].L - 6) < 1e-9, JSON.stringify(f));
   ok('...con el % de batería al empezar y al terminar', f[0].socIni === 25 && f[0].socFin === 26);
   ok('...y la lista lo muestra', dom.get('fuel-list').innerHTML.includes('25→26 %'), dom.get('fuel-list').innerHTML);
+  ok('las notas se guardan sin espacios de sobra', f[0].notas === 'SAVE <b>activado</b>', JSON.stringify(f[0].notas));
+  ok('...y la lista las enseña escapadas, sin interpretar el HTML',
+     dom.get('fuel-list').innerHTML.includes('SAVE &lt;b&gt;activado&lt;/b&gt;') &&
+     !dom.get('fuel-list').innerHTML.includes('<b>activado'), dom.get('fuel-list').innerHTML);
+  ok('...y el campo de notas queda limpio', dom.get('fuel-notas').value === '');
   ok('el formulario queda limpio', dom.get('fuel-valor').value === '' && dom.get('fuel-clima').value === '' &&
      dom.get('fuel-soc1').value === '' && dom.get('fuel-soc2').value === '');
   ok('la gasolina del cálculo pasa a ser la medida', gas() === 6, String(gas()));

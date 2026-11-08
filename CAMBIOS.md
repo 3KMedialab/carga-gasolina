@@ -8,6 +8,13 @@ plan de pruebas que lo cubre.
 
 ---
 
+## 2026-11-08-5 — Notas en la medida del consumo en híbrido
+
+- Campo opcional **"Notas"** en la medida del consumo en híbrido, para apuntar cómo la
+  hiciste (un modo de ahorro de batería como el SAVE de BYD, autovía…) y comparar
+  medidas hechas de forma distinta. Se ven en la lista y no cambian ningún cálculo.
+- Plan de pruebas: **9.12**.
+
 ## 2026-11-08-4 — Medir el consumo en híbrido, más sencillo
 
 - **Ya no hay que elegir método.** Un solo campo, "Gasolina gastada", con un botón para

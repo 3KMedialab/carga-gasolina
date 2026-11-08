@@ -34,7 +34,7 @@ Se despliega subiendo los archivos tal cual a GitHub Pages.
    (eléctricas y del consumo en híbrido), la climatización, la carga en
    casa, los descuentos, los cargadores públicos y las gasolineras.
 3. `node humo.mjs` — arranca la app entera contra un DOM simulado
-   (187 comprobaciones en 18 escenarios).
+   (190 comprobaciones en 18 escenarios).
 4. Subir **también** `version.json` con un valor nuevo, y el mismo valor
    en la constante `VERSION` de `js/app.js`. Sin eso, los móviles que
    ya tienen la app instalada seguirán viendo la versión antigua.

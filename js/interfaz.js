@@ -954,7 +954,9 @@ function renderFuel(){
       (isFinite(m.socIni) && isFinite(m.socFin) ? ` · ${fmt(m.socIni, 0)}→${fmt(m.socFin, 0)} %` : '') +
       ` · ${CORTO[m.clima]}${m.frio ? ', frío' : ''}</span>` +
       `<span><strong>${fmt(m.L, 1)}</strong> L/100km` +
-      `<button class="meas-del" data-fid="${m.id}" aria-label="Borrar">&times;</button></span></div></div>`;
+      `<button class="meas-del" data-fid="${m.id}" aria-label="Borrar">&times;</button></span></div>` +
+      // las notas las escribe el usuario: siempre escapadas
+      (m.notas ? `<div class="meas-nota">${esc(m.notas)}</div>` : '') + '</div>';
   }).join('');
 }
 
@@ -980,12 +982,15 @@ function saveFuel(){
   if(!res.ok){ err.textContent = res.error; err.classList.add('show'); return; }
 
   const l = D.loadFuel();
+  // notas libres, opcionales (SAVE, autovía…): no entran en ningún cálculo
+  const notas = String($('fuel-notas').value || '').trim().slice(0, 60);
   l.push({ id: 'f' + Date.now() + '-' + l.length, date: new Date().toISOString(),
            km: res.km, litres: res.litres, L: res.L,
-           socIni: res.socIni, socFin: res.socFin, clima: res.clima, frio: res.frio });
+           socIni: res.socIni, socFin: res.socFin, clima: res.clima, frio: res.frio,
+           ...(notas ? { notas } : {}) });
   D.storeFuel(l);
 
-  ['fuel-km1', 'fuel-km2', 'fuel-valor', 'fuel-soc1', 'fuel-soc2', 'fuel-clima', 'fuel-frio']
+  ['fuel-km1', 'fuel-km2', 'fuel-valor', 'fuel-soc1', 'fuel-soc2', 'fuel-clima', 'fuel-frio', 'fuel-notas']
     .forEach(id => { $(id).value = ''; });
   err.classList.remove('show');
   trasCambiarConsumo();
