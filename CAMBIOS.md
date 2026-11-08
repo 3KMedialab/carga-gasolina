@@ -8,6 +8,14 @@ plan de pruebas que lo cubre.
 
 ---
 
+## 2026-11-08-6 — La lista de medidas enseña los datos tal cual
+
+- En **Mi coche → medidas**, cada medida muestra los km y los kWh **como los
+  escribiste** (26,1 km, 3,98 kWh), sin redondear, y **los litros de gasolina** si
+  pusiste alguno. Antes un 0,1 L olvidado en "Gasolina gastada" bajaba el km/kWh sin
+  que se viera por qué.
+- Plan de pruebas: **9.8**.
+
 ## 2026-11-08-5 — Notas en la medida del consumo en híbrido
 
 - Campo opcional **"Notas"** en la medida del consumo en híbrido, para apuntar cómo la

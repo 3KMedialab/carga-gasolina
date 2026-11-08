@@ -38,6 +38,12 @@ export function fmt(n, d){
   return n.toLocaleString('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d });
 }
 
+/** Como fmt, pero sin ceros de relleno: un dato escrito a mano se ve tal cual (26 / 26,1; 3,9 / 3,98). */
+export function fmtTal(n, max){
+  if(!isFinite(n)) return '—';
+  return n.toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: max });
+}
+
 export function esc(s){
   return String(s).replace(/[&<>"']/g, c =>
     ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' })[c]);

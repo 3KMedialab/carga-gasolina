@@ -694,6 +694,8 @@ const enUso = (dom, id) => parseFloat(dom.get(id).textContent.replace(',', '.'))
   ok('la medida eléctrica se recalcula: (250 − 50) ÷ 50 = 4,00',
      dom.get('meas-list').innerHTML.includes('<strong>4,00</strong>'), dom.get('meas-list').innerHTML);
   ok('...sin tocar lo guardado', JSON.parse(dom.store['cvg_meas_v1'])[0].R === 3.8);
+  ok('la lista de R enseña km, kWh y litros tal como se escribieron',
+     dom.get('meas-list').innerHTML.includes('250 km / 50 kWh · 3 L'), dom.get('meas-list').innerHTML);
   ok('el consumo eléctrico usa el R recalculado (86 / 4 = 21,5)',
      enUso(dom, 'uso-elec') === 21.5, dom.get('uso-elec').textContent);
 

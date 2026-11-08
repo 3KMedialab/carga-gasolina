@@ -293,6 +293,10 @@ Tras cada medida verás el **margen de error** de cada climatización:
   ±5%.
 - Solo cuentan las 8 últimas de los últimos 12 meses de cada climatización. Las demás
   se ven atenuadas en la lista.
+- En la lista, cada medida enseña los km y los kWh tal como los escribiste, y los
+  litros si pusiste alguno. Si su km/kWh no te cuadra con km ÷ kWh, mira los litros:
+  un 0,1 L olvidado en "Gasolina gastada" ya lo baja. Para corregirla, bórrala y
+  vuelve a guardarla.
 
 ---
 

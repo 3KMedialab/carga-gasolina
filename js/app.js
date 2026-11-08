@@ -2,7 +2,7 @@
 
 import { iniciar } from './interfaz.js';
 
-const VERSION = '2026-11-08-5';
+const VERSION = '2026-11-08-6';
 
 (function comprobarActualizacion(){
   try{

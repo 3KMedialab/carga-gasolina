@@ -473,7 +473,10 @@ casi todo el tiempo).
 - **Tras guardar** debe aparecer, para **cada climatización**, su km por kWh
   facturado, el consumo equivalente en kWh/100km, el margen de error y cuántas
   medidas tiene, o "sin medidas todavía". En la lista, cada medida dice su
-  climatización (y ", frío" si lo marcaste). Si la climatización elegida en Calcular
+  climatización (y ", frío" si lo marcaste), los km y los kWh **tal como los
+  escribiste**, sin redondear (26,1 km; 3,98 kWh), y los litros si pusiste alguno
+  ("· 0,1 L"). Comprueba que km ÷ kWh da el km/kWh de la derecha; si no, mira los
+  litros. Si la climatización elegida en Calcular
   es la de la medida, el consumo eléctrico pasa a ser el medido y los km del
   veredicto cambian. **Si es otra, no deben cambiar.**
 - **Borrar.** La × de cada medida pide confirmación y, al borrarla, todo se recalcula.

@@ -2,7 +2,7 @@
 // Exporta iniciar() para que las pruebas puedan importar sin arrancar la app.
 
 import {
-  $, show, openOverlay, num, byId, clamp, fmt, esc, fmtTime,
+  $, show, openOverlay, num, byId, clamp, fmt, fmtTal, esc, fmtTime,
   tono, EURO
 } from './util.js';
 
@@ -835,7 +835,10 @@ function renderMeas(){
     const valor = m.invalida
       ? '<span class="c-warn">no vale con tu consumo en híbrido</span>'
       : `<strong>${fmt(m.R, 2)}</strong> km/kWh`;
-    const fila = `<div class="meas-fila"><span>${d} · ${fmt(m.km, 0)} km / ${fmt(m.kwh, 1)} kWh${etiqueta}</span>` +
+    // los datos tal como se escribieron: un 3,98 redondeado a 4,0 o unos litros ocultos
+    // cambian R sin que se vea por qué
+    const litros = m.litres > 0 ? ` · ${fmtTal(m.litres, 2)} L` : '';
+    const fila = `<div class="meas-fila"><span>${d} · ${fmtTal(m.km, 1)} km / ${fmtTal(m.kwh, 2)} kWh${litros}${etiqueta}</span>` +
       `<span>${valor}` +
       `<button class="meas-del" data-mid="${m.id}" aria-label="Borrar">&times;</button></span></div>`;
     if(!sinClasificar(m)) return `<div class="meas-item${vieja}">${fila}</div>`;
