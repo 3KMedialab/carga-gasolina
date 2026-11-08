@@ -346,8 +346,13 @@ export function medidasConConsumo(list, consumoDe){
 // medias. No sirven la cifra ponderada que se anuncia ni el promedio acumulado
 // del ordenador de a bordo: los dos mezclan km hechos con electricidad de la red.
 
-/** 'contador': L/100 km del ordenador de a bordo, puesto a cero al empezar. 'deposito': litros al rellenar. */
-export const METODOS_CONSUMO = ['contador', 'deposito'];
+/**
+ * En qué viene la gasolina gastada. Para la cuenta solo importa esto, no de
+ * dónde sale el dato (surtidor, resumen de trayectos del coche o contador):
+ * 'L':    litros (del surtidor al rellenar, o sumando el resumen de cada trayecto).
+ * 'L100': L/100 km (el contador de consumo del coche, puesto a cero al empezar).
+ */
+export const UNIDADES_GASOLINA = ['L', 'L100'];
 // La batería oscila un poco alrededor de su nivel mínimo; cuanto más largo el
 // tramo, menos pesa esa oscilación en el resultado.
 export const CONSUMO_KM_MIN = 50;
@@ -365,18 +370,16 @@ export const CONSUMO_MIN = 3, CONSUMO_MAX = 30;
 export const SOC_TOLERANCIA = 1;
 
 /** Valida una medida del consumo en híbrido y devuelve {ok, km, litres, L, ...} o {ok:false, error}. */
-export function buildFuelMeasurement({ km1, km2, metodo, valor, socIni, socFin, clima, frio }){
+export function buildFuelMeasurement({ km1, km2, valor, unidad, socIni, socFin, clima, frio }){
   const fail = error => ({ ok: false, error });
-  if(METODOS_CONSUMO.indexOf(metodo) === -1) return fail('Indica cómo lo has medido.');
+  if(UNIDADES_GASOLINA.indexOf(unidad) === -1) return fail('Indica si la gasolina va en litros o en L/100 km.');
   if(!isFinite(km1) || !isFinite(km2)) return fail('Faltan los kilómetros.');
   if(km2 <= km1) return fail('Los km del final deben ser mayores que los del principio.');
   const km = km2 - km1;
   if(km < CONSUMO_KM_MIN) return fail(`Haz al menos ${CONSUMO_KM_MIN} km: en un tramo corto pesa demasiado lo que oscila la batería.`);
-  if(!isFinite(valor) || valor <= 0) return fail(metodo === 'contador'
-    ? 'Indica el consumo que marca el ordenador de a bordo.'
-    : 'Indica los litros que has repostado.');
+  if(!isFinite(valor) || valor <= 0) return fail('Indica la gasolina gastada.');
 
-  const litres = metodo === 'contador' ? valor * km / 100 : valor;
+  const litres = unidad === 'L100' ? valor * km / 100 : valor;
   const L = litres / km * 100;
   if(L < CONSUMO_MIN) return fail('Es demasiado bajo para gastarlo todo con gasolina: seguramente incluye km eléctricos. ' +
     'Empieza y acaba con la batería en su nivel mínimo, sin enchufar entre medias.');
@@ -393,7 +396,7 @@ export function buildFuelMeasurement({ km1, km2, metodo, valor, socIni, socFin, 
   if(CLIMAS.indexOf(clima) === -1) return fail('Indica si usaste la calefacción, el aire o nada.');
   if(frio !== true && frio !== false) return fail('Indica si hizo frío esos días.');
 
-  return { ok: true, km, litres, L, metodo, socIni, socFin, clima, frio };
+  return { ok: true, km, litres, L, unidad, socIni, socFin, clima, frio };
 }
 
 /** Estadística del consumo medido: litros totales ÷ km totales, y la banda de los valores individuales. */

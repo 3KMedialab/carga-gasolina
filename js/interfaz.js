@@ -894,8 +894,10 @@ const leerFrio = id => $(id).value === 'si' ? true : $(id).value === 'no' ? fals
 
 // ======================= CONSUMO EN HÍBRIDO =======================
 
-// el select arranca en la primera opción, como en el navegador
-const metodoConsumo = () => $('fuel-metodo').value || 'contador';
+// En qué va la gasolina gastada: 'L' (litros) o 'L100' (L/100 km). Solo cambia
+// cómo se lee el número; empieza en litros, que es lo que dan el surtidor y el
+// resumen de trayectos.
+let unidadGasolina = 'L';
 
 /** Lo que gasta el coche en híbrido con cada climatización, solo con datos medidos. */
 function resumenConsumoHTML(list, prof){
@@ -921,13 +923,17 @@ function resumenConsumoHTML(list, prof){
   return filas.join('') + nota;
 }
 
-function syncMetodoConsumo(){
-  const dep = metodoConsumo() === 'deposito';
-  $('fuel-valor-label').textContent = dep ? 'Litros al rellenar el depósito' : 'Consumo que marca el contador';
-  $('fuel-valor-unit').textContent = dep ? 'litros' : 'L/100km';
-  $('fuel-valor-hint').textContent = dep
-    ? 'Los que entran al llenarlo de nuevo, hasta que salte el surtidor como la primera vez'
-    : 'El del tramo que has medido, no el acumulado';
+function syncUnidadGasolina(){
+  const l100 = unidadGasolina === 'L100';
+  $('fuel-unidad').textContent = l100 ? 'L/100 km' : 'litros';
+  $('fuel-valor-hint').textContent = l100
+    ? 'El que marca el contador del tramo, no el acumulado. Toca la unidad para cambiarla'
+    : 'Los del surtidor, o la suma de los de cada trayecto. Toca la unidad para cambiarla';
+}
+
+function cambiarUnidadGasolina(){
+  unidadGasolina = unidadGasolina === 'L100' ? 'L' : 'L100';
+  syncUnidadGasolina();
 }
 
 function renderFuel(){
@@ -935,16 +941,15 @@ function renderFuel(){
   const resumen = resumenConsumoHTML(list, prof);
   $('fuel-summary').innerHTML = resumen;
   $('g-resumen').innerHTML = resumen;
-  syncMetodoConsumo();
+  syncUnidadGasolina();
 
   const enUso = measEnUso(list);
   const CORTO = { calefaccion: 'calefacción', aire: 'aire', nada: 'sin clima' };
-  const METODO = { contador: 'contador', deposito: 'depósito' };
   $('fuel-list').innerHTML = list.slice().reverse().map(m => {
     const d = new Date(m.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
     const vieja = enUso.has(m.id) ? '' : ' meas-vieja';
     return `<div class="meas-item${vieja}"><div class="meas-fila">` +
-      `<span>${d} · ${fmt(m.km, 0)} km · ${METODO[m.metodo] || ''}` +
+      `<span>${d} · ${fmt(m.km, 0)} km · ${fmt(m.litres, 1)} L` +
       // las medidas anteriores al 2026-11-08-3 no guardaban el % de batería
       (isFinite(m.socIni) && isFinite(m.socFin) ? ` · ${fmt(m.socIni, 0)}→${fmt(m.socFin, 0)} %` : '') +
       ` · ${CORTO[m.clima]}${m.frio ? ', frío' : ''}</span>` +
@@ -965,8 +970,8 @@ function saveFuel(){
   const res = buildFuelMeasurement({
     km1: parseFloat($('fuel-km1').value),
     km2: parseFloat($('fuel-km2').value),
-    metodo: metodoConsumo(),
     valor: parseFloat($('fuel-valor').value),
+    unidad: unidadGasolina,
     socIni: parseFloat($('fuel-soc1').value),
     socFin: parseFloat($('fuel-soc2').value),
     clima: $('fuel-clima').value,
@@ -976,7 +981,7 @@ function saveFuel(){
 
   const l = D.loadFuel();
   l.push({ id: 'f' + Date.now() + '-' + l.length, date: new Date().toISOString(),
-           km: res.km, litres: res.litres, L: res.L, metodo: res.metodo,
+           km: res.km, litres: res.litres, L: res.L,
            socIni: res.socIni, socFin: res.socFin, clima: res.clima, frio: res.frio });
   D.storeFuel(l);
 
@@ -1658,7 +1663,7 @@ function bindEvents(){
   });
   $('fuel-close').addEventListener('click', () => openOverlay('fuel-overlay', false));
   $('fuel-save').addEventListener('click', saveFuel);
-  $('fuel-metodo').addEventListener('change', syncMetodoConsumo);
+  $('fuel-unidad').addEventListener('click', cambiarUnidadGasolina);
   $('fuel-list').addEventListener('click', e => {
     const b = e.target.closest('[data-fid]'); if(!b) return;
     if(!confirm('¿Borrar esta medida?')) return;

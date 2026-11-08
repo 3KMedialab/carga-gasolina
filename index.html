@@ -572,24 +572,13 @@
 
       <div class="s-head mt"><h3 class="s-title">Nueva medida</h3></div>
       <ol class="steps">
-        <li><strong>Empieza con la bater&iacute;a en su nivel m&aacute;s bajo</strong>, en el modo que mantiene la carga (h&iacute;brido, HEV&hellip;). Si tu coche deja elegir el nivel que mantiene, ponlo en el m&iacute;nimo, y no uses ning&uacute;n modo que cargue la bater&iacute;a con el motor.</li>
-        <li><strong>Anota el cuentakil&oacute;metros y el nivel de bater&iacute;a.</strong> Si vas a usar el ordenador de a bordo, ponlo a cero ahora; si vas a medir de dep&oacute;sito a dep&oacute;sito, llena el dep&oacute;sito.</li>
-        <li><strong>Conduce con normalidad sin enchufar</strong> el coche ni una vez, con la misma climatizaci&oacute;n todo el rato: al menos 50 km, y cuantos m&aacute;s, mejor.</li>
-        <li><strong>Termina con la bater&iacute;a en el mismo nivel que al empezar.</strong> Si marca otra cosa, sigue un poco hasta que vuelva: la bater&iacute;a sube y baja mientras el motor la carga, y la medida no se guarda con m&aacute;s de 1 punto de diferencia. Anota los km y el consumo del contador, o llena el dep&oacute;sito y anota los litros.</li>
+        <li><strong>Empieza con la bater&iacute;a en su nivel m&aacute;s bajo</strong>, en el modo que mantiene la carga (h&iacute;brido, HEV&hellip;). Apunta los km y el % de bater&iacute;a.</li>
+        <li><strong>Conduce sin enchufar</strong>, con la misma climatizaci&oacute;n: al menos 50 km. Puedes juntar varios trayectos.</li>
+        <li><strong>Termina con el mismo % de bater&iacute;a</strong> (la bater&iacute;a sube y baja mientras el motor la carga: si marca otra cosa, sigue un poco). Apunta los km y la gasolina gastada.</li>
       </ol>
-      <p class="r-nota" style="padding:0 4px 12px">Con el ordenador de a bordo puedes juntar varios trayectos en una medida, sin ponerlo a cero entre ellos, mientras no enchufes el coche. Repite la medida 3 o 4 veces: los errores peque&ntilde;os se compensan.</p>
-      <div class="notice plain">Evita tener el coche parado y encendido mucho rato: algunos arrancan el motor para cargar la bater&iacute;a sin moverse, y esa gasolina no suma km. Si puedes, mide <strong>de dep&oacute;sito a dep&oacute;sito</strong>: sirve en cualquier coche y los ordenadores de a bordo suelen marcar algo menos de lo real. Ciudad y autov&iacute;a pueden dar cifras distintas: m&iacute;delas como hagas tus trayectos.</div>
+      <div class="notice plain"><strong>La gasolina gastada</strong>, de donde la tengas: los litros al rellenar el dep&oacute;sito (lo m&aacute;s fiable), los litros del resumen de cada trayecto sumados, o el L/100 km del contador si lo pusiste a cero al empezar. Nunca el promedio acumulado del coche.</div>
 
       <div class="err" id="fuel-err"></div>
-      <div class="field">
-        <label for="fuel-metodo">C&oacute;mo lo mides</label>
-        <div class="field-input-wrap wrap-select">
-          <select id="fuel-metodo" class="sel">
-            <option value="contador">Ordenador de a bordo, puesto a cero al empezar</option>
-            <option value="deposito">De dep&oacute;sito a dep&oacute;sito</option>
-          </select>
-        </div>
-      </div>
       <div class="field-row">
         <div class="field">
           <label for="fuel-km1">Km al empezar</label>
@@ -612,9 +601,9 @@
         </div>
       </div>
       <div class="field">
-        <label for="fuel-valor" id="fuel-valor-label">Consumo que marca el contador</label>
-        <div class="field-input-wrap"><input class="num" id="fuel-valor" type="number" inputmode="decimal" step="0.1" placeholder="5.4"><span class="field-unit" id="fuel-valor-unit">L/100km</span></div>
-        <div class="field-hint" id="fuel-valor-hint">El del tramo que has medido, no el acumulado</div>
+        <label for="fuel-valor">Gasolina gastada</label>
+        <div class="field-input-wrap"><input class="num" id="fuel-valor" type="number" inputmode="decimal" step="0.1" placeholder="3.2"><button type="button" class="unit-toggle" id="fuel-unidad" aria-label="Cambiar entre litros y litros cada 100 km">litros</button></div>
+        <div class="field-hint" id="fuel-valor-hint">Toca la unidad para cambiarla</div>
       </div>
       <div class="field-row">
         <div class="field">

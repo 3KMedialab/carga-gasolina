@@ -8,6 +8,15 @@ plan de pruebas que lo cubre.
 
 ---
 
+## 2026-11-08-4 — Medir el consumo en híbrido, más sencillo
+
+- **Ya no hay que elegir método.** Un solo campo, "Gasolina gastada", con un botón para
+  cambiar la unidad entre litros y L/100 km. Valen los litros del surtidor, la suma de
+  los litros del resumen de cada trayecto (si tu coche lo da) o el L/100 km del
+  contador puesto a cero.
+- La ficha explica la medida en **tres pasos** en vez de cuatro.
+- Plan de pruebas: **9.12**.
+
 ## 2026-11-08-3 — El % de batería en la medida del consumo en híbrido
 
 - La medida del consumo en híbrido pide **el % de batería al empezar y al terminar**.

@@ -141,19 +141,21 @@ de a bordo como acumulado (2,5 L/100 km) no sirve, porque mezcla km eléctricos;
 la ficha del manual da 5,1 L/100 km (WLTC). Mídelo al menos una vez
 (apartado 9.12 del plan de pruebas):
 
-Con tu uso, el método es el del **ordenador de a bordo** (de depósito a depósito
-pediría trayectos largos sin enchufar):
+Con tu uso, la gasolina gastada sale de los **litros del resumen de cada trayecto**, que
+te da el coche (de depósito a depósito pediría trayectos largos sin enchufar):
 
 1. Modo HEV, con el **SOC objetivo en el 25%** (Energía → Gestor de energía), y la
    batería ya en el 25% después de un rato en HEV, no recién bajada
-2. **Pon a cero el contador de consumo** y apunta el % exacto. *Primero comprueba que
-   tu coche lo permite: el acumulado (2,5 L/100 km) no sirve*
+2. **Apunta el % exacto de batería** al salir en el primer trayecto
 3. Junta trayectos **sin enchufar** (no cargues en la oficina entre medias) hasta pasar
-   de **50 km**, con la misma climatización
-4. Antes de enchufar, con la batería en el **mismo % que al empezar (±1)**, anota km y
-   L/100 km. La batería oscila del 25 a ~35% mientras el motor carga: si marca más,
-   sigue un poco. La app no guarda la medida con más de 1 punto de diferencia
-5. **Repítelo 3 o 4 veces**
+   de **50 km**, con la misma climatización. Apunta los **km y los litros** del resumen
+   de cada trayecto. Ignora el "consumo de batería" del resumen
+4. Al acabar el último, con la batería en el **mismo % que al empezar (±1)**, suma km y
+   litros. La batería oscila del 25 a ~35% mientras el motor carga: si marca más,
+   sigue un trayecto más. La app no guarda la medida con más de 1 punto de diferencia
+5. En la app: los km del cuentakilómetros al empezar y al terminar, el % de los dos
+   momentos y, en "Gasolina gastada" (en **litros**), la suma de los litros
+6. **Repítelo 3 o 4 veces**
 
 **Una vez, para saber cuánto se desvía el ordenador**: al llenar el depósito, pon a
 cero un contador desde el último repostaje (si lo hay) y, en el siguiente lleno,
@@ -162,10 +164,10 @@ medidas por ese factor.
 
 ```
 CONSUMO EN HÍBRIDO   fecha: ____________
-  método                   contador / depósito
   km al empezar            ______________
+  trayectos (km · litros)  ______ · ______   ______ · ______   ______ · ______
   km al terminar           ______________
-  L/100 km o litros        ______________
+  litros sumados           ______________
   SOC al empezar / acabar  ______ % / ______ %
   climatización            calefacción / aire / nada
   ¿hizo frío (< 10 °C)?    sí / no

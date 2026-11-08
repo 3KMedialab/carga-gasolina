@@ -399,37 +399,46 @@ seccion('Consumo en híbrido medido (vale para cualquier PHEV)');
 
 {
   const { buildFuelMeasurement, consumoStats, consumoParaClima, medidasConConsumo,
-          METODOS_CONSUMO, CONSUMO_KM_MIN, CONSUMO_MIN } = calculo;
+          UNIDADES_GASOLINA, CONSUMO_KM_MIN, CONSUMO_MIN } = calculo;
   const SOC = { socIni:25, socFin:25 };
   const CL = { clima:'nada', frio:false, ...SOC };
 
-  ok('dos métodos: contador y depósito', METODOS_CONSUMO.join(',') === 'contador,deposito');
-  const cont = buildFuelMeasurement({ km1:1000, km2:1200, metodo:'contador', valor:5.4, ...CL });
-  ok('contador: se acepta', cont.ok, cont.error);
-  casi('contador: los litros salen del L/100km y los km', cont.litres, 10.8, 1e-9);
-  casi('contador: el consumo es el que marca', cont.L, 5.4, 1e-9);
-  const dep = buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5, ...CL });
-  casi('depósito: litros ÷ km × 100', dep.L, 5, 1e-9);
-  ok('devuelve método, climatización y frío', dep.metodo === 'deposito' && dep.clima === 'nada' && dep.frio === false);
+  // para la cuenta solo importa la unidad, no de dónde sale el dato
+  ok('dos unidades: litros y L/100 km', UNIDADES_GASOLINA.join(',') === 'L,L100');
+  // litros (surtidor, o resumen de varios trayectos: 18 + 22 + 15 km con 1,1 + 1,2 + 0,9 L)
+  const litros = buildFuelMeasurement({ km1:0, km2:55, unidad:'L', valor:3.2, ...CL });
+  ok('en litros: se acepta', litros.ok && litros.unidad === 'L', litros.error);
+  casi('en litros: los litros son los escritos', litros.litres, 3.2, 1e-9);
+  casi('...y el consumo, litros ÷ km × 100 (5,8)', litros.L, 3.2 / 55 * 100, 1e-9);
+  // L/100 km del contador puesto a cero
+  const cont = buildFuelMeasurement({ km1:1000, km2:1200, unidad:'L100', valor:5.4, ...CL });
+  ok('en L/100 km: se acepta', cont.ok && cont.unidad === 'L100', cont.error);
+  casi('en L/100 km: los litros salen del L/100 km y los km', cont.litres, 10.8, 1e-9);
+  casi('...y el consumo es el que marca', cont.L, 5.4, 1e-9);
+  const dep = buildFuelMeasurement({ km1:0, km2:250, unidad:'L', valor:12.5, ...CL });
+  casi('12,5 L en 250 km: 5 L/100 km', dep.L, 5, 1e-9);
+  ok('devuelve climatización y frío', dep.clima === 'nada' && dep.frio === false);
+  const sinGasolina = buildFuelMeasurement({ km1:0, km2:55, unidad:'L', valor:0, ...CL });
+  ok('sin gasolina gastada, la pide', !sinGasolina.ok && sinGasolina.error.includes('gasolina gastada'), sinGasolina.error);
 
-  ok('rechaza sin método', !buildFuelMeasurement({ km1:0, km2:250, valor:12.5, ...CL }).ok);
-  ok('rechaza km al revés', !buildFuelMeasurement({ km1:250, km2:0, metodo:'deposito', valor:12.5, ...CL }).ok);
-  const corto = buildFuelMeasurement({ km1:0, km2:CONSUMO_KM_MIN - 1, metodo:'contador', valor:5, ...CL });
+  ok('rechaza sin unidad', !buildFuelMeasurement({ km1:0, km2:250, valor:12.5, ...CL }).ok);
+  ok('rechaza km al revés', !buildFuelMeasurement({ km1:250, km2:0, unidad:'L', valor:12.5, ...CL }).ok);
+  const corto = buildFuelMeasurement({ km1:0, km2:CONSUMO_KM_MIN - 1, unidad:'L100', valor:5, ...CL });
   ok(`rechaza menos de ${CONSUMO_KM_MIN} km, explicando por qué`, !corto.ok && corto.error.includes('oscila'), corto.error);
-  ok('rechaza sin consumo o sin litros', !buildFuelMeasurement({ km1:0, km2:250, metodo:'contador', valor:0, ...CL }).ok);
+  ok('rechaza sin consumo o sin litros', !buildFuelMeasurement({ km1:0, km2:250, unidad:'L100', valor:0, ...CL }).ok);
   // el promedio acumulado de un enchufable (aquí 2,5) mezcla km eléctricos: no es el consumo en híbrido
-  const acumulado = buildFuelMeasurement({ km1:0, km2:3000, metodo:'contador', valor:2.5, ...CL });
+  const acumulado = buildFuelMeasurement({ km1:0, km2:3000, unidad:'L100', valor:2.5, ...CL });
   ok(`rechaza menos de ${CONSUMO_MIN} L/100km: es un promedio con km eléctricos`,
      !acumulado.ok && acumulado.error.includes('km eléctricos'), acumulado.error);
-  ok('rechaza un consumo imposible', !buildFuelMeasurement({ km1:0, km2:100, metodo:'deposito', valor:40, ...CL }).ok);
-  const sinClima = buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5, frio:false, ...SOC });
+  ok('rechaza un consumo imposible', !buildFuelMeasurement({ km1:0, km2:100, unidad:'L', valor:40, ...CL }).ok);
+  const sinClima = buildFuelMeasurement({ km1:0, km2:250, unidad:'L', valor:12.5, frio:false, ...SOC });
   ok('rechaza sin climatización', !sinClima.ok && sinClima.error.includes('calefacción'), sinClima.error);
-  const sinFrio = buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5, clima:'aire', ...SOC });
+  const sinFrio = buildFuelMeasurement({ km1:0, km2:250, unidad:'L', valor:12.5, clima:'aire', ...SOC });
   ok('rechaza sin indicar si hizo frío', !sinFrio.ok && sinFrio.error.includes('frío'), sinFrio.error);
 
   // la batería tiene que acabar como empezó: si no, parte de la gasolina se quedó en ella (o salió de ella)
   const { SOC_TOLERANCIA } = calculo;
-  const med = (socIni, socFin) => buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5,
+  const med = (socIni, socFin) => buildFuelMeasurement({ km1:0, km2:250, unidad:'L', valor:12.5,
     clima:'nada', frio:false, socIni, socFin });
   ok('tolerancia de 1 punto: lo que distingue el indicador', SOC_TOLERANCIA === 1);
   ok('misma batería al empezar y al terminar: vale, y se guarda', med(25, 25).ok && med(25, 25).socIni === 25 && med(25, 25).socFin === 25);
@@ -440,7 +449,7 @@ seccion('Consumo en híbrido medido (vale para cualquier PHEV)');
   const vacia = med(30, 25);
   ok('acaba más vacía: se rechaza, porque parte de los km los puso la batería',
      !vacia.ok && vacia.error.includes('los puso la batería'), vacia.error);
-  ok('sin el % de batería no se guarda', !buildFuelMeasurement({ km1:0, km2:250, metodo:'deposito', valor:12.5, clima:'nada', frio:false }).ok);
+  ok('sin el % de batería no se guarda', !buildFuelMeasurement({ km1:0, km2:250, unidad:'L', valor:12.5, clima:'nada', frio:false }).ok);
   ok('un % fuera de 0–100 se rechaza', !med(-1, -1).ok && !med(120, 120).ok);
   ok('con 0 % al empezar y al terminar (coches que marcan 0 al mínimo): vale', med(0, 0).ok);
 

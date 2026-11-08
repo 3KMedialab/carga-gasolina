@@ -642,19 +642,23 @@ const enUso = (dom, id) => parseFloat(dom.get(id).textContent.replace(',', '.'))
 
   dom.click('btn-measure-fuel');
   ok('la ficha se abre', dom.get('fuel-overlay').classList.contains('open'));
-  ok('por defecto, con el ordenador de a bordo', dom.get('fuel-valor-unit').textContent === 'L/100km');
+  ok('la gasolina va en litros por defecto', dom.get('fuel-unidad').textContent === 'litros' &&
+     dom.get('fuel-valor-hint').textContent.includes('suma'), dom.get('fuel-valor-hint').textContent);
 
-  // el promedio acumulado (2,5) no se acepta
+  // el promedio acumulado (2,5 L/100 km) no se acepta
+  dom.click('fuel-unidad');
+  ok('al tocar la unidad pasa a L/100 km, y explica que no vale el acumulado',
+     dom.get('fuel-unidad').textContent === 'L/100 km' && dom.get('fuel-valor-hint').textContent.includes('no el acumulado'));
   dom.get('fuel-km1').value = '10000'; dom.get('fuel-km2').value = '13000';
   dom.get('fuel-valor').value = '2.5'; dom.get('fuel-clima').value = 'nada'; dom.get('fuel-frio').value = 'no';
+  dom.get('fuel-soc1').value = '25'; dom.get('fuel-soc2').value = '25';
   _test.saveFuel();
   ok('el promedio acumulado se rechaza y se explica', dom.store['cvg_fuel_v1'] === undefined &&
      dom.get('fuel-err').textContent.includes('km eléctricos'), dom.get('fuel-err').textContent);
 
-  // de depósito a depósito: 12 L en 200 km = 6 L/100km
-  dom.get('fuel-metodo').value = 'deposito';
-  dom.fire('fuel-metodo', 'change');
-  ok('al cambiar de método, el campo pide litros', dom.get('fuel-valor-unit').textContent === 'litros');
+  // en litros (surtidor o resumen de trayectos): 12 L en 200 km = 6 L/100km
+  dom.click('fuel-unidad');
+  ok('al volver a tocarla, otra vez litros', dom.get('fuel-unidad').textContent === 'litros');
   const rellenar = (soc1, soc2) => {
     dom.get('fuel-km1').value = '13000'; dom.get('fuel-km2').value = '13200';
     dom.get('fuel-valor').value = '12'; dom.get('fuel-clima').value = 'nada'; dom.get('fuel-frio').value = 'no';
@@ -668,7 +672,7 @@ const enUso = (dom, id) => parseFloat(dom.get(id).textContent.replace(',', '.'))
   rellenar('25', '26');
   _test.saveFuel();
   const f = JSON.parse(dom.store['cvg_fuel_v1'] || '[]');
-  ok('se guarda la medida', f.length === 1 && f[0].metodo === 'deposito' && Math.abs(f[0].L - 6) < 1e-9, JSON.stringify(f));
+  ok('se guarda la medida', f.length === 1 && f[0].litres === 12 && Math.abs(f[0].L - 6) < 1e-9, JSON.stringify(f));
   ok('...con el % de batería al empezar y al terminar', f[0].socIni === 25 && f[0].socFin === 26);
   ok('...y la lista lo muestra', dom.get('fuel-list').innerHTML.includes('25→26 %'), dom.get('fuel-list').innerHTML);
   ok('el formulario queda limpio', dom.get('fuel-valor').value === '' && dom.get('fuel-clima').value === '' &&

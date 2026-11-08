@@ -220,47 +220,55 @@ motor no arrancó), la climatización y si hizo frío.
 En **Mi coche → Medir el consumo en híbrido**. Es la otra mitad de la comparación: si
 este consumo está mal, la gasolina parece más barata o más cara de lo que es.
 
-1. **Empieza con la batería en su nivel más bajo**, en el modo que mantiene la carga
-   (híbrido, HEV…). En muchos coches es el 0% del indicador. Si tu coche deja elegir el
-   nivel que mantiene (en los BYD DM-i, por ejemplo, el "SOC objetivo"), ponlo en el
-   mínimo. No uses ningún modo que cargue la batería con el motor.
-2. **Anota el cuentakilómetros y el nivel de batería.** Pon a cero el contador de
-   consumo del coche o, si vas a medir de depósito a depósito, llena el depósito.
-3. **Conduce sin enchufar el coche** ni una vez, con la misma climatización: **al menos
-   50 km**, y cuantos más, mejor. Con el ordenador de a bordo puedes juntar varios
-   trayectos (varios días, si no enchufas entre medias) sin ponerlo a cero.
-4. **Termina con la batería en el mismo % que al empezar.** Mientras el motor
-   funciona, la batería sube y baja, a veces varios puntos: si marca otra cosa, sigue
-   conduciendo hasta que vuelva. Anota los km y el consumo del contador, o llena el
-   depósito y anota los litros.
+**Tres pasos:**
 
-Al guardarla, la app te pide **el % de batería al empezar y al terminar**. Con más de
-1 punto de diferencia no la guarda: si la batería acaba más llena, parte de la gasolina
-se ha quedado guardada en ella, y el consumo saldría falseado.
+1. **Empieza con la batería en su nivel más bajo**, en el modo que mantiene la carga
+   (híbrido, HEV…). En muchos coches es el 0% del indicador; si el tuyo deja elegir el
+   nivel que mantiene (el "SOC objetivo" de los BYD DM-i, por ejemplo), déjalo en el
+   mínimo. Apunta los km y el % de batería.
+2. **Conduce sin enchufar**, con la misma climatización: **al menos 50 km**. Puedes
+   juntar varios trayectos, incluso de varios días.
+3. **Termina con el mismo % de batería.** Mientras el motor funciona, la batería sube y
+   baja, a veces varios puntos: si marca otra cosa, sigue un poco. Apunta los km y la
+   **gasolina gastada**.
+
+**La gasolina gastada, de donde la tengas.** En la app hay un solo campo; toca la
+unidad para cambiar entre litros y L/100 km.
+
+| De dónde | Unidad | Fiabilidad |
+|---|---|---|
+| Los litros al **rellenar el depósito** (si lo llenaste al empezar) | litros | La mejor |
+| La suma de los litros del **resumen de cada trayecto**, si tu coche lo da | litros | Buena: es el ordenador de a bordo, que puede marcar un 2–5% menos que el surtidor |
+| El **contador de consumo**, si lo pusiste a cero al empezar | L/100 km | La misma |
+
+**Nunca el promedio acumulado del coche**: mezcla kilómetros eléctricos, y la app lo
+rechaza (menos de 3 L/100 km).
+
+**Ejemplo con el resumen de trayectos:** sales el lunes con la batería al 25%, haces
+tres trayectos sin enchufar (18 km con 1,1 L, 22 km con 1,2 L y 15 km con 0,9 L) y al
+llegar el martes vuelve a marcar el 25%. Metes los km del principio y del final, el 25%
+y el 25%, y 3,2 litros: 5,8 L/100 km.
+
+**Si la batería no acaba como empezó** (más de 1 punto de diferencia), la app no guarda
+la medida: si acaba más llena, parte de la gasolina se ha quedado guardada en ella, y
+el consumo saldría falseado.
 
 **¿Hace falta que el motor mueva las ruedas?** No. Da igual que el motor cargue la
-batería mientras conduces (en muchos híbridos, como los de serie, es lo normal) o que
-mueva las ruedas: si la batería acaba como empezó, toda la energía del trayecto ha
-salido del depósito. La homologación mide igual el consumo con la batería descargada.
+batería mientras conduces (en muchos híbridos es lo normal) o que mueva las ruedas: si
+la batería acaba como empezó, toda la energía del trayecto ha salido del depósito. Así
+mide también la homologación.
 
-**Qué método elegir:**
-
-| Método | Fiabilidad | Cuándo usarlo |
-|---|---|---|
-| **De depósito a depósito** | La mejor | Si haces trayectos largos sin enchufar |
-| **Ordenador de a bordo** | Algo menor: suele marcar un 2–5% menos que el surtidor | Si tus trayectos son cortos o no quieres esperar a repostar. Repite la medida 3 o 4 veces |
-
-**Truco para el ordenador de a bordo:** compáralo una vez con el surtidor, sin trayecto
-especial. Al llenar el depósito, pon a cero un contador desde el último repostaje (si tu
-coche tiene uno). En el siguiente lleno, compara los litros que dice el coche con los
-que te cobran. Da igual cómo haya ido la batería entre medias. Si la diferencia es de
-un 2–3%, ignórala; si es mayor, corrige tus medidas por ese factor antes de meterlas.
-
-- **De depósito a depósito** sirve en cualquier coche.
+**Consejos:**
+- Con el ordenador de a bordo, **repite la medida 3 o 4 veces**: los errores pequeños
+  se compensan.
+- Para saber cuánto se desvía tu ordenador, compáralo **una vez** con el surtidor: al
+  llenar el depósito, pon a cero un contador desde el último repostaje (si tu coche
+  tiene uno) y, en el siguiente lleno, compara sus litros con los que te cobran. Si se
+  desvía más de un 2–3%, corrige tus medidas por esa diferencia.
+- No te fíes del "consumo de batería" del resumen de trayectos para saber si la batería
+  acabó como empezó: mira el % del indicador.
 - Evita tener el coche **parado y encendido** mucho rato: algunos arrancan el motor
   para cargar la batería sin moverse, y esa gasolina no suma kilómetros.
-- La app **rechaza menos de 3 L/100 km**: eso es un promedio con kilómetros
-  eléctricos, no lo que gasta en híbrido.
 - Al guardarla, **tus medidas eléctricas se recalculan solas**, porque los litros de
   cada una se descuentan con este consumo.
 
