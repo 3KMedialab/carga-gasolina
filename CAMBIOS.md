@@ -8,6 +8,16 @@ plan de pruebas que lo cubre.
 
 ---
 
+## 2026-11-24-1 — Qué potencia poner
+
+- Bajo **Potencia**, en Calcular, la pista dice ahora **"La del punto, no la que marca
+  el coche"**: lo que marca el coche puede ser lo que llega a la batería, que es menos
+  de lo que sale del enchufe. Si la app del cargador enseña la potencia real, usa esa.
+  Los cálculos no cambian.
+- La **validación con una recarga real** pide más datos (kWh del cargador, curva de
+  carga y la potencia que marcan el coche y el cargador).
+- Plan de pruebas: **3** (paso 2), **10** y **14**.
+
 ## 2026-11-08-6 — La lista de medidas enseña los datos tal cual
 
 - En **Mi coche → medidas**, cada medida muestra los km y los kWh **como los

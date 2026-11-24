@@ -280,7 +280,7 @@ function render(){
       fmt(r.eff * 100, 0) + '%';
     ph.classList.add('warn');
   } else {
-    ph.textContent = 'La del punto donde estás';
+    ph.textContent = 'La del punto, no la que marca el coche';
     ph.classList.remove('warn');
   }
 

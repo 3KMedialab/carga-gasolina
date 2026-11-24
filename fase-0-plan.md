@@ -133,6 +133,22 @@ margen mucho más ancho. Estos son los valores que debería mostrar:
 
 **Apunta el R final:** ____________ km/kWh
 
+## Resultados hasta el 24 de noviembre
+
+Tres medidas, todas sin climatización. La app muestra **±5%**, por debajo del objetivo.
+
+| Km | kWh | Litros | Batería | Potencia del cargador | R (km/kWh) |
+|---|---|---|---|---|---|
+| 28,4 | 3,932 | 0,1 | 82 → 100% | unos 6,6 kW | 6,72 |
+| 26,1 | 4,0 | 0 | 83 → 100% | unos 3,4 kW | 6,53 |
+| unos 34 | unos 5,4 | 0 | *pendiente* | *pendiente* | 6,33 |
+
+- **R es mucho más alto que los 3,9 esperados.** Con 6,5, bajar del 100% al 26% daría unos
+  101 km. Las ventanas son cortas (26–34 km): falta **un tramo largo**, del 100% al 40%
+  sin enchufar, para saber si se mantiene. Unos 80 km lo confirman; unos 50, no.
+- La medida hecha a 3,4 kW tiene las pérdidas contadas dos veces (ver "Pérdidas al cargar
+  despacio" en `hoja-de-ruta.md`).
+
 ## A2 — El consumo en híbrido *(añadido el 7 de noviembre)*
 
 R no es lo único que pesa: la gasolina usa el **consumo en híbrido**, y ese mismo
@@ -228,6 +244,28 @@ Configura la app con los datos reales del punto y anota lo que predice:
 | La app predice **menos** kWh | La capacidad de batería declarada se queda corta |
 | Los kWh cuadran pero **el tiempo no** | Es la curva de carga. Anota desde y hasta qué % ibas |
 | Más del 20% en cualquiera | **Hay que corregir el modelo antes de añadir nada** |
+
+## Predicción y realidad hasta el 24 de noviembre
+
+Predicción con 18 kWh, 86% y 6,6 kW de máximo, **calculada después** de las cargas, no
+antes de enchufar. El tiempo real sale de las curvas, así que es aproximado.
+
+| Carga | kWh: app / real | Tiempo: app / real |
+|---|---|---|
+| 82 → 100%, unos 6,6 kW | 3,77 / 3,93 (−4%) | 37 / 36 min |
+| 83 → 100%, unos 3,4 kW | 3,83 / 4,0 (−4%) | 67 / 70 min |
+| 26 → 100%, oficina | sin kWh medidos | 292 / 293 min con 3,42 kW |
+
+- **Las dos con kWh medidos están por debajo del 10%.** Falta una predicción apuntada antes
+  de enchufar y con más de 50 puntos de batería (sirve la carga del tramo largo).
+- **La oficina:** la app del coche marcaba 3,2 kW; con esa potencia, la app se quedaba en
+  el 95%. Con unos 3,4 kW cuadra. Lo más probable es que el coche marque lo que llega tras
+  su cargador interno, pero **no está comprobado**: falta mirar a la vez los kW del coche
+  y los del cargador.
+- **El ajuste × 0,93** por cargar a menos de 4 kW encaja con la carga a 3,4 kW: sin él, la
+  app daría 3,56 kWh (−11%).
+- **Frenado final:** en la curva de 6,6 kW solo baja en los 2 últimos minutos; la app
+  empieza unos 10 minutos antes. El tiempo total apenas cambia.
 
 ---
 

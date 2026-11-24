@@ -91,8 +91,10 @@ cambio.
 - O escribe a mano:
   - **Cobra por**: *Energía* (€/kWh) o *Tiempo* (€/min).
   - **Precio**.
-  - **Potencia**: la del punto donde estás. Si es más de lo que admite tu coche, la
-    app usa el límite de tu coche y te lo dice.
+  - **Potencia**: la del punto donde estás. Si la app del cargador enseña la potencia
+    real de la carga, usa esa. **No pongas la que marca el coche**: puede ser la que
+    llega a la batería, que es menor que la que sale del enchufe. Si es más de lo que
+    admite tu coche, la app usa el límite de tu coche y te lo dice.
   - **Tarifa fija**: si cobra algo solo por conectar.
 
 **2. Gasolina**

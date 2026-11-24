@@ -7,7 +7,7 @@ Estado a 8 de noviembre de 2026 (el plan de fases es del 7 de septiembre).
 ## Dónde estamos
 
 La app funciona, está desplegada en GitHub Pages y estructurada en módulos con
-pruebas automáticas (243 del cálculo + 190 de humo en 18 escenarios). Abre sin
+pruebas automáticas (243 del cálculo + 191 de humo en 18 escenarios). Abre sin
 cobertura y se instala como app.
 
 **Lo que ya hace:**
@@ -160,6 +160,28 @@ prestadas medidas de otra climatización.
   separa grupos hasta que los datos lo pidan.
 
 **Depende de:** mediciones de invierno y de verano, de varios coches.
+
+### Pérdidas al cargar despacio *(abierto el 24 de noviembre, a la espera de datos)*
+
+Cargando despacio se pierde más en cualquier coche. La app lo aplica con
+`efficiencyPenalty()`: × 0,98 entre 4 y 6 kW, × 0,93 entre 2,5 y 4, × 0,82 por debajo.
+Son constantes **sin fuente, iguales para todos los coches y con saltos bruscos**, lo
+que va contra la regla de que lo que cambia según el coche es un dato o una medida.
+
+- **Lo que hay:** una carga del Atto 2 a 3,4 kW con kWh medidos, que encaja con el
+  × 0,93 (bloque B de `fase-0-plan.md`). Un coche y 17 puntos de batería: no basta.
+- **Se decidirá** con recargas de varios coches (kWh del cargador, % inicial y final,
+  curva), mejor de más de 50 puntos, y sobre todo de coches de 3,3 o 3,7 kW.
+
+**Pérdidas contadas dos veces en los km.** R son km por kWh facturado, así que ya incluye
+las pérdidas de las cargas con que se midió. Si esas cargas fueron a menos de 6 kW, el
+ajuste se resta otra vez y los km salen bajos. En un coche que no pasa de 6 kW pasa
+siempre. No se corrige aún:
+
+- Hace falta saber a qué potencia se hizo cada medida (hoy no se guarda), y el tamaño de
+  la corrección es el propio ajuste, que está por confirmar.
+- **No vale calcular km = kWh × R sin el ajuste:** al llenar la batería, el ajuste
+  también aumenta los kWh, y cargar más despacio daría más km con la misma batería.
 
 ---
 

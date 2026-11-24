@@ -117,6 +117,11 @@ La app la ajusta a la baja si cargas despacio, porque las pérdidas fijas pesan 
 
 Cuando se aplica un ajuste, la app te lo dice bajo el campo de potencia.
 
+> Cargando despacio se pierde más en cualquier coche, pero **cuánto** depende del
+> cargador interno de cada uno. Estos ajustes son **estimaciones, iguales para todos**,
+> no medidas de tu modelo. Aquí solo compruebas que la cuenta cuadra; si se parecen a la
+> realidad lo dice la sección 10, sobre todo si tu coche carga a 3,3 o 3,7 kW.
+
 **Paso 3 — ¿Cuánto cabe todavía en la batería?**
 ```
 (batería × (100 − % actual) ÷ 100) ÷ (eficiencia del paso 2 ÷ 100)
@@ -651,9 +656,16 @@ verdad. Es la que dirá si la app funciona con tu coche o solo con el de quien l
 
 **Antes de enchufar:**
 1. Mira el % de batería del coche y ponlo en la app.
-2. Pon el precio, el modo de tarifa y la potencia reales del punto.
+2. Pon el precio, el modo de tarifa y la potencia del punto. Si la app del cargador
+   enseña la potencia real, usa esa; **no la que marca el coche**.
 3. Pon el tiempo que vas a estar.
 4. **Anota lo que predice:** kWh, km, coste, % final y **tiempo de carga**.
+
+Mejor si vas a cargar **más de la mitad de la batería**: el % va sin decimales, y en una
+carga pequeña un punto de redondeo cambia mucho el resultado.
+
+**Durante la carga**, si puedes: mira **a la vez** los kW que marca el coche (en pantalla
+o en su app) y los que marca la app del cargador, y apunta los dos. Pueden no coincidir.
 
 **Después de la recarga:**
 
@@ -665,11 +677,21 @@ verdad. Es la que dirá si la app funciona con tu coche o solo con el de quien l
 | Km eléctricos ganados | | |
 | Tiempo hasta llenar | | |
 
+Los kWh, los que mida **el cargador**: si no los da, dilo, porque entonces esta prueba no
+puede comprobar la eficiencia. Si su app enseña la **curva de carga**, guarda una
+captura: dice la potencia real y desde qué momento frena el coche. Apunta también si la
+carga **acabó sola** al llenarse o la cortaste tú.
+
 **Cómo interpretarlo:**
 - **Diferencia menor del 10%:** bien, tus datos están bien puestos.
 - **La app predice más kWh de los que salieron:** la potencia real pudo ser menor (los
   cargadores no siempre dan lo que anuncian), o tu eficiencia es peor que la puesta.
-- **La app predice menos kWh:** revisa la capacidad de batería.
+- **La app predice menos kWh:** revisa la capacidad de batería. También puede ser que tu
+  eficiencia real sea peor, o que cargando despacio tu coche pierda más de lo que la app
+  supone.
+- **El coche se llenó y la app decía que no llegaba:** comprueba antes que no pusiste la
+  potencia que marca el coche. Si era la del cargador, puede que el ajuste por cargar
+  despacio sea excesivo para el tuyo.
 - **El tiempo no cuadra pero los kWh sí:** es la curva de carga. Anota desde qué % y
   hasta qué % ibas — es justo el dato que nos falta por modelo.
 - **El % final no cuadra:** batería o eficiencia están desviadas.
@@ -829,6 +851,9 @@ Sección 7 (límites físicos):      Todo OK / Fallos: ___
 Sección 8 (tarifa por minuto):    Todo OK / No pude probarlo / Fallos: ___
 Sección 9 (otras funciones):      Todo OK / No pude probarlo / Fallos: ___
 Sección 10 (recarga real):        diferencia en kWh ___%  ·  en tiempo ___%
+  Batería: de ___% a ___%  ·  kWh según el cargador: ___  ·  de ___:___ a ___:___
+  kW según el cargador: ___  ·  kW según el coche, a la vez: ___
+  ¿Acabó sola al llenarse? Sí / No  ·  Curva de carga adjunta: Sí / No la da
 
 ── LO IMPORTANTE ───────────────────────────
 ¿Te fiarías de la app para decidir?     Sí / No / Depende
