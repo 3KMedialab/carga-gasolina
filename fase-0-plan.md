@@ -141,13 +141,16 @@ Tres medidas, todas sin climatización. La app muestra **±5%**, por debajo del 
 |---|---|---|---|---|---|
 | 28,4 | 3,932 | 0,1 | 82 → 100% | unos 6,6 kW | 6,72 |
 | 26,1 | 4,0 | 0 | 83 → 100% | unos 3,4 kW | 6,53 |
-| unos 34 | unos 5,4 | 0 | *pendiente* | *pendiente* | 6,33 |
+| 34,2 | 5,4 | 0 | no apuntada → 100% | unos 3,3 kW (entre 3,1 y 3,4) | 6,33 |
 
 - **R es mucho más alto que los 3,9 esperados.** Con 6,5, bajar del 100% al 26% daría unos
   101 km. Las ventanas son cortas (26–34 km): falta **un tramo largo**, del 100% al 40%
   sin enchufar, para saber si se mantiene. Unos 80 km lo confirman; unos 50, no.
-- La medida hecha a 3,4 kW tiene las pérdidas contadas dos veces (ver "Pérdidas al cargar
-  despacio" en `hoja-de-ruta.md`).
+- **Dos de las tres medidas se hicieron a menos de 4 kW**, así que tienen las pérdidas
+  contadas dos veces (ver "Pérdidas al cargar despacio" en `hoja-de-ruta.md`). Si el
+  × 0,93 es correcto, los km de la app salen un 5% bajos con estas medidas.
+- Sin el % inicial, la carga de 5,4 kWh sirve para R pero no para validar kWh ni tiempo.
+  Su curva no muestra frenado: la potencia cae de golpe al llenarse.
 
 ## A2 — El consumo en híbrido *(añadido el 7 de noviembre)*
 
@@ -261,7 +264,8 @@ antes de enchufar. El tiempo real sale de las curvas, así que es aproximado.
 - **La oficina:** la app del coche marcaba 3,2 kW; con esa potencia, la app se quedaba en
   el 95%. Con unos 3,4 kW cuadra. Lo más probable es que el coche marque lo que llega tras
   su cargador interno, pero **no está comprobado**: falta mirar a la vez los kW del coche
-  y los del cargador.
+  y los del cargador. La carga de 5,4 kWh estuvo entre 3,1 y 3,4 kW, así que 3,2 reales
+  en el enchufe tampoco son descartables.
 - **El ajuste × 0,93** por cargar a menos de 4 kW encaja con la carga a 3,4 kW: sin él, la
   app daría 3,56 kWh (−11%).
 - **Frenado final:** en la curva de 6,6 kW solo baja en los 2 últimos minutos; la app
